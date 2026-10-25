@@ -6,6 +6,7 @@ import Pill from "../../components/Pill.astro";
 import BandArt from "../../components/BandArt.astro";
 import TrackList from "../../components/TrackList.astro";
 import { postersFor } from "../../lib/posters";
+import { SITE, canonicalUrl, cardPath, musicGroup } from "../../lib/seo";
 
 export async function getStaticPaths() {
   const bands = (await getCollection("bands")).sort((a, b) => a.data.order - b.data.order);
@@ -13,15 +14,18 @@ export async function getStaticPaths() {
 }
 interface Props { band: CollectionEntry<"bands">; next: CollectionEntry<"bands">; index: number }
 const { band, next, index } = Astro.props;
-const { name, tagline, lineup, tracks, spotify, photo, photoAlt, poster } = band.data;
+const { name, tagline, lineup, tracks, spotify, photo, photoAlt, poster, seoTitle, seoDescription } = band.data;
 const { Content } = await render(band);
 const hasBio = Boolean(band.body?.trim());
 // Posters featuring this band, minus the one already in the hero.
 const strip = postersFor(band.id).filter((p) => p.img.src !== poster?.src);
 const slug = band.id;
 const heroRatio = poster ? `${poster.width} / ${poster.height}` : "5 / 4";
+// Share image: the generated 1200x630 card (posters are portrait). Schema image: the poster when there is one.
+const group = musicGroup(slug, band.data, new URL(poster?.src ?? photo?.src ?? cardPath(`/bands/${slug}`), SITE).href);
+const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}` }];
 ---
-<Base title={`${name} · Tritone Productions · Oakland, CA`} description={tagline} image={poster?.src}>
+<Base title={seoTitle ?? `${name} · Bay Area Band · Tritone Productions`} description={seoDescription ?? tagline} breadcrumbs={crumbs} schema={[{ ...group, mainEntityOfPage: canonicalUrl(`/bands/${slug}`) }]}>
   <section class="wrap pb-12 pt-6 md:pb-20 md:pt-10">
     <a href="/bands" class="eyebrow inline-flex min-h-11 items-center gap-2 text-stone no-underline hover:text-white"><span aria-hidden="true">←</span> All bands</a>
 

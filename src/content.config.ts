@@ -36,6 +36,11 @@ const bands = defineCollection({
         .default([]),
       // Spotify embed URL: shows a Listen button that plays in the persistent dock.
       spotify: z.string().url().optional(),
+      // Genres for the MusicGroup schema (only what the band actually plays).
+      genres: z.array(z.string()).default([]),
+      // Search title (~50-60 chars) and description (~140-160 chars). Defaults: name + tagline.
+      seoTitle: z.string().max(65).optional(),
+      seoDescription: z.string().min(70).max(165).optional(),
     }),
 });
 
