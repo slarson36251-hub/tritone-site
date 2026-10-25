@@ -1,11 +1,77 @@
 ---
 import Base from "../layouts/Base.astro";
-import PageHead from "../components/PageHead.astro";
-import Pill from "../components/Pill.astro";
+import { bookHref } from "../lib/nav";
+
+const socials = [
+  { label: "Instagram", href: "https://www.instagram.com/tritone_productions/" },
+  { label: "Facebook", href: "https://www.facebook.com/tritoneproductions" },
+  { label: "SoundCloud", href: "https://soundcloud.com/skatlarson" },
+];
 ---
-<Base title="Contact · Tritone Productions · Oakland, CA" description="For sessions, bookings and anything else, write to Scott.">
-  <PageHead eyebrow="Oakland, CA" title="Contact">
-    <p class="m-0 max-w-[60ch] text-[19px]">For sessions, bookings and anything else, write to Scott.</p>
-    <div class="pt-2"><Pill href="mailto:scott@tritone-productions.com">scott@tritone-productions.com</Pill></div>
-  </PageHead>
+<Base title="Contact · Tritone Productions · Oakland, CA" description="Write or call Scott Larson at Tritone Productions, music production in Oakland, CA, about recording at the Hummingbird Hut or booking a band.">
+  <section class="wrap pb-12 pt-10 md:pb-16 md:pt-16">
+    <p class="eyebrow m-0 text-stone">Tritone Productions · Music production · Oakland, CA</p>
+    <h1 class="disp mb-0 mt-4 text-[clamp(3.2rem,11vw,8.6rem)] leading-[0.86]">Say <span class="outline-type">hello</span></h1>
+    <p class="mb-0 mt-6 max-w-[48ch] text-[19px]">Sessions, gigs, or a question about either. Scott reads everything himself and usually answers within a day.</p>
+  </section>
+
+  <section class="wrap pb-12 md:pb-16" aria-label="Email and phone">
+    <div class="grid gap-4 md:grid-cols-2 md:gap-5">
+      <a href="mailto:scott@tritone-productions.com" class="tile reveal group flex min-h-[200px] flex-col justify-between gap-8 p-6 no-underline md:p-8">
+        <p class="eyebrow m-0 text-stone">Email</p>
+        <div class="flex items-end justify-between gap-4">
+          <span class="disp text-[clamp(1.35rem,3.4vw,2.3rem)] leading-tight">scott@<wbr />tritone-<wbr />productions.com</span>
+          <span class="grid size-12 shrink-0 place-items-center rounded-full bg-white text-xl text-black transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+        </div>
+      </a>
+      <a href="tel:+14152006291" class="tile reveal group flex min-h-[200px] flex-col justify-between gap-8 p-6 no-underline md:p-8">
+        <p class="eyebrow m-0 text-stone">Phone</p>
+        <div class="flex items-end justify-between gap-4">
+          <span class="disp text-[clamp(1.6rem,4vw,2.6rem)] leading-tight tabular-nums">(415) 200-6291</span>
+          <span class="grid size-12 shrink-0 place-items-center rounded-full bg-white text-xl text-black transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section class="wrap pb-12 md:pb-16" aria-label="Booking">
+    <div class="grid gap-4 md:grid-cols-2 md:gap-5">
+      <a href={bookHref} class="tile reveal group flex min-h-[240px] flex-col justify-between gap-8 !border-stone !bg-stone p-6 text-black no-underline md:p-8">
+        <p class="eyebrow m-0">Recording · Hummingbird Hut</p>
+        <div class="flex flex-col gap-3">
+          <h2 class="disp m-0 text-[clamp(2.2rem,5vw,3.6rem)] leading-[0.92]">Book the Hut</h2>
+          <p class="m-0 max-w-[40ch] text-[16px]">Pick an open day on the studio calendar. The address is sent once your booking is confirmed.</p>
+        </div>
+      </a>
+      <div class="tile reveal flex min-h-[240px] flex-col justify-between gap-8 p-6 md:p-8">
+        <p class="eyebrow m-0 text-stone">Live · The bands</p>
+        <div class="flex flex-col gap-3">
+          <h2 class="disp m-0 text-[clamp(2.2rem,5vw,3.6rem)] leading-[0.92]">Book a band</h2>
+          <p class="m-0 max-w-[40ch] text-[16px] text-white/85">Clubs, parties and festivals. Send the date, the place and the kind of night you have in mind.</p>
+          <div class="flex flex-wrap gap-x-6 gap-y-2 pt-1">
+            <a href="mailto:scott@tritone-productions.com?subject=Band%20booking" class="font-semibold">Email about a date →</a>
+            <a href="/bands" class="font-semibold text-stone hover:text-white">Meet the bands →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap pb-20 md:pb-28" aria-labelledby="where-h">
+    <div class="rule flex flex-col gap-6 border-t pt-8 md:flex-row md:items-start md:justify-between">
+      <div class="flex flex-col gap-1">
+        <p class="eyebrow m-0 text-stone" id="where-h">Where</p>
+        <p class="m-0 text-[19px] font-semibold">Oakland, CA</p>
+        <p class="m-0 text-[15px] text-stone">Studio address sent once your booking is confirmed.</p>
+      </div>
+      <div class="flex flex-col gap-3">
+        <p class="eyebrow m-0 text-stone">Follow along</p>
+        <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+          {socials.map((s) => (
+            <li><a href={s.href} target="_blank" rel="noopener" class="inline-flex min-h-12 items-center rounded-full border-2 border-stone/60 px-5 text-sm font-semibold uppercase tracking-[.04em] no-underline hover:border-white">{s.label}</a></li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
 </Base>

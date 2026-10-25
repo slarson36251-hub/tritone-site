@@ -1,11 +1,220 @@
 ---
+import { Image } from "astro:assets";
 import Base from "../layouts/Base.astro";
-import PageHead from "../components/PageHead.astro";
 import Pill from "../components/Pill.astro";
+import { bookHref } from "../lib/nav";
+
+import heroPhoto from "../assets/photos/fault-line-trio-piano-mics-feb-2026-hummingbird-hut-oakland.jpg";
+import roomPhoto from "../assets/photos/solomon-alber-ensemble-oct-2025-hummingbird-hut-oakland.jpg";
+import gearMaag from "../assets/photos/fault-line-trio-mix-maag-trident-hummingbird-hut-oakland.jpg";
+import gearApollo from "../assets/photos/fault-line-trio-mix-apollo-stam-eq-hummingbird-hut-oakland.jpg";
+import gearStam from "../assets/photos/fault-line-trio-mix-stam-leveler-hummingbird-hut-oakland.jpg";
+import levis from "../assets/photos/jason-levis-session-aug-2026-hummingbird-hut-oakland.jpg";
+import clint from "../assets/photos/clint-baker-band-session-may-2026-hummingbird-hut-oakland.jpg";
+import faultline from "../assets/photos/fault-line-trio-jay-sanders-piano-feb-2026-hummingbird-hut-oakland.jpg";
+import romona from "../assets/photos/romona-baker-solo-piano-nov-2025-hummingbird-hut-oakland.jpg";
+import tuttle from "../assets/photos/john-tuttle-country-session-singers-nov-2025-hummingbird-hut-oakland.jpg";
+import solomon from "../assets/photos/solomon-alber-ensemble-oct-2025-hummingbird-hut-oakland.jpg";
+import nima from "../assets/photos/nima-piano-session-jun-2025-hummingbird-hut-oakland.jpg";
+import woodwind from "../assets/photos/woodwind-trio-session-apr-2025-hummingbird-hut-oakland.jpg";
+import tim from "../assets/photos/tim-rowe-trio-drums-bass-mar-2024-hummingbird-hut-oakland.jpg";
+
+// Group sizes we have actually recorded, each pointing at its session in the gallery.
+const sizes = [
+  { n: "1", what: "Solo piano", who: "Romona Baker, a day on the grand", id: "romona" },
+  { n: "3", what: "Jazz trio", who: "Fault Line Trio, Tim Rowe, Nima Hafez", id: "faultline" },
+  { n: "3", what: "Woodwind trio", who: "Flutes, clarinets and double reeds", id: "woodwind" },
+  { n: "5", what: "Live ensemble", who: "Solomon Alber, Clint Baker", id: "solomon" },
+  { n: "8", what: "Country band + singers", who: "John Tuttle and One Horse Stampede", id: "tuttle" },
+];
+
+const services = [
+  { t: "Tracking", d: "Everyone in one room, set up to see each other. Days run anywhere from two to twelve hours, between 8 am and 11 pm." },
+  { t: "Overdubs", d: "Piano, horns, percussion or voices over tracks you already have. Bring the session or the stems." },
+  { t: "Mixing", d: "Mixed here, through the analog chain in the rack: Maag and Trident EQ, Stam EQ and leveling amp." },
+  { t: "Mastering prep", d: "Final mixes printed, checked and labelled, ready to hand to your mastering engineer." },
+];
+
+// Only gear named in our own session notes and photos (src/gallery.html).
+const gear = [
+  { h: "Microphones", items: ["U87 pair", "Royer R-121 pair", "Coles 4038 pair", "AEA R84", "AEA KU5A", "TLM 103", "KM 184", "Lawson", "RE-20", "SM7B"] },
+  { h: "Preamps", items: ["WA-2MPX tube preamps", "V72", "AEA TRP", "Daking II"] },
+  { h: "Interface + mix chain", items: ["Apollo x8", "Maag EQ4 pair", "Trident 80B", "Stam EQP-1AS+", "Stam SA-2A+ leveling amp"] },
+  { h: "Instruments", items: ["Grand piano", "Nord Grand"] },
+];
+
+const recent = [
+  { img: levis, name: "Jason Levis", what: "Joseph's Bones", when: "Aug 2026", id: "levis", alt: "Musician in headphones by the console rack, saxophonist at a mic across the room" },
+  { img: clint, name: "Clint Baker", what: "Bands of 2 to 5", when: "May 2026", id: "clint", alt: "Drummer reading a chart behind a vintage kit, upright bass beside him" },
+  { img: faultline, name: "Fault Line Trio", what: "Trio · album", when: "Feb 2026", id: "faultline", alt: "Pianist in headphones at the grand piano through a row of mic stands" },
+  { img: romona, name: "Romona Baker", what: "Solo piano", when: "Nov 2025", id: "romona", alt: "Pianist in a black hat at the grand piano, a large condenser mic in front" },
+  { img: tuttle, name: "John Tuttle", what: "Country · 8 players", when: "Nov 2025", id: "tuttle", alt: "Three singers at music stands in front of a gold condenser mic" },
+  { img: solomon, name: "Solomon Alber", what: "Five players", when: "Oct 2025", id: "solomon", alt: "Five musicians with violin, viola, clarinet, accordion and tapan drum on a rug" },
+  { img: nima, name: "Nima Hafez", what: "Piano day", when: "Jul 2025", id: "nima", alt: "Pianist in sunglasses at the grand piano, two condenser mics over the strings" },
+  { img: woodwind, name: "Woodwind Trio", what: "Flutes and reeds", when: "Apr 2025", id: "woodwind", alt: "Three woodwind players standing at mics around the live room" },
+  { img: tim, name: "Tim Rowe", what: "Drums + trio", when: "Mar 2024", id: "tim", alt: "Drummer at a red kit and bassist bowing an upright bass" },
+];
+
+const credits = [
+  { name: "Fault Line Trio", id: "faultline" },
+  { name: "Jason Levis / Joseph's Bones", id: "levis" },
+  { name: "Clint Baker", id: "clint" },
+  { name: "John Tuttle", id: "tuttle" },
+  { name: "Romona Baker", id: "romona" },
+  { name: "Solomon Alber", id: "solomon" },
+  { name: "Woodwind Trio", id: "woodwind" },
+  { name: "Tim Rowe", id: "tim" },
+  { name: "Nima Hafez", id: "nima" },
+];
 ---
-<Base title="Hummingbird Hut · Tritone Productions · Oakland, CA" description="A private studio in Oakland built for small acoustic groups: real room, ribbon and condenser pairs, tube preamps. Tracking, overdubs, mixing and mastering.">
-  <PageHead eyebrow="Recording studio · Oakland, CA" title="Hummingbird Hut">
-    <p class="m-0 max-w-[60ch] text-[19px]">A private studio in Oakland built for small acoustic groups: real room, ribbon and condenser pairs, tube preamps. Tracking, overdubs, mixing and mastering.</p>
-    <div class="pt-2"><Pill href="/sessions">See recent sessions</Pill></div>
-  </PageHead>
+<Base title="Hummingbird Hut · Recording studio · Music production · Oakland, CA" description="Tritone Productions' private recording studio in Oakland, CA, for small acoustic groups, from solo piano and jazz trios to eight-piece country bands. Tracking, overdubs, mixing and mastering prep.">
+
+  <!-- Hero -->
+  <section class="wrap grid gap-8 pb-14 pt-10 md:grid-cols-12 md:items-end md:gap-10 md:pb-20 md:pt-16">
+    <div class="flex flex-col gap-6 md:col-span-7">
+      <p class="eyebrow m-0 text-stone">Recording studio · Music production · Oakland, CA</p>
+      <h1 class="disp m-0 text-[clamp(3.3rem,11vw,4.8rem)] leading-[0.86] md:text-[clamp(4rem,7.2vw,6.4rem)]">Humming&shy;bird <span class="outline-type">Hut</span></h1>
+      <p class="m-0 max-w-[46ch] text-[19px] md:text-[21px]">A small, private room for musicians who play together. A grand piano, ribbon and condenser pairs, tube preamps, and enough time to get the take.</p>
+      <div class="flex flex-wrap gap-3 pt-1">
+        <Pill href={bookHref}>Book the Hut</Pill>
+        <Pill href="/sessions" ghost>Recent sessions</Pill>
+      </div>
+    </div>
+    <figure class="tile reveal m-0 md:col-span-5">
+      <Image src={heroPhoto} alt="Grand piano with the lid up and four condenser and ribbon mics in A/B pairs" widths={[480, 720, 902]} sizes="(min-width: 761px) 40vw, 100vw" loading="eager" fetchpriority="high" class="block aspect-[4/5] h-auto w-full object-cover md:aspect-[3/4]" />
+      <figcaption class="absolute bottom-3 left-3 right-3 m-0 w-fit rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">Feb 2026 · U87 and R-121 pairs on the grand</figcaption>
+    </figure>
+  </section>
+
+  <!-- The room -->
+  <section class="wrap py-12 md:py-20" aria-labelledby="room-h">
+    <div class="grid gap-10 md:grid-cols-12 md:gap-12">
+      <div class="flex flex-col gap-5 md:col-span-5">
+        <p class="eyebrow m-0 text-stone">The room</p>
+        <h2 id="room-h" class="disp m-0 text-[clamp(2.1rem,5vw,3.6rem)] leading-[0.95]">Made for playing in the same room</h2>
+        <p class="m-0 max-w-[48ch] text-white/85">The Hut suits small acoustic groups best. Everyone sets up together, sightlines stay open, and the take is the performance. Jazz trios, string and woodwind players, and country bands with singers gathered around one mic have all done their best work here.</p>
+        <div class="tile reveal mt-2 hidden md:block">
+          <Image src={roomPhoto} alt="Five musicians with violin, viola, clarinet, accordion and tapan drum gathered on a rug in the live room" widths={[480, 720, 917]} sizes="40vw" class="block aspect-[4/3] h-auto w-full object-cover" />
+        </div>
+      </div>
+      <ol class="m-0 list-none p-0 md:col-span-7">
+        {sizes.map((s) => (
+          <li class="rule border-t last:border-b">
+            <a href={`/sessions#${s.id}`} class="group grid grid-cols-[4.2rem_1fr_auto] items-center gap-4 py-5 no-underline md:grid-cols-[6.5rem_1fr_auto] md:py-6">
+              <span class="disp text-[3.2rem] leading-none text-stone transition-colors group-hover:text-white md:text-[4.6rem]" aria-hidden="true">{s.n}</span>
+              <span class="flex flex-col gap-1">
+                <span class="text-[19px] font-semibold md:text-[22px]">{s.what}<span class="sr-only">, {s.n === "1" ? "one player" : `${s.n} players`}</span></span>
+                <span class="text-[15px] text-stone">{s.who}</span>
+              </span>
+              <span class="text-xl text-stone transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="wrap py-12 md:py-16" aria-labelledby="svc-h">
+    <div class="mb-8 flex flex-col gap-3">
+      <p class="eyebrow m-0 text-stone">Services</p>
+      <h2 id="svc-h" class="disp m-0 text-[clamp(2.1rem,5vw,3.6rem)] leading-[0.95]">From the first take to the final print</h2>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-5">
+      {services.map((s, i) => (
+        <article class="tile reveal flex flex-col gap-4 p-6 md:p-7">
+          <span class="text-sm font-semibold tabular-nums text-stone">{String(i + 1).padStart(2, "0")}</span>
+          <h3 class="disp m-0 text-[1.7rem] leading-none">{s.t}</h3>
+          <p class="m-0 text-[15.5px] text-white/85">{s.d}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- Gear -->
+  <section class="wrap py-12 md:py-20" aria-labelledby="gear-h">
+    <div class="grid gap-10 lg:grid-cols-12 lg:gap-12">
+      <div class="flex flex-col gap-5 lg:col-span-5">
+        <p class="eyebrow m-0 text-stone">Gear</p>
+        <h2 id="gear-h" class="disp m-0 text-[clamp(2.1rem,5vw,3.6rem)] leading-[0.95]">What's in the room</h2>
+        <p class="m-0 max-w-[46ch] text-white/85">Taken from our own session notes, so it's what actually gets used. Ask about anything you don't see.</p>
+        <dl class="m-0 mt-2 grid gap-7 sm:grid-cols-2 lg:grid-cols-1">
+          {gear.map((g) => (
+            <div>
+              <dt class="eyebrow mb-3 text-stone">{g.h}</dt>
+              <dd class="m-0 flex flex-wrap gap-2">
+                {g.items.map((it) => <span class="rounded-full border border-stone/40 px-3.5 py-1.5 text-[15px] font-medium">{it}</span>)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <div class="grid grid-cols-2 gap-4 self-start lg:col-span-7 md:gap-5">
+        <figure class="tile reveal col-span-2 m-0">
+          <Image src={gearMaag} alt="Two blue Maag EQ4 modules next to a Trident 80B equalizer" widths={[480, 720, 900]} sizes="(min-width: 1024px) 50vw, 100vw" class="block aspect-[4/3] h-auto w-full object-cover" />
+          <figcaption class="absolute bottom-3 left-3 m-0 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">Maag EQ4 pair · Trident 80B</figcaption>
+        </figure>
+        <figure class="tile reveal m-0">
+          <Image src={gearApollo} alt="Apollo x8 interface above a Stam EQP-1AS+ equalizer" widths={[360, 683]} sizes="(min-width: 1024px) 25vw, 50vw" class="block aspect-[3/4] h-auto w-full object-cover" />
+          <figcaption class="absolute bottom-3 left-3 right-3 m-0 w-fit rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">Apollo x8 · Stam EQP-1AS+</figcaption>
+        </figure>
+        <figure class="tile reveal m-0">
+          <Image src={gearStam} alt="Stam SA-2A+ leveling amp with a lit VU meter" widths={[360, 683]} sizes="(min-width: 1024px) 25vw, 50vw" class="block aspect-[3/4] h-auto w-full object-cover" />
+          <figcaption class="absolute bottom-3 left-3 right-3 m-0 w-fit rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">Stam SA-2A+</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent sessions -->
+  <section class="wrap py-12 md:py-20" aria-labelledby="recent-h">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div class="flex flex-col gap-3">
+        <p class="eyebrow m-0 text-stone">Session log</p>
+        <h2 id="recent-h" class="disp m-0 text-[clamp(2.1rem,5vw,3.6rem)] leading-[0.95]">Recently at the Hut</h2>
+      </div>
+      <a href="/sessions" class="font-semibold">All sessions →</a>
+    </div>
+    <ul class="m-0 grid list-none grid-cols-2 gap-x-4 gap-y-7 p-0 md:grid-cols-3 md:gap-x-5 md:gap-y-10">
+      {recent.map((s, i) => (
+        <li class:list={["reveal", i === recent.length - 1 && "col-span-2 md:col-span-1"]}>
+          <a href={`/sessions#${s.id}`} class="group flex flex-col gap-2.5 no-underline">
+            <span class="block overflow-hidden rounded-2xl border border-stone/25">
+              <Image src={s.img} alt={s.alt} widths={[280, 455]} sizes="(min-width: 761px) 30vw, 46vw" class:list={["tile-img block h-auto w-full object-cover group-hover:scale-[1.04]", i === recent.length - 1 ? "aspect-[16/10] md:aspect-[4/5]" : "aspect-[4/5]"]} />
+            </span>
+            <span class="flex flex-col">
+              <span class="text-[17px] font-semibold leading-tight md:text-[19px]">{s.name}</span>
+              <span class="text-sm text-stone">{s.what} · {s.when}</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- Credits -->
+  <section class="wrap py-12 md:py-20" aria-labelledby="credits-h">
+    <p class="eyebrow m-0 mb-6 text-stone" id="credits-h">Recorded at the Hut</p>
+    <ul class="m-0 flex list-none flex-wrap items-baseline gap-x-5 gap-y-1 p-0 md:gap-x-7">
+      {credits.map((c, i) => (
+        <li>
+          <a href={`/sessions#${c.id}`} class:list={["disp text-[clamp(1.9rem,4.4vw,3.6rem)] leading-[1.04] no-underline transition-colors hover:text-white", i % 2 ? "outline-type hover:[-webkit-text-stroke-color:#fff]" : ""]}>{c.name}</a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- CTA -->
+  <section class="wrap pb-20 pt-6 md:pb-28">
+    <a href={bookHref} class="tile reveal group flex min-h-[260px] flex-col justify-between gap-8 !border-stone !bg-stone p-6 text-black no-underline md:p-10">
+      <p class="eyebrow m-0">Hummingbird Hut · Oakland, CA</p>
+      <div class="flex flex-wrap items-end justify-between gap-6">
+        <div class="flex flex-col gap-4">
+          <h2 class="disp m-0 text-[clamp(2.6rem,7vw,5.6rem)] leading-[0.9]">Book the Hut</h2>
+          <p class="m-0 max-w-[44ch] text-[17px]">Pick a day and tell Scott what you're recording. He confirms every session personally, and the address is sent once your booking is confirmed.</p>
+        </div>
+        <span class="grid size-16 place-items-center rounded-full bg-black text-3xl text-white transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+      </div>
+    </a>
+  </section>
 </Base>

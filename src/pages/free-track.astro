@@ -1,0 +1,94 @@
+---
+import { Image } from "astro:assets";
+import Base from "../layouts/Base.astro";
+import logo from "../assets/logo/tritone-wordmark-white.png";
+import "../styles/forms.css";
+
+// Tip handles exactly as they appear on the old /free-track page (site archive). Cash App dropped.
+const tips = [
+  { label: "Venmo", href: "https://venmo.com/code?user_id=2496222434689024704" },
+  { label: "PayPal", href: "https://paypal.me/SLarson468" },
+];
+const socials = [
+  { label: "Instagram", href: "https://www.instagram.com/tritone_productions/" },
+  { label: "Facebook", href: "https://www.facebook.com/tritoneproductions" },
+];
+---
+<Base title="Free track · Tritone Productions · Oakland, CA" description="Leave your name and email and we'll send a free Tritone Productions track straight to your inbox.">
+  <meta slot="head" name="robots" content="noindex" />
+  <section class="wrap pb-20 pt-10 md:pb-28 md:pt-16">
+    <div class="mx-auto max-w-[560px]" id="ft-root">
+      <Image src={logo} alt="Tritone Productions" class="mx-auto mb-8 h-16 w-auto md:h-20" widths={[240, 480]} sizes="200px" loading="eager" />
+
+      <div class="tf-card">
+        <!-- 1. Sign up -->
+        <div class="tf-screen" data-screen="form">
+          <p class="eyebrow m-0 text-center text-stone">Oakland, CA</p>
+          <h1 class="disp mb-3 mt-2 text-center text-[clamp(2.4rem,9vw,3.6rem)] leading-[0.92]">A free track, on us</h1>
+          <p class="mx-auto mb-7 mt-0 max-w-[36ch] text-center text-white/85">Drop your name and email and we'll send a free track straight to your inbox.</p>
+          <form id="ft-form" novalidate>
+            <div class="tf-row">
+              <div class="tf-field">
+                <label class="tf-label" for="ft-first">First name</label>
+                <input class="tf-input" id="ft-first" name="firstName" type="text" autocomplete="given-name" maxlength="80" required aria-describedby="ft-first-err" />
+                <p class="tf-err" id="ft-first-err">Your first name, please.</p>
+              </div>
+              <div class="tf-field">
+                <label class="tf-label" for="ft-last">Last name</label>
+                <input class="tf-input" id="ft-last" name="lastName" type="text" autocomplete="family-name" maxlength="80" />
+              </div>
+            </div>
+            <div class="tf-field">
+              <label class="tf-label" for="ft-email">Email</label>
+              <input class="tf-input" id="ft-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required aria-describedby="ft-email-err" />
+              <p class="tf-err" id="ft-email-err">That email doesn't look right.</p>
+            </div>
+            <!-- honeypot: humans never see this -->
+            <div class="tf-hp" aria-hidden="true">
+              <label for="ft-company">Company</label>
+              <input id="ft-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+            <div class="tf-notice" id="ft-msg" role="alert" hidden></div>
+            <button type="submit" class="tf-btn" id="ft-submit">Get my free track</button>
+            <p class="tf-foot">No spam. One free track, then the occasional show note.</p>
+          </form>
+        </div>
+
+        <!-- 2. Tip -->
+        <div class="tf-screen text-center" data-screen="tip" hidden>
+          <div class="tf-check mx-auto" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h2 class="disp m-0 text-[clamp(2.4rem,9vw,3.4rem)] leading-[0.92]">Awesome!</h2>
+          <p class="mx-auto mb-0 mt-3 max-w-[34ch] text-white/85">Check your inbox for your free track download link.</p>
+          <p class="eyebrow mb-4 mt-8 text-stone">Want to support the music? Leave a tip</p>
+          <div class="grid gap-3 sm:grid-cols-2">
+            {tips.map((t) => (
+              <a href={t.href} target="_blank" rel="noopener" data-tip class="flex min-h-16 flex-col items-center justify-center rounded-2xl border border-stone/50 bg-stone/10 px-4 py-3 no-underline transition-colors hover:border-white">
+                <span class="disp text-xl">{t.label}</span>
+                <span class="text-xs text-stone">Tap to open {t.label}</span>
+              </a>
+            ))}
+          </div>
+          <button type="button" data-skip class="mt-6 min-h-12 cursor-pointer border-0 bg-transparent px-3 font-semibold text-white underline-offset-4 hover:underline">No thanks, I'm good →</button>
+        </div>
+
+        <!-- 3. Thanks -->
+        <div class="tf-screen text-center" data-screen="thanks" hidden>
+          <h2 class="disp m-0 text-[clamp(2.4rem,9vw,3.4rem)] leading-[0.92]">Thank you<br />so much!</h2>
+          <p class="mx-auto mb-0 mt-3 max-w-[34ch] text-white/85">Thanks for the support. Enjoy the rest of the set.</p>
+          <ul class="m-0 mt-7 flex list-none flex-wrap justify-center gap-3 p-0">
+            {socials.map((s) => (
+              <li><a href={s.href} target="_blank" rel="noopener" class="inline-flex min-h-12 items-center rounded-full border-2 border-stone/60 px-6 text-sm font-semibold uppercase tracking-[.04em] no-underline hover:border-white">{s.label}</a></li>
+            ))}
+          </ul>
+          <p class="mb-0 mt-8 text-sm text-stone">Tritone Productions · Oakland, CA · <a href="/" class="text-white">tritone-productions.com</a></p>
+          <button type="button" data-restart class="tf-btn tf-btn-ghost">Start over</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initFreeTrack } from "../lib/freetrack";
+  document.addEventListener("astro:page-load", initFreeTrack);
+</script>

@@ -1,11 +1,133 @@
 ---
 import Base from "../layouts/Base.astro";
-import PageHead from "../components/PageHead.astro";
-import Pill from "../components/Pill.astro";
+import "../styles/forms.css";
 ---
-<Base title="Book the Hut · Tritone Productions · Oakland, CA" description="Tell Scott about your project: the group, the dates you have in mind, and what you want to come away with. The studio address is sent once a booking is confirmed.">
-  <PageHead eyebrow="Hummingbird Hut · Oakland, CA" title="Book the Hut">
-    <p class="m-0 max-w-[60ch] text-[19px]">Tell Scott about your project: the group, the dates you have in mind, and what you want to come away with. The studio address is sent once a booking is confirmed.</p>
-    <div class="pt-2"><Pill href="mailto:scott@tritone-productions.com?subject=Hummingbird%20Hut%20booking">Email to book</Pill></div>
-  </PageHead>
+<Base title="Book the Hut · Hummingbird Hut · Oakland, CA" description="Request a day at the Hummingbird Hut, the Tritone Productions recording studio in Oakland, CA. Pick a date and start time; Scott confirms every session personally.">
+  <section class="wrap grid gap-10 pb-20 pt-10 md:pt-16 lg:grid-cols-12 lg:gap-14 lg:pb-28">
+
+    <!-- Intro -->
+    <div class="flex flex-col gap-6 lg:sticky lg:top-28 lg:col-span-5 lg:self-start">
+      <p class="eyebrow m-0 text-stone">Hummingbird Hut · Music production · Oakland, CA</p>
+      <h1 class="disp m-0 text-[clamp(3rem,9vw,6.2rem)] leading-[0.88]">Book the Hut</h1>
+      <p class="m-0 max-w-[44ch] text-[19px]">Pick an open day, choose how long you need, and tell Scott what you're recording. Requests hold the date while he takes a look.</p>
+      <ol class="m-0 flex list-none flex-col p-0">
+        <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">01</span><span><strong>Request a date.</strong> Open days come straight from the studio calendar.</span></li>
+        <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">02</span><span><strong>Scott confirms by email,</strong> usually within a day. Every session is confirmed personally.</span></li>
+        <li class="rule flex gap-4 border-y py-4"><span class="disp text-stone">03</span><span><strong>Your confirmation</strong> carries the address and a link for sending files ahead.</span></li>
+      </ol>
+      <p class="m-0 text-[15px] text-stone">Need something the calendar doesn't show? Write to <a href="mailto:scott@tritone-productions.com" class="font-semibold text-white">scott@tritone-productions.com</a>.</p>
+    </div>
+
+    <!-- Booking form -->
+    <div class="lg:col-span-7" id="hbh-booking">
+      <div class="tf-card">
+        <section id="hbh-picker" class="tf-group" aria-labelledby="hbh-when">
+          <div class="tf-step"><span class="tf-step-n">01</span><h2 class="tf-step-t" id="hbh-when">When</h2></div>
+
+          <p class="tf-label" id="hbh-date-label">Pick a day</p>
+          <div class="bk-cal">
+            <div class="bk-cal-head">
+              <button type="button" class="bk-nav" id="hbh-prev" aria-label="Previous month" disabled>‹</button>
+              <div class="bk-cal-title" id="hbh-cal-title" aria-live="polite">&nbsp;</div>
+              <button type="button" class="bk-nav" id="hbh-next" aria-label="Next month" disabled>›</button>
+            </div>
+            <div class="bk-dows" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+            <div class="bk-days" id="hbh-days" role="group" aria-labelledby="hbh-date-label"><div class="bk-skel"></div></div>
+          </div>
+          <div class="tf-notice" id="hbh-avail-msg" role="status" hidden></div>
+
+          <div class="tf-field mt-6">
+            <p class="tf-label" id="hbh-hours-label">Session length</p>
+            <div class="bk-stepper" role="group" aria-labelledby="hbh-hours-label">
+              <button type="button" class="bk-step-btn" id="hbh-hours-dec" aria-label="Shorter session">−</button>
+              <output class="bk-step-val" id="hbh-hours-out" aria-live="polite">4<small>hours</small></output>
+              <button type="button" class="bk-step-btn" id="hbh-hours-inc" aria-label="Longer session">+</button>
+            </div>
+          </div>
+
+          <div class="tf-field mt-6">
+            <p class="tf-label" id="hbh-time-label">Start time</p>
+            <div class="bk-times" id="hbh-times" role="group" aria-labelledby="hbh-time-label">
+              <p class="bk-times-empty">Loading open times…</p>
+            </div>
+          </div>
+        </section>
+
+        <form id="hbh-form" novalidate>
+          <section class="tf-group" aria-labelledby="hbh-you">
+            <div class="tf-step"><span class="tf-step-n">02</span><h2 class="tf-step-t" id="hbh-you">You</h2></div>
+            <div class="tf-field">
+              <label class="tf-label" for="hbh-name">Your name</label>
+              <input class="tf-input" id="hbh-name" name="name" type="text" autocomplete="name" maxlength="100" required aria-describedby="hbh-name-err" />
+              <p class="tf-err" id="hbh-name-err">Your name, please.</p>
+            </div>
+            <div class="tf-row">
+              <div class="tf-field">
+                <label class="tf-label" for="hbh-email">Email</label>
+                <input class="tf-input" id="hbh-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required aria-describedby="hbh-email-err" />
+                <p class="tf-err" id="hbh-email-err">That email doesn't look right.</p>
+              </div>
+              <div class="tf-field">
+                <label class="tf-label" for="hbh-phone">Phone</label>
+                <input class="tf-input" id="hbh-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" required aria-describedby="hbh-phone-err" />
+                <p class="tf-err" id="hbh-phone-err">A number with at least 7 digits.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="tf-group" aria-labelledby="hbh-session">
+            <div class="tf-step"><span class="tf-step-n">03</span><h2 class="tf-step-t" id="hbh-session">The session</h2></div>
+            <div class="tf-field">
+              <label class="tf-label" for="hbh-project">What are we recording?</label>
+              <textarea class="tf-input" id="hbh-project" name="project" rows="3" maxlength="2000" required aria-describedby="hbh-project-err" placeholder="The band, the tunes, what you're after."></textarea>
+              <p class="tf-err" id="hbh-project-err">A few words about the project.</p>
+            </div>
+            <div class="tf-field">
+              <label class="tf-label" for="hbh-num">Total number of musicians in session</label>
+              <input class="tf-input max-w-[10rem]" id="hbh-num" name="numMusicians" type="number" min="1" max="30" inputmode="numeric" required aria-describedby="hbh-num-err" />
+              <p class="tf-err" id="hbh-num-err">How many players, counting everyone.</p>
+            </div>
+            <div class="tf-field">
+              <label class="tf-label" for="hbh-musicians">Musician name and instrument <span class="tf-opt">(optional)</span></label>
+              <textarea class="tf-input" id="hbh-musicians" name="musicians" rows="3" maxlength="500" placeholder="One per line, e.g. Nick Culp, tenor sax"></textarea>
+            </div>
+
+            <!-- honeypot: humans never see this -->
+            <div class="tf-hp" aria-hidden="true">
+              <label for="hbh-company">Company</label>
+              <input id="hbh-company" name="company" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+          </section>
+
+          <div class="bk-summary" id="hbh-summary" aria-live="polite">
+            <span class="eyebrow">Your request</span>
+            <strong id="hbh-summary-text">Pick a day and start time</strong>
+          </div>
+
+          <div class="tf-notice" id="hbh-form-msg" role="alert" hidden></div>
+
+          <button type="submit" class="tf-btn" id="hbh-submit">Request the date</button>
+          <p class="tf-foot">A booking request holds your date; Scott confirms every session personally.</p>
+        </form>
+
+        <div class="tf-done" id="hbh-done" role="status" tabindex="-1" hidden>
+          <div class="tf-check" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p class="eyebrow m-0 text-stone">Request received</p>
+          <h2 class="disp mb-3 mt-2 text-[clamp(2.2rem,6vw,3.4rem)] leading-[0.95]">You're penciled in</h2>
+          <p class="m-0 text-[19px] font-semibold" id="hbh-done-detail"></p>
+          <p class="mb-0 mt-4 max-w-[46ch] text-white/85">Scott will confirm by email within a day. Your confirmation carries the studio address and a link for sending files ahead.</p>
+          <p class="mb-0 mt-4 text-sm text-stone" id="hbh-done-ref" hidden></p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="/hummingbird-hut" class="inline-flex min-h-12 items-center rounded-full border-2 border-white px-6 text-sm font-semibold uppercase tracking-[.04em] no-underline">About the studio</a>
+            <a href="/sessions" class="inline-flex min-h-12 items-center rounded-full border-2 border-stone/60 px-6 text-sm font-semibold uppercase tracking-[.04em] no-underline">Recent sessions</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </Base>
+
+<script>
+  import { initBooking } from "../lib/booking";
+  document.addEventListener("astro:page-load", initBooking);
+</script>
