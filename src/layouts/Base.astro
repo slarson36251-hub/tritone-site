@@ -13,7 +13,7 @@ import Footer from "../components/Footer.astro";
 import PlayerDock from "../components/PlayerDock.astro";
 import Feedback from "../components/Feedback.astro";
 import { getCollection } from "astro:content";
-import { PAGE_CARDS, SITE, breadcrumbs as crumbList, canonicalUrl, cardPath, cleanPath, organization, website, type Crumb } from "../lib/seo";
+import { PAGE_CARDS, SITE, breadcrumbs as crumbList, canonicalUrl, cardPath, cleanPath, organization, scottLarson, website, type Crumb } from "../lib/seo";
 
 interface Props {
   /** ~50-60 characters, unique per page. */
@@ -38,7 +38,7 @@ const card = image ? undefined : cardPath(path in PAGE_CARDS || bandPaths.has(pa
 const ogImage = new URL(image ?? card!, SITE).href;
 const graph = {
   "@context": "https://schema.org",
-  "@graph": [organization(), website(), ...(breadcrumbs?.length ? [crumbList(breadcrumbs)] : []), ...schema],
+  "@graph": [organization(), scottLarson(), website(), ...(breadcrumbs?.length ? [crumbList(breadcrumbs)] : []), ...schema],
 };
 ---
 <!doctype html>

@@ -30,7 +30,7 @@ const items = await Promise.all(
               <Image src={p.img} alt={p.alt} widths={[240, 400, 640]} sizes="(min-width: 1024px) 23vw, (min-width: 761px) 30vw, 46vw" class="tile-img absolute inset-0 h-full w-full object-cover group-hover:scale-[1.03]" />
             </span>
             <span class="mt-2 block text-sm font-semibold leading-tight md:text-[15px]">{p.title}</span>
-            <span class="mt-0.5 block text-xs text-stone md:text-sm">{p.sub}</span>
+            <span class="mt-0.5 block text-[14px] text-stone md:text-sm">{p.sub}</span>
           </button>
         </li>
       ))}
