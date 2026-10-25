@@ -29,7 +29,7 @@ const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirect
 const problems = [];
 for (const file of walk("dist")) {
   const ext = extname(file).toLowerCase();
-  if ([".html", ".js", ".json", ".xml", ".txt", ".css"].includes(ext)) {
+  if ([".html", ".js", ".json", ".xml", ".txt", ".css", ".ics"].includes(ext)) {
     const text = readFileSync(file, "utf8");
     for (const re of banned) if (re.test(text)) problems.push(`${file}: matches ${re}`);
   } else if ([".jpg", ".jpeg", ".webp", ".png", ".avif"].includes(ext)) {

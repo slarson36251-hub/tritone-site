@@ -102,8 +102,15 @@ async function load(): Promise<Show[]> {
   } else {
     const calendarId = env("MUSIC_CALENDAR_ID") ?? DEFAULT_ID;
     if (HUT_GUARD.test(calendarId)) throw new Error("Refusing to read the Hut calendar on a public page.");
+    // Preferred: a service account the (private) Music calendar is shared with, read-only.
+    // Fallbacks: an API key (public calendar only), then the public iCal feed.
+    const sa = env("GOOGLE_SERVICE_ACCOUNT_JSON");
     const key = env("GOOGLE_CALENDAR_API_KEY");
-    raw = key ? await fromApi(calendarId, key, from, to) : await fromIcsFeed(calendarId, from, to);
+    raw = sa
+      ? await fromApi(calendarId, { token: await serviceAccountToken(sa) }, from, to)
+      : key
+        ? await fromApi(calendarId, { key }, from, to)
+        : await fromIcsFeed(calendarId, from, to);
   }
 
   const seen = new Set<string>();
@@ -114,16 +121,40 @@ async function load(): Promise<Show[]> {
     .sort((a, b) => a.start.getTime() - b.start.getTime());
 }
 
-async function fetchWithTimeout(url: string): Promise<Response> {
-  return fetch(url, { signal: AbortSignal.timeout(10_000) });
+async function fetchWithTimeout(url: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(url, { ...init, signal: AbortSignal.timeout(10_000) });
 }
 
-async function fromApi(calendarId: string, key: string, from: Date, to: Date): Promise<RawEvent[]> {
+// Signs a JWT for the service account and swaps it for a read-only Calendar access token.
+async function serviceAccountToken(json: string): Promise<string> {
+  const { createSign } = await import("node:crypto");
+  const sa = JSON.parse(json);
+  const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
+  const now = Math.floor(Date.now() / 1000);
+  const unsigned = `${b64({ alg: "RS256", typ: "JWT" })}.${b64({
+    iss: sa.client_email,
+    scope: "https://www.googleapis.com/auth/calendar.readonly",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600,
+  })}`;
+  const sig = createSign("RSA-SHA256").update(unsigned).sign(sa.private_key, "base64url");
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: `${unsigned}.${sig}` }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) throw new Error(`Service account token request answered ${res.status}`);
+  return (await res.json()).access_token;
+}
+
+async function fromApi(calendarId: string, auth: { key?: string; token?: string }, from: Date, to: Date): Promise<RawEvent[]> {
   const out: RawEvent[] = [];
   let pageToken: string | undefined;
   do {
     const params = new URLSearchParams({
-      key,
+      ...(auth.key ? { key: auth.key } : {}),
       timeMin: from.toISOString(),
       timeMax: to.toISOString(),
       singleEvents: "true",
@@ -133,6 +164,7 @@ async function fromApi(calendarId: string, key: string, from: Date, to: Date): P
     });
     const res = await fetchWithTimeout(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
+      auth.token ? { headers: { authorization: `Bearer ${auth.token}` } } : undefined,
     );
     if (!res.ok) throw new Error(`Calendar API answered ${res.status}`);
     const data: any = await res.json();

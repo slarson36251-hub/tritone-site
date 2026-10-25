@@ -9,7 +9,7 @@ import { getUpcomingShows, getPastShows, SITE, type Show } from "../lib/shows";
 const CARDS = 12;
 const upcoming = await getUpcomingShows(CARDS + 30);
 const featured = upcoming.slice(0, CARDS);
-const later = upcoming.slice(CARDS);
+const later = upcoming.slice(CARDS, CARDS + 12);
 const past = await getPastShows(20);
 
 // schema.org MusicEvent list. Venue name and city only: never a street address or geo.
