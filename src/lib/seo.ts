@@ -7,6 +7,7 @@ export const SITE = "https://tritone-productions.com";
 export const ORG_ID = `${SITE}/#organization`;
 export const SITE_ID = `${SITE}/#website`;
 export const HUT_ID = `${SITE}/hummingbird-hut#studio`;
+export const SCOTT_ID = `${SITE}/#scott-larson`;
 export const LOGO_URL = `${SITE}/tritone-logo.png`;
 export const EMAIL = "scott@tritone-productions.com";
 export const PHONE = "+1-415-200-6291";
@@ -57,11 +58,36 @@ export function organization() {
     description: "Music production in Oakland, CA: the Hummingbird Hut recording studio and Tritone's Bay Area bands.",
     email: EMAIL,
     telephone: PHONE,
-    founder: { "@type": "Person", name: "Scott Larson" },
+    founder: { "@id": SCOTT_ID },
+    knowsAbout: ["Music production", "Recording", "Mixing", "Live ensemble recording", "Jazz", "Ska", "Live music booking"],
     address: OAKLAND,
     areaServed: { "@type": "Place", name: "San Francisco Bay Area" },
     sameAs: SOCIALS.map((s) => s.href),
     contactPoint: { "@type": "ContactPoint", contactType: "booking", email: EMAIL, telephone: PHONE, areaServed: "US", availableLanguage: "en" },
+  };
+}
+
+/** Scott, as the person behind Tritone: founder, engineer and bandleader. */
+export function scottLarson() {
+  return {
+    "@type": "Person",
+    "@id": SCOTT_ID,
+    name: "Scott Larson",
+    jobTitle: "Music producer, recording engineer and trombonist",
+    description: "Founder of Tritone Productions in Oakland, CA. Runs the Hummingbird Hut recording studio and leads the Hard Bop Quintet and the Scott Larson Quartet on trombone.",
+    worksFor: { "@id": ORG_ID },
+    homeLocation: { "@type": "Place", name: "Oakland, CA" },
+    knowsAbout: ["Music production", "Recording engineering", "Mixing", "Trombone", "Jazz"],
+    url: SITE,
+  };
+}
+
+/** FAQPage from question/answer pairs that are also shown on the page. */
+export function faqPage(url: string, faqs: { q: string; a: string }[]) {
+  return {
+    "@type": "FAQPage",
+    "@id": `${url}#faq`,
+    mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
   };
 }
 

@@ -16,7 +16,7 @@
 .tf-step { display: flex; align-items: baseline; gap: 12px; margin: 0 0 14px; }
 .tf-step-n {
   font-family: var(--font-display, "Archivo Black", sans-serif);
-  font-size: 13px; color: #a8a6a1; letter-spacing: 0.04em;
+  font-size: 14px; color: #a8a6a1; letter-spacing: 0.04em;
 }
 .tf-step-t {
   font-family: var(--font-display, "Archivo Black", sans-serif);
@@ -84,7 +84,7 @@ textarea.tf-input { padding: 14px 16px; min-height: 108px; resize: vertical; lin
 .bk-nav:hover:not(:disabled) { border-color: #fff; }
 .bk-nav:disabled { opacity: 0.25; cursor: default; }
 .bk-dows, .bk-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
-.bk-dows span { text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #a8a6a1; padding-bottom: 6px; }
+.bk-dows span { text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #a8a6a1; padding-bottom: 6px; }
 .bk-cell {
   aspect-ratio: 1 / 1; min-height: 40px; display: grid; place-items: center;
   border-radius: 50%; font: inherit; font-size: 16px; border: 0; background: transparent; color: rgb(255 255 255 / 0.6);
@@ -126,7 +126,7 @@ button.bk-cell[aria-pressed="true"] { background: #fff; border-color: #fff; colo
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px;
   margin: 26px 0 0; padding: 16px 18px; border-radius: 16px; background: rgb(168 166 161 / 0.14);
 }
-.bk-summary .eyebrow { color: rgb(255 255 255 / 0.75); font-size: 13px; }
+.bk-summary .eyebrow { color: rgb(255 255 255 / 0.75); font-size: 14px; }
 .bk-summary strong { font-size: 17px; }
 
 .tf-done { text-align: left; padding: 6px 0; }
