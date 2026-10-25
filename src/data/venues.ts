@@ -27,17 +27,21 @@ export interface Venue {
 
 export const VENUES: Venue[] = [
   {
-    name: "Club Deluxe",
-    aliases: ["The DeLuxe", "The Deluxe", "Deluxe"],
+    name: "The DeLuxe",
+    aliases: ["Club Deluxe", "The Deluxe", "Deluxe"],
     city: "San Francisco",
     street: "1511 Haight St",
     postalCode: "94117",
+    url: "https://thedeluxesf.com/",
+    instagram: "thedeluxesf",
   },
   {
     name: "Low Bar",
     city: "Oakland",
     street: "2300 Webster St",
     postalCode: "94612",
+    url: "https://www.lowbaroakland.com/",
+    instagram: "lowbaroakland",
   },
   {
     name: "Rite Spot Cafe",
@@ -45,13 +49,24 @@ export const VENUES: Venue[] = [
     city: "San Francisco",
     street: "2099 Folsom St",
     postalCode: "94110",
+    url: "https://ritespotcafe.net/",
+  },
+  {
+    name: "The Sound Room",
+    aliases: ["Sound Room"],
+    city: "Oakland",
+    street: "3022 Broadway",
+    postalCode: "94611",
+    url: "https://soundroom.org/",
+    instagram: "thesoundroomoakland",
   },
   {
     name: "Salesforce Park",
     city: "San Francisco",
     street: "425 Mission St",
     postalCode: "94105",
-    url: "https://www.salesforcetransitcenter.com/salesforce-park/",
+    url: "https://www.tjpa.org/salesforce-transit-center/salesforce-park",
+    instagram: "transitcentersf",
   },
   {
     name: "Verdi Club",
@@ -59,6 +74,17 @@ export const VENUES: Venue[] = [
     city: "San Francisco",
     street: "2424 Mariposa St",
     postalCode: "94110",
+    url: "https://www.verdiclub.net/",
+    instagram: "verdiclubsf",
+  },
+  {
+    name: "Dawn Club",
+    aliases: ["The Dawn Club"],
+    city: "San Francisco",
+    street: "10 Annie St",
+    postalCode: "94103",
+    url: "https://www.dawnclub.com/",
+    instagram: "dawnclubsf",
   },
   {
     name: "Ivy Room",
@@ -67,12 +93,23 @@ export const VENUES: Venue[] = [
     street: "860 San Pablo Ave",
     postalCode: "94706",
     url: "https://www.ivyroom.com/",
+    instagram: "ivyroom",
   },
   {
     name: "Broadway Studios",
     city: "San Francisco",
     street: "435 Broadway",
     postalCode: "94133",
+    url: "https://www.broadwaystudios.com/",
+  },
+  {
+    name: "Toot's Tavern",
+    aliases: ["Toots Tavern", "Toots"],
+    city: "Crockett",
+    street: "627 2nd Ave",
+    postalCode: "94525",
+    url: "https://www.tootstavern.com/",
+    instagram: "tootstavern",
   },
   {
     name: "Cigar Bar & Grill",
@@ -80,6 +117,41 @@ export const VENUES: Venue[] = [
     city: "San Francisco",
     street: "850 Montgomery St",
     postalCode: "94133",
+    url: "https://www.cigarbarandgrill.com/",
+    instagram: "cigarbar_sf",
+  },
+  {
+    name: "Notte Divino",
+    aliases: ["Divino", "Osteria Divino"],
+    city: "Sausalito",
+    street: "37 Caledonia St",
+    postalCode: "94965",
+    url: "https://nottedivinosausalito.com/",
+    instagram: "notte.divino",
+  },
+  {
+    name: "Jack London Square",
+    city: "Oakland",
+    street: "472 Water St",
+    postalCode: "94607",
+    url: "https://jacklondonsquare.com/",
+    instagram: "jacklondonsq",
+  },
+  {
+    name: "San Francisco Botanical Garden",
+    aliases: ["Golden Gate", "Flower Piano", "SF Botanical Garden"],
+    city: "San Francisco",
+    street: "1199 9th Ave",
+    postalCode: "94122",
+    url: "https://gggp.org/",
+    instagram: "gardensofgoldengatepark",
+  },
+  {
+    name: "Boom Boom Room",
+    aliases: ["The Boom Boom Room"],
+    city: "San Francisco",
+    url: "https://boomboomroom.com/",
+    instagram: "boomboomroomsf",
   },
   {
     name: "Yoshi's",
@@ -110,12 +182,8 @@ export const VENUES: Venue[] = [
     street: "498 Broadway",
     postalCode: "94133",
   },
-  // Name and city known; street address and website still to confirm.
-  { name: "The Sound Room", aliases: ["Sound Room"], city: "Oakland" },
-  { name: "Dawn Club", aliases: ["The Dawn Club"], city: "San Francisco" },
-  { name: "Toot's Tavern", aliases: ["Toots Tavern", "Toots"], city: "Crockett" },
-  { name: "Jack London Square", city: "Oakland", url: "https://www.jacklondonsquare.com/" },
   { name: "Cat's Corner", aliases: ["Cats Corner"], city: "San Francisco" },
+  // Not listed on purpose: Stanford (private events), Swan Club and Crescent Hotel (unconfirmed).
 ];
 
 const key = (v: string) =>

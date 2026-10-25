@@ -1,0 +1,626 @@
+{
+  "_about": "Venue research for the Shows pages, checked 2026-10-24 against each venue's own website (Google Maps listings were not checked directly). Fields that could not be verified are null; see notes. Instagram handles have no @. tritoneListings = dates on the venue's own events page matching Tritone bands or the Music calendar's acts (Hard Bop Quintet, Franco Nero, Lucky 7, Scott Larson Quartet, Fault Line Trio, Scott Larson, Nick Culp, Angela LaFlamme, David Parker).",
+  "checkedAt": "2026-10-24",
+  "crossReference": [
+    {
+      "issue": "missing-from-music-calendar",
+      "venue": "Dawn Club",
+      "date": "2026-11-03",
+      "title": "Fault Line Trio",
+      "detail": "Listed on dawnclub.com/music, not on the Music calendar."
+    },
+    {
+      "issue": "missing-from-music-calendar",
+      "venue": "Dawn Club",
+      "date": "2026-11-05",
+      "title": "Hard Bop Quintet",
+      "detail": "Listed on dawnclub.com/music, not on the Music calendar."
+    },
+    {
+      "issue": "time-mismatch",
+      "venue": "The Sound Room",
+      "date": "2026-11-20",
+      "title": "Angela LaFlamme",
+      "detail": "Venue says 7:30 PM; the Music calendar entry starts 2026-11-21T00:30Z (4:30 PM Pacific)."
+    },
+    {
+      "issue": "name-variant",
+      "venue": "Salesforce Park",
+      "title": "David Parker",
+      "detail": "Venue lists 'Dave Parker Sextet', fourth Fridays 11:30 AM-1 PM; matches the calendar's monthly 4th-Friday series. Same person assumed, not confirmed."
+    },
+    {
+      "issue": "zip-conflict",
+      "venue": "The DeLuxe",
+      "detail": "Venue site says 94107; Music calendar and The Infatuation say 94117 (the Haight ZIP). Verify before publishing."
+    },
+    {
+      "issue": "not-on-venue-page",
+      "venue": "The DeLuxe",
+      "date": "2026-10-18",
+      "title": "Scott Larson Quartet",
+      "detail": "Venue calendar read only from Oct 21, so not checkable."
+    },
+    {
+      "issue": "not-on-venue-page",
+      "venue": "Verdi Club",
+      "date": "2026-12-16",
+      "title": "Lucky 7",
+      "detail": "Not in the readable part of the venue's events page (more behind 'Load More')."
+    },
+    {
+      "issue": "closed",
+      "venue": "The Uptown Nightclub",
+      "detail": "Permanently closed (2020)."
+    },
+    {
+      "issue": "renamed",
+      "venue": "Notte Divino",
+      "detail": "Osteria Divino closed; Notte Divino opened in the same space July 2026."
+    },
+    {
+      "issue": "renamed",
+      "venue": "The DeLuxe",
+      "detail": "Club Deluxe closed 2023; reopened June 2026 as The DeLuxe."
+    },
+    {
+      "issue": "unidentified",
+      "venue": "Swan Club",
+      "detail": "No Bay Area venue found; ask Scott."
+    },
+    {
+      "issue": "unidentified",
+      "venue": "Crescent Hotel",
+      "detail": "Likely the former Crescent Hotel / Burritt Room, 417 Stockton St, SF (later Mystic Hotel); current status unclear; ask Scott."
+    }
+  ],
+  "venues": [
+    {
+      "name": "The DeLuxe",
+      "aliases": [
+        "Club Deluxe",
+        "The DeLuxe",
+        "Deluxe"
+      ],
+      "website": "https://thedeluxesf.com/",
+      "address": {
+        "streetAddress": "1511 Haight St",
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": "94107"
+      },
+      "instagram": "thedeluxesf",
+      "eventsUrl": "https://thedeluxesf.com/calendar/",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://thedeluxesf.com/",
+        "https://thedeluxesf.com/calendar/",
+        "https://www.theinfatuation.com/san-francisco/reviews/the-deluxe",
+        "https://hoodline.com/2026/06/beloved-haight-jazz-club-roars-back-to-life-as-the-deluxe/"
+      ],
+      "notes": "Club Deluxe closed April 2023; reopened June 2026 as The DeLuxe under new owners (Jay Bordeleau of Mr. Tipple's and Christian Beaulieu). ZIP CONFLICT: the venue site says 94107; The Infatuation and the Music calendar say 94117 (the usual Haight ZIP). Verify before publishing. Calendar read for Oct 21 - Dec 4, 2026: no watch-list names (nearest is 'Hard Bop Quartet' on Nov 25, not Hard Bop Quintet). No iCal feed."
+    },
+    {
+      "name": "Low Bar",
+      "aliases": [
+        "Low Bar Oakland",
+        "Lo Bar"
+      ],
+      "website": "https://www.lowbaroakland.com/",
+      "address": {
+        "streetAddress": "2300 Webster St",
+        "addressLocality": "Oakland",
+        "addressRegion": "CA",
+        "postalCode": "94612"
+      },
+      "instagram": "lowbaroakland",
+      "eventsUrl": "https://www.lowbaroakland.com/event-calendar",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": false,
+      "sources": [
+        "https://lowbaroakland.com",
+        "https://www.lowbaroakland.com/event-calendar",
+        "https://kqed.org/arts/13896221/low-bar-oakland-chicano-cocktail-bar-opening-quesabirria"
+      ],
+      "notes": "Wix site; the event calendar is only an image ('Low Bar September Calendar Website.png'), so listings could not be read and may be out of date. Status inferred from current hours and promotions and a 2025 copyright; not verified on Google Maps."
+    },
+    {
+      "name": "Rite Spot Cafe",
+      "aliases": [
+        "The Rite Spot",
+        "Rite Spot"
+      ],
+      "website": "https://ritespotcafe.net/",
+      "address": {
+        "streetAddress": "2099 Folsom St",
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": "94110"
+      },
+      "instagram": null,
+      "eventsUrl": "https://ritespotcafe.net/calendar.html",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [
+        {
+          "date": "2026-10-09",
+          "title": "Angela LaFlamme",
+          "url": "https://ritespotcafe.net/calendar.html"
+        }
+      ],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://ritespotcafe.net",
+        "https://ritespotcafe.net/calendar.html"
+      ],
+      "notes": "Calendar is a plain HTML month page; currently only October 2026 (the Oct 9 date is past; no November page yet). No Instagram link on the site; no feed. Homepage text is dated (COVID-era) but the calendar is current."
+    },
+    {
+      "name": "The Sound Room",
+      "aliases": [
+        "Sound Room",
+        "Bay Area Jazz & Arts (BAJA)"
+      ],
+      "website": "https://soundroom.org/",
+      "address": {
+        "streetAddress": "3022 Broadway",
+        "addressLocality": "Oakland",
+        "addressRegion": "CA",
+        "postalCode": "94611"
+      },
+      "instagram": "thesoundroomoakland",
+      "eventsUrl": "https://soundroom.org/events",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [
+        {
+          "date": "2026-11-20",
+          "title": "Angela LaFlamme: Wild Women of the Blues (7:30 PM)",
+          "url": "https://soundroom.org/events/angela-laflamme-wild-women-of-the-blues"
+        }
+      ],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://soundroom.org",
+        "https://soundroom.org/events"
+      ],
+      "notes": "Squarespace events list through Jan 2027; each event has its own '?format=ical' and Google Calendar link, but there is no feed for the whole calendar. Older listings give 2147 Broadway (the earlier address); the site now says 3022 Broadway. Run by the nonprofit Bay Area Jazz & Arts."
+    },
+    {
+      "name": "Salesforce Park",
+      "aliases": [
+        "Salesforce Transit Center rooftop park"
+      ],
+      "website": "https://www.tjpa.org/salesforce-transit-center/salesforce-park",
+      "address": {
+        "streetAddress": "425 Mission St",
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": "94105"
+      },
+      "instagram": "transitcentersf",
+      "eventsUrl": "https://www.tjpa.org/salesforce-transit-center/activities",
+      "calendarFeedUrl": "webcal://www.tjpa.org/calendar/ical",
+      "status": "open",
+      "tritoneListings": [
+        {
+          "date": "2026-10-23",
+          "title": "Dave Parker Sextet (11:30 AM-1 PM, Main Plaza)",
+          "url": "https://www.tjpa.org/calendar/ical"
+        },
+        {
+          "date": "2026-11-27",
+          "title": "Dave Parker Sextet (11:30 AM-1 PM, Main Plaza)",
+          "url": "https://www.tjpa.org/calendar/ical"
+        },
+        {
+          "date": "2026-12-25",
+          "title": "Dave Parker Sextet (11:30 AM-1 PM, Main Plaza)",
+          "url": "https://www.tjpa.org/calendar/ical"
+        }
+      ],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://www.tjpa.org/salesforce-transit-center/activities",
+        "https://www.tjpa.org/events/",
+        "https://www.tjpa.org/calendar/ical",
+        "https://www.tjpa.org/salesforce-transit-center/salesforce-park",
+        "https://www.tjpa.org/node/53"
+      ],
+      "notes": "Run by TJPA (salesforcetransitcenter.com redirects to tjpa.org). TJPA gives 425 Mission St with no ZIP; 94105 is from secondary listings and the Music calendar. Activities page: 'Dave Parker Sextet: Fourth Friday, 11:30 a.m.-1 p.m. at Main Plaza'; the iCal feed repeats it through Sep 24, 2027 (Jan-Sep 2027 omitted here). 'Dave Parker' is assumed to be the calendar's David Parker (not confirmed). Only part of the feed was read."
+    },
+    {
+      "name": "Verdi Club",
+      "aliases": [
+        "The Verdi Club"
+      ],
+      "website": "https://www.verdiclub.net/",
+      "address": {
+        "streetAddress": "2424 Mariposa St",
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": "94110"
+      },
+      "instagram": "verdiclubsf",
+      "eventsUrl": "https://www.verdiclub.net/events-calendar/",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://www.verdiclub.net",
+        "https://www.verdiclub.net/events-calendar/"
+      ],
+      "notes": "Events page shows 9 events (Oct 25 - Dec 19, 2026), mostly dance socials, plus 'Load More' (later events not checked). The Music calendar's Lucky 7 date (Dec 15/16, 2026) did not appear in the readable part. No feed."
+    },
+    {
+      "name": "Dawn Club",
+      "aliases": [
+        "The Dawn Club"
+      ],
+      "website": "https://www.dawnclub.com/",
+      "address": {
+        "streetAddress": "10 Annie St",
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": "94103"
+      },
+      "instagram": "dawnclubsf",
+      "eventsUrl": "https://www.dawnclub.com/music",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [
+        {
+          "date": "2026-10-05",
+          "title": "Fault Line Trio (8:00-11:00 PM)",
+          "url": "https://www.dawnclub.com/music/fault-line-trio-2-6n78a-5ahn3-f9mtk-6j3g4-ffwlm-a44l6-82gjh-yj9t8-zea6k-w5ch2-ta6x8-36wkr-ys5kd-fmb6g-ml3rc-p7wjc-9hjmx-rg688-jb6t7"
+        },
+        {
+          "date": "2026-11-03",
+          "title": "Fault Line Trio (8:00-11:00 PM)",
+          "url": "https://www.dawnclub.com/music/fault-line-trio-2-6n78a-5ahn3-f9mtk-6j3g4-ffwlm-a44l6-82gjh-yj9t8-zea6k-w5ch2-ta6x8-36wkr-ys5kd-fmb6g-ml3rc-p7wjc-9hjmx-rg688-jb6t7-456lt"
+        },
+        {
+          "date": "2026-11-05",
+          "title": "Hard Bop Quintet (8:00-11:59 PM)",
+          "url": "https://www.dawnclub.com/music/hard-bop-quintet-1-8wayg-z74k5-b44xz-f4pay-x4b3g-y6l6j-aab82-ajgzf-5s7g7-8f3yn-8nb4m-gbrzc"
+        }
+      ],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://www.dawnclub.com",
+        "https://www.dawnclub.com/music"
+      ],
+      "notes": "Homepage: '10 Annie St at Market St (beside The Palace Hotel), San Francisco, CA 94103'. Squarespace /music lists Sep 23 - Dec 17, 2026; each event has its own '?format=ical' and Google Calendar link, but there is no feed for the whole calendar."
+    },
+    {
+      "name": "Ivy Room",
+      "aliases": [],
+      "website": "https://www.ivyroom.com/",
+      "address": {
+        "streetAddress": "860 San Pablo Avenue",
+        "addressLocality": "Albany",
+        "addressRegion": "CA",
+        "postalCode": "94706"
+      },
+      "instagram": "ivyroom",
+      "eventsUrl": "https://www.ivyroom.com/",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://www.ivyroom.com/",
+        "https://www.venuepilot.co/graphql (publicEvents, accountIds [992], startDate 2026-10-24)"
+      ],
+      "notes": "Shows are a JavaScript VenuePilot widget (account 992) on the homepage; read via VenuePilot's public GraphQL API: 51 upcoming events Oct 24, 2026 - Apr 24, 2027, no Tritone names. No iCal feed. Address and Instagram are linked on the venue's own site."
+    },
+    {
+      "name": "Broadway Studios",
+      "aliases": [
+        "On Broadway Theatre at Mabuhay Gardens",
+        "The Mab (sister venue, 443 Broadway)"
+      ],
+      "website": "https://www.broadwaystudios.com/",
+      "address": {
+        "streetAddress": "435 Broadway",
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": "94133"
+      },
+      "instagram": null,
+      "eventsUrl": "https://themab.org/events/",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [
+        {
+          "date": "2026-10-21",
+          "title": "Cat's Corner: Angela Laflamme & Her Swingin' All-Stars (past)",
+          "url": "https://themab.org/events/2026-10-21-cats-corner/"
+        },
+        {
+          "date": "2026-08-05",
+          "title": "Cat's Corner: Angela LaFlamme & Her Swing All-Stars (past)",
+          "url": "https://themab.org/events/2026-08-05-cats-corner/"
+        }
+      ],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://www.broadwaystudios.com/",
+        "https://themab.org/",
+        "https://themab.org/events/",
+        "https://themab.org/events/?view=all&q=Laflamme"
+      ],
+      "notes": "broadwaystudios.com is a private-event rental site; its 'Tickets & Box Office' link goes to themab.org, which publishes the public calendar for On Broadway Theatre (435 Broadway) and The Mab (443 Broadway). ZIP from themab.org schema.org data. No Instagram linked from Broadway Studios (The Mab's is @fabmabsf, the sister venue). The Music calendar has Angela LaFlamme here on Oct 22 (UTC), i.e. the venue's Oct 21 evening. No feed."
+    },
+    {
+      "name": "Toot's Tavern",
+      "aliases": [
+        "Toots Tavern"
+      ],
+      "website": "https://www.tootstavern.com/",
+      "address": {
+        "streetAddress": "627 2nd Ave",
+        "addressLocality": "Crockett",
+        "addressRegion": "CA",
+        "postalCode": "94525"
+      },
+      "instagram": "tootstavern",
+      "eventsUrl": "https://www.tootstavern.com/new-events",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://www.tootstavern.com/",
+        "https://www.tootstavern.com/locations",
+        "https://www.tootstavern.com/new-events",
+        "https://www.tootstavern.com/new-events?format=json",
+        "https://www.sfstation.com/toots-tavern-b39001826"
+      ],
+      "notes": "Homepage says 'NOW OPEN DAILY'; address from the Locations page. Events page is stale (latest entry early July 2022), so it is no guide to current bookings. Per-event ICS links only."
+    },
+    {
+      "name": "Cigar Bar & Grill",
+      "aliases": [
+        "The Cigar Bar & Grill",
+        "Cigar Bar"
+      ],
+      "website": "https://www.cigarbarandgrill.com/",
+      "address": {
+        "streetAddress": "850 Montgomery St",
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": "94133"
+      },
+      "instagram": "cigarbar_sf",
+      "eventsUrl": "https://www.cigarbarandgrill.com/index.php/entertainment",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://www.cigarbarandgrill.com/",
+        "https://www.cigarbarandgrill.com/index.php/entertainment"
+      ],
+      "notes": "HTML entertainment calendar Oct 24 - Nov 29, 2026 (42 entries): salsa/bachata, DJs, no jazz, no matches. No feed."
+    },
+    {
+      "name": "Notte Divino",
+      "aliases": [
+        "Osteria Divino",
+        "Notte Di Vino",
+        "Divino",
+        "Devino",
+        "Divinos"
+      ],
+      "website": "https://nottedivinosausalito.com/",
+      "address": {
+        "streetAddress": "37 Caledonia Street",
+        "addressLocality": "Sausalito",
+        "addressRegion": "CA",
+        "postalCode": "94965"
+      },
+      "instagram": "notte.divino",
+      "eventsUrl": null,
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": false,
+      "sources": [
+        "https://www.sausalito.org/list/member/notte-divino-1803",
+        "https://www.sausalito.org/events/details/notte-divino-grand-opening-8638",
+        "https://whatnow.com/?p=416688",
+        "https://www.opentable.com/r/notte-divino-sausalito",
+        "https://www.yelp.com/biz/notte-divino-sausalito-3"
+      ],
+      "notes": "Osteria Divino closed; Notte Divino (new owners) opened in the same space, ribbon-cutting Jul 24, 2026. Its website returns a Cloudflare 403 to automated fetches, so website, address and Instagram come from the Sausalito Chamber member listing, not the venue's own site; events page and listings unverified. Secondary sources say live jazz Fri/Sat. Do not confuse with nottedivino.com (unrelated Texas business)."
+    },
+    {
+      "name": "Stanford University",
+      "aliases": [
+        "Franco Nero Holiday Party venue (private event)"
+      ],
+      "website": "https://www.stanford.edu/",
+      "address": {
+        "streetAddress": "450 Jane Stanford Way",
+        "addressLocality": "Stanford",
+        "addressRegion": "CA",
+        "postalCode": "94305"
+      },
+      "instagram": "stanford",
+      "eventsUrl": null,
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": false,
+      "sources": [
+        "https://www.stanford.edu/",
+        "https://urbanstudies.stanford.edu/about/directions",
+        "https://cesta.stanford.edu/about/contact-us"
+      ],
+      "notes": "Private event (Franco Nero Holiday Party, Dec 18, 2026): not a public show; eventsUrl deliberately null. 450 Jane Stanford Way is the main campus address; the specific building is unknown."
+    },
+    {
+      "name": "Jack London Square",
+      "aliases": [
+        "Jack London Sq"
+      ],
+      "website": "https://jacklondonsquare.com/",
+      "address": {
+        "streetAddress": "472 Water Street",
+        "addressLocality": "Oakland",
+        "addressRegion": "CA",
+        "postalCode": "94607"
+      },
+      "instagram": "jacklondonsq",
+      "eventsUrl": "https://jacklondonsquare.com/events",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://jacklondonsquare.com/",
+        "https://jacklondonsquare.com/events/",
+        "https://api.mallmaverick.com/properties/805/",
+        "https://api.mallmaverick.com/properties/805/events",
+        "https://www.portofoakland.com/jack-london-square-presents-live-music-with-celebrated-performers"
+      ],
+      "notes": "JavaScript site (CIM Group); address and Instagram from its own data API (Mall Maverick property 805). /events shows five non-music entries; the free Friday summer music series has ended. No matches, no feed."
+    },
+    {
+      "name": "San Francisco Botanical Garden (Flower Piano)",
+      "aliases": [
+        "Golden Gate",
+        "Flower Piano",
+        "SF Botanical Garden",
+        "Gardens of Golden Gate Park"
+      ],
+      "website": "https://gggp.org/",
+      "address": {
+        "streetAddress": "1199 9th Avenue",
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": "94122"
+      },
+      "instagram": "gardensofgoldengatepark",
+      "eventsUrl": "https://gggp.org/flower-piano",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://gggp.org/flower-piano",
+        "https://gggp.org/flowerpiano",
+        "https://gggp.org/visit/getting-here/",
+        "https://gggp.org/events-calendar/"
+      ],
+      "notes": "sfbg.org/flower-piano now redirects (302) to gggp.org/flower-piano. Flower Piano's 11th year ran Sep 10-20, 2026 (11 days, 12 pianos, with Sunset Piano). No performer lineup published, so the Sep 2026 calendar date cannot be cross-checked. Address from the Getting Here page. No iCal/ICS link found on the events calendar (fetch was truncated). Instagram linked from the site; it is the parent nonprofit (Gardens of Golden Gate Park)."
+    },
+    {
+      "name": "Swan Club",
+      "aliases": [],
+      "website": null,
+      "address": {
+        "streetAddress": null,
+        "addressLocality": null,
+        "addressRegion": null,
+        "postalCode": null
+      },
+      "instagram": null,
+      "eventsUrl": null,
+      "calendarFeedUrl": null,
+      "status": "unclear",
+      "tritoneListings": [],
+      "eventsPageReadable": false,
+      "sources": [],
+      "notes": "No Bay Area venue named 'Swan Club' found in web searches (SF, Oakland, Berkeley, San Jose, Alameda). Unverified candidates: (a) Lyon & Swan, a restaurant at 124 Columbus Ave, SF, with jazz trios in 2022 (aggregator listings); (b) Stork Club, 2330 Telegraph Ave, Oakland (similar name, likely not it). Ask Scott; all fields null."
+    },
+    {
+      "name": "Boom Boom Room",
+      "aliases": [
+        "BoomBoomRoom",
+        "Boom Boom Room SF"
+      ],
+      "website": "https://boomboomroom.com/",
+      "address": {
+        "streetAddress": null,
+        "addressLocality": "San Francisco",
+        "addressRegion": "CA",
+        "postalCode": null
+      },
+      "instagram": "boomboomroomsf",
+      "eventsUrl": "https://boomboomroom.com/events/",
+      "calendarFeedUrl": null,
+      "status": "open",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://boomboomroom.com/",
+        "https://boomboomroom.com/events/",
+        "https://newfillmore.com/?p=11554"
+      ],
+      "notes": "Open: events page lists shows Oct 24 - Nov 23, 2026 (tickets via Etix). An undated New Fillmore article reported financial trouble or closure at some point, but the live calendar is active. Street address not shown on the venue's own site (/contact/ is a 404), so streetAddress and postalCode are null; 1601 Fillmore St (from the Music calendar) is unconfirmed from the venue. No iCal feed."
+    },
+    {
+      "name": "Crescent Hotel",
+      "aliases": [
+        "Burritt Room",
+        "Burritt Room + Tavern",
+        "Mystic Hotel by Charlie Palmer"
+      ],
+      "website": null,
+      "address": {
+        "streetAddress": null,
+        "addressLocality": null,
+        "addressRegion": null,
+        "postalCode": null
+      },
+      "instagram": null,
+      "eventsUrl": null,
+      "calendarFeedUrl": null,
+      "status": "unclear",
+      "tritoneListings": [],
+      "eventsPageReadable": false,
+      "sources": [
+        "https://www.crescentsf.com/",
+        "https://www.mystichotel.com/",
+        "https://www.7x7.com/burritt-room-great-cocktails-great-show-lineup-1779560711.html",
+        "https://www.hotel-online.com/News/PR2010_3rd/Jul10_CrescentSF.html",
+        "https://guide.michelin.com/vn/en/hotels-stays/san-francisco-bay-area/mystic-hotel-8157"
+      ],
+      "notes": "Only Bay Area match: the former Crescent Hotel, 417 Stockton St, SF; its bar was the Burritt Room (live music ~2010-11), later rebranded Mystic Hotel by Charlie Palmer (Burritt Room + Tavern, live jazz). Official sites are dead (crescentsf.com redirects to an unrelated site, mystichotel.com parked, burrittroom.com does not resolve); one aggregator names the address 'Palihotel San Francisco'. Current operator/status not established; all fields null. Confirm with Scott."
+    },
+    {
+      "name": "The Uptown Nightclub",
+      "aliases": [
+        "The UpTown",
+        "Uptown Nightclub",
+        "The Uptown Oakland"
+      ],
+      "website": "https://www.uptownnightclub.com/",
+      "address": {
+        "streetAddress": "1928 Telegraph Ave",
+        "addressLocality": "Oakland",
+        "addressRegion": "CA",
+        "postalCode": "94612"
+      },
+      "instagram": "uptownnightclub",
+      "eventsUrl": null,
+      "calendarFeedUrl": null,
+      "status": "permanently closed",
+      "tritoneListings": [],
+      "eventsPageReadable": true,
+      "sources": [
+        "https://www.uptownnightclub.com/",
+        "https://riffmagazine.com/news/the-uptown-nightclub-oakland-closes"
+      ],
+      "notes": "Own site carries a permanent-closure notice ('will not be reopening'); last listing 'goodbye and thank you', Sep 4, 2020. Riff Magazine (Sep 5, 2020) confirms the COVID closure. No sign of reopening. Any Tritone gig there is historical (2012-2013 on the calendar)."
+    }
+  ]
+}
