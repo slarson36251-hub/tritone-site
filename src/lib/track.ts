@@ -76,13 +76,37 @@ const isAny = (host: string, list: string[]) => list.some((d) => matches(host, d
 
 const clip = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 
+/**
+ * Hosts that must never be recorded: the studio's own NAS / DDNS names (file-upload links in
+ * src/lib/upload.ts point at them), anything naming the studio, raw IPs and local machines.
+ * A referrer from one becomes "" (direct) and an outbound click to one is labelled "file upload".
+ */
+export function isPrivateHost(host: string): boolean {
+  const h = String(host || "").toLowerCase().replace(/\.$/, "");
+  if (!h) return false;
+  if (/hummingbird/.test(h)) return true;
+  if (/^(localhost|[a-z0-9-]+\.(local|lan|home|internal))$/.test(h)) return true;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h) || /^\[?[0-9a-f:]*:[0-9a-f:]*\]?$/.test(h)) return true;
+  if (/(^|\.)ddns\./.test(h) || /^ddns\b/.test(h)) return true;
+  return /(^|\.)(synology\.me|quickconnect\.to|myds\.me|synology\.com|dscloud\.me|dsmynas\.com|familyds\.com|diskstation\.me|i234\.me|ddns\.net|dyndns\.org|duckdns\.org|no-ip\.(com|org|biz)|noip\.com|hopto\.org|zapto\.org|sytes\.net|servebeer\.com|myqnapcloud\.com|mynetgear\.com)$/.test(h);
+}
+
+/** True when a referrer host is this site itself (a reload or a new tab from an in-site link is not a new visit). */
+export function isInternalReferrer(host: string, ownHost: string): boolean {
+  const h = String(host || "").toLowerCase().replace(/^www\./, "");
+  if (!h) return false;
+  const own = String(ownHost || "").toLowerCase().replace(/^www\./, "");
+  return h === own || SITE_HOSTS.includes(h) || SITE_HOSTS.includes("www." + h);
+}
+
 /** The referrer's hostname, lower case, without "www."; "" when missing or unparseable. */
 export function referrerHost(referrerUrl: string): string {
   if (!referrerUrl) return "";
   try {
     const u = new URL(referrerUrl);
     if (u.protocol !== "http:" && u.protocol !== "https:" && u.protocol !== "android-app:") return "";
-    return u.hostname.toLowerCase().replace(/^www\./, "").replace(/\.$/, "");
+    const h = u.hostname.toLowerCase().replace(/^www\./, "").replace(/\.$/, "");
+    return isPrivateHost(h) ? "" : h;
   } catch {
     return "";
   }
@@ -126,8 +150,7 @@ export function classifySource(referrerUrl: string, locationSearch: string, ownH
 
   const own = String(ownHost || "").toLowerCase().replace(/^www\./, "");
   let ref = referrerHost(referrerUrl);
-  const internal = ref !== "" && (ref === own || SITE_HOSTS.includes(ref) || SITE_HOSTS.includes("www." + ref));
-  if (internal) ref = "";
+  if (isInternalReferrer(ref, own)) ref = "";
   ref = ref.slice(0, LIMITS.ref);
 
   if (us || um || uc) {
@@ -159,7 +182,8 @@ export function deviceOf(width: number): "m" | "t" | "d" {
 /** Likely a bot, crawler, preview fetcher or automation tool. */
 export function isLikelyBot(ua: string, webdriver = false): boolean {
   if (webdriver) return true;
-  return /bot\b|bot\/|crawl|spider|slurp|mediapartners|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptime|preview|facebookexternalhit|embedly|quora link|whatsapp|telegram|discord|phantom|puppeteer|playwright|selenium|cypress|python-requests|curl\/|wget/i.test(
+  // "bot" only as a word or a product token (Googlebot/2.1, bingbot/2.0), so a Cubot phone is not a bot.
+  return /(^|[^a-z])bot\b|bot\/|crawl|spider|slurp|mediapartners|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptime|preview|facebookexternalhit|embedly|quora link|whatsapp|telegram|discord|phantom|puppeteer|playwright|selenium|cypress|python-requests|curl\/|wget/i.test(
     ua || "",
   );
 }
@@ -256,9 +280,7 @@ export function classifyLink(href: string, pagePath: string, ownHost: string): {
   if (u.protocol === "tel:" || u.protocol === "sms:") return [{ ev: "contact_click", lbl: "phone" }];
   if (u.protocol !== "http:" && u.protocol !== "https:") return [];
   const host = u.hostname.toLowerCase().replace(/^www\./, "");
-  const own = String(ownHost || "").toLowerCase().replace(/^www\./, "");
-  const internal = host === own || SITE_HOSTS.includes(u.hostname.toLowerCase());
-  if (internal) {
+  if (isInternalReferrer(host, ownHost)) {
     const ics = u.pathname.match(/^\/shows\/([^/]+)\.ics$/);
     if (ics) return [{ ev: "calendar_add", lbl: ics[1] }];
     const show = u.pathname.match(/^\/shows\/([^/.]+)$/);
@@ -268,6 +290,8 @@ export function classifyLink(href: string, pagePath: string, ownHost: string): {
     return [];
   }
   if (host === "calendar.google.com" || (host === "google.com" && u.pathname.startsWith("/calendar"))) return [{ ev: "calendar_add", lbl: "google" }];
+  // The studio's file-upload link: count the click, never the host.
+  if (isPrivateHost(host)) return [{ ev: "outbound", lbl: "file upload" }];
   return [{ ev: "outbound", lbl: host.slice(0, LIMITS.lbl) }];
 }
 
@@ -308,7 +332,6 @@ function enabled(): boolean {
     if (!key || !hostTracked(location.hostname, devDebug)) return false;
     if (isLikelyBot(navigator.userAgent, Boolean(navigator.webdriver))) return false;
     if (storageFlag(SELF_FLAG) === "1") return false;
-    if ((document as Document & { prerendering?: boolean }).prerendering) return false;
     on = true;
   } catch {
     on = false;
@@ -365,8 +388,28 @@ export function track(ev: EventName, lbl = "") {
   send("ev", ev, lbl);
 }
 
+/** A reload, back/forward, or a new tab opened from an in-site link continues a visit rather than starting one. */
+export function isContinuation(referrerUrl: string, ownHost: string, navigationType: string): boolean {
+  if (navigationType === "reload" || navigationType === "back_forward") return true;
+  return isInternalReferrer(referrerHost(referrerUrl), ownHost);
+}
+
+function navigationType(): string {
+  try {
+    const e = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    return e?.type ?? "";
+  } catch {
+    return "";
+  }
+}
+
 function pageView() {
-  const first = !landingSent;
+  let first = !landingSent;
+  if (first) {
+    try {
+      if (isContinuation(document.referrer, location.hostname, navigationType())) first = false;
+    } catch {}
+  }
   landingSent = true;
   send("pv", "", "", first);
 }
@@ -436,6 +479,12 @@ export function initTracker() {
   try {
     const w = window as Window & { __tritoneTrack?: boolean };
     if (w.__tritoneTrack) return;
+    // A prerendered page (Chrome speculation rules) counts only once it is actually shown.
+    const doc = document as Document & { prerendering?: boolean };
+    if (doc.prerendering) {
+      document.addEventListener("prerenderingchange", () => initTracker(), { once: true });
+      return;
+    }
     w.__tritoneTrack = true;
     if (!enabled()) return;
     ensureVisit();

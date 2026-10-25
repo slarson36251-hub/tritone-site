@@ -51,6 +51,12 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow update, delete: if false;
     }
+    // Weekly digests, written only by the service account (scripts/analytics-digest.mjs via
+    // .github/workflows/analytics-digest.yml) and shown on /admin. Clients can never write.
+    match /digests/{week} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
     match /{document=**} {
       allow read, write: if false;
     }

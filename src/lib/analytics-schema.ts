@@ -55,7 +55,9 @@ export interface Hit {
   t: string; // ISO time; written as Firestore timestampValue = server request.time
   sid: string; // random id for this visit (memory only, no cookie / storage), <= 16
   path: string; // page path, no query string, <= 200
-  first: boolean; // true on the landing page view of a visit
+  first: boolean; // true on the landing page view of a visit. False on a reload, back/forward, or a new tab
+  //                  opened from an in-site link: those continue a visit. The digest counts a visit only for a
+  //                  sid with a first:true page view and reports the others as "continued".
   src: Source;
   ref: string; // referrer hostname only ("" if none), <= 100
   us: string; // utm_source <= 80
