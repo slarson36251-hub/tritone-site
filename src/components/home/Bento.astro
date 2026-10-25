@@ -1,0 +1,110 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import studioPhoto from "../../assets/photos/fault-line-trio-piano-mics-feb-2026-hummingbird-hut-oakland.jpg";
+import gearPhoto from "../../assets/photos/fault-line-trio-mix-maag-trident-hummingbird-hut-oakland.jpg";
+import levis from "../../assets/photos/jason-levis-session-aug-2026-hummingbird-hut-oakland.jpg";
+import clint from "../../assets/photos/clint-baker-band-session-may-2026-hummingbird-hut-oakland.jpg";
+import jay from "../../assets/photos/fault-line-trio-jay-sanders-piano-feb-2026-hummingbird-hut-oakland.jpg";
+import { bookHref } from "../../lib/nav";
+
+const [release] = await getCollection("releases", ({ data }) => data.featured);
+const bands = (await getCollection("bands")).sort((a, b) => a.data.order - b.data.order);
+const recent = [
+  { img: levis, name: "Jason Levis", what: "Joseph's Bones", when: "Aug 2026", id: "levis" },
+  { img: clint, name: "Clint Baker", what: "Bands of 2 to 5", when: "May 2026", id: "clint" },
+  { img: jay, name: "Fault Line Trio", what: "Piano overdubs", when: "Feb 2026", id: "faultline" },
+];
+---
+<section class="wrap py-12 md:py-20">
+  <div class="grid auto-rows-[minmax(150px,auto)] grid-cols-1 gap-4 md:grid-cols-6 md:gap-5">
+
+    {release && (
+      <article class="tile reveal flex flex-col justify-between gap-8 p-6 md:col-span-4 md:row-span-2 md:p-9">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="eyebrow m-0 text-stone">Fresh from the Hut</p>
+            <h2 class="disp mb-0 mt-2 text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]">{release.data.artist}</h2>
+          </div>
+          <button type="button" data-play={`https://open.spotify.com/embed/artist/6totQHGBvwYsowo9jUIndk?utm_source=generator&theme=0`} data-play-title={`${release.data.artist} · Spotify`}
+            class="flex min-h-12 cursor-pointer items-center gap-3 rounded-full bg-white px-6 font-semibold uppercase tracking-[.04em] text-black transition-transform hover:scale-[1.03]">
+            <svg width="12" height="14" viewBox="0 0 16 18" aria-hidden="true"><path d="M0 0l16 9-16 9z" fill="currentColor"/></svg>
+            Play
+          </button>
+        </div>
+        <ol class="m-0 list-none p-0">
+          {release.data.tracks.map((t, i) => (
+            <li class="rule flex items-baseline gap-4 border-t py-3.5">
+              <span class="w-6 text-sm tabular-nums text-stone">{String(i + 1).padStart(2, "0")}</span>
+              <strong class="flex-1 text-[19px]">{t.title}</strong>
+              <span class="text-sm text-stone">{t.note}</span>
+            </li>
+          ))}
+        </ol>
+        <p class="m-0 max-w-[62ch] text-[15px] text-white/80">{release.data.credits}</p>
+      </article>
+    )}
+
+    <a href="/hummingbird-hut" class="tile reveal group min-h-[320px] md:col-span-2 md:row-span-2">
+      <Image src={studioPhoto} alt="Grand piano with condenser mics at the Hummingbird Hut, Oakland, CA" widths={[480, 720]} sizes="(min-width: 761px) 30vw, 100vw" class="tile-img absolute inset-0 h-full w-full object-cover" />
+      <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/0"></div>
+      <div class="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-6">
+        <p class="eyebrow m-0 text-stone">The studio</p>
+        <h3 class="disp m-0 text-3xl">Hummingbird Hut</h3>
+        <p class="m-0 text-[15px] text-white/85">Real room, ribbon and condenser pairs, tube preamps. Tracking, overdubs, mixing, mastering.</p>
+        <span class="mt-1 font-semibold">Tour the studio →</span>
+      </div>
+    </a>
+
+    <div class="tile reveal flex flex-col gap-5 p-6 md:col-span-3 md:p-8">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <p class="eyebrow m-0 text-stone">Session log</p>
+          <h3 class="disp mb-0 mt-2 text-3xl">Latest at the Hut</h3>
+        </div>
+        <a href="/sessions" class="shrink-0 whitespace-nowrap font-semibold">All sessions →</a>
+      </div>
+      <ul class="m-0 grid list-none grid-cols-3 gap-3 p-0">
+        {recent.map((s) => (
+          <li>
+            <a href={`/sessions#${s.id}`} class="group flex flex-col gap-2 no-underline">
+              <span class="block overflow-hidden rounded-xl">
+                <Image src={s.img} alt={`${s.name} session at the Hummingbird Hut, Oakland, CA`} widths={[240, 400]} sizes="(min-width: 761px) 14vw, 30vw" class="tile-img aspect-3/4 h-auto w-full object-cover group-hover:scale-105" />
+              </span>
+              <span class="text-sm font-semibold leading-tight">{s.name}</span>
+              <span class="-mt-1.5 text-xs text-stone">{s.when}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <a href="/bands" class="tile reveal group flex flex-col justify-between gap-6 p-6 md:col-span-3 md:p-8">
+      <div>
+        <p class="eyebrow m-0 text-stone">On stage</p>
+        <h3 class="disp mb-0 mt-2 text-3xl">The Bands</h3>
+      </div>
+      <ul class="m-0 flex list-none flex-col p-0">
+        {bands.map((b) => (
+          <li class="rule flex items-center justify-between border-t py-2.5 text-lg font-semibold">
+            {b.data.name}<span class="text-stone transition-transform group-hover:translate-x-1">→</span>
+          </li>
+        ))}
+      </ul>
+      <p class="m-0 text-[15px] text-white/80">Hard bop, boogaloo, afro-cuban and down-home blues for clubs, parties and festivals.</p>
+    </a>
+
+    <a href={bookHref} class="tile reveal group flex min-h-[220px] flex-col justify-between gap-6 !border-stone !bg-stone p-6 text-black md:col-span-4 md:p-8">
+      <p class="eyebrow m-0">Hummingbird Hut · Oakland, CA</p>
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <h3 class="disp m-0 text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]">Book the Hut</h3>
+        <span class="grid size-14 place-items-center rounded-full bg-black text-2xl text-white transition-transform group-hover:rotate-[-45deg]">→</span>
+      </div>
+    </a>
+
+    <div class="tile reveal min-h-[220px] md:col-span-2">
+      <Image src={gearPhoto} alt="Maag and Trident EQs in the Hummingbird Hut rack" widths={[400, 640]} sizes="(min-width: 761px) 30vw, 100vw" class="tile-img absolute inset-0 h-full w-full object-cover" />
+      <p class="absolute bottom-3 left-3 m-0 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">The rack: Maag · Trident</p>
+    </div>
+  </div>
+</section>

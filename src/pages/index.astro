@@ -1,8 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
 import Hero from "../components/home/Hero.astro";
-import FeaturedRelease from "../components/home/FeaturedRelease.astro";
-import PathCards from "../components/home/PathCards.astro";
+import Marquee from "../components/home/Marquee.astro";
+import Bento from "../components/home/Bento.astro";
 import NextUp from "../components/home/NextUp.astro";
 
 // Organization schema: city and region only. Never a street address or geo coordinates.
@@ -22,7 +22,7 @@ const org = {
 >
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(org)} />
   <Hero />
-  <FeaturedRelease />
-  <PathCards />
+  <Marquee />
+  <Bento />
   <NextUp />
 </Base>

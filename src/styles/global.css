@@ -11,6 +11,8 @@
 
   --font-display: "Archivo Black", "Arial Black", Impact, sans-serif;
   --font-body: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
@@ -21,8 +23,12 @@
     font-size: 17px;
     line-height: 1.55;
     color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 88px;
   }
   a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--color-white); outline-offset: 3px; border-radius: 4px; }
+  ::selection { background: var(--color-stone); color: var(--color-black); }
 }
 
 @layer components {
@@ -40,7 +46,7 @@
     font-size: 13px;
   }
   .wrap {
-    max-width: 1200px;
+    max-width: 1280px;
     margin-inline: auto;
     padding-inline: max(16px, env(safe-area-inset-left, 0px));
   }
@@ -48,4 +54,52 @@
     .wrap { padding-inline: 40px; }
   }
   .rule { border-color: rgb(168 166 161 / 0.6); }
+
+  /* Bento tile: hairline stone border, soft stone wash, lifts on hover. */
+  .tile {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px solid rgb(168 166 161 / 0.28);
+    background: rgb(168 166 161 / 0.07);
+    transition: border-color 0.3s var(--ease-out-quint), transform 0.5s var(--ease-out-quint);
+  }
+  a.tile:hover { border-color: rgb(168 166 161 / 0.7); }
+  .tile-img { transition: transform 0.9s var(--ease-out-quint); }
+  a.tile:hover .tile-img { transform: scale(1.04); }
+
+  /* Scroll-driven reveal, pure CSS. Browsers without support just show content. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal {
+        animation: reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 22%;
+      }
+    }
+  }
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(28px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* Endless band-name marquee. */
+  .marquee { display: flex; width: max-content; animation: marquee 48s linear infinite; }
+  .marquee:hover { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+
+  .outline-type {
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgb(168 166 161 / 0.9);
+  }
+}
+
+/* Cross-page transitions: quick fade/slide for the page, morphs for named elements. */
+::view-transition-old(root) { animation: 180ms var(--ease-out-quint) both vt-out; }
+::view-transition-new(root) { animation: 320ms var(--ease-out-quint) both vt-in; }
+@keyframes vt-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

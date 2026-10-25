@@ -1,13 +1,16 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import PlayerDock from "../components/PlayerDock.astro";
 
 interface Props {
   title: string;
   description: string;
+  image?: string;
 }
-const { title, description } = Astro.props;
+const { title, description, image } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 <!doctype html>
@@ -22,16 +25,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Tritone Productions" />
+    {image && <meta property="og:image" content={new URL(image, Astro.site)} />}
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#38383B" />
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <ClientRouter fallback="swap" />
     <slot name="head" />
   </head>
   <body class="m-0 min-h-dvh bg-charcoal text-white antialiased">
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-black">Skip to content</a>
     <Header />
-    <main><slot /></main>
+    <main id="main"><slot /></main>
     <Footer />
+    <PlayerDock />
   </body>
 </html>

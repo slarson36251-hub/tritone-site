@@ -6,33 +6,48 @@ import { nav, bookHref } from "../lib/nav";
 
 const path = Astro.url.pathname;
 ---
-<header class="sticky top-0 z-20 border-b border-stone/40 bg-charcoal">
-  <div class="wrap flex items-center justify-between gap-6 py-4">
+<header class="sticky top-0 z-30 border-b border-stone/25 bg-charcoal/80 backdrop-blur-xl backdrop-saturate-150" transition:persist="site-header">
+  <div class="wrap flex items-center justify-between gap-6 py-3">
     <a href="/" class="shrink-0" aria-label="Tritone Productions, home">
-      <Image src={logo} alt="Tritone Productions" class="h-12 w-auto md:h-16" widths={[240, 480]} sizes="160px" loading="eager" />
+      <Image src={logo} alt="Tritone Productions" class="h-11 w-auto md:h-14" widths={[240, 480]} sizes="160px" loading="eager" />
     </a>
 
-    <nav class="hidden items-center gap-7 lg:flex" aria-label="Main">
+    <nav class="hidden items-center gap-1 lg:flex" aria-label="Main">
       {nav.map((item) => (
         <a
           href={item.href}
-          class:list={["font-semibold no-underline hover:underline", path.startsWith(item.href) && "underline underline-offset-4"]}
+          data-nav={item.href}
+          class:list={[
+            "rounded-full px-4 py-2 font-semibold no-underline transition-colors hover:bg-stone/15",
+            path.startsWith(item.href) && "bg-stone/20",
+          ]}
         >{item.label}</a>
       ))}
-      <Pill href={bookHref}>Book the Hut</Pill>
+      <span class="ml-3"><Pill href={bookHref}>Book the Hut</Pill></span>
     </nav>
 
-    <details class="group lg:hidden">
+    <details class="group lg:hidden" id="mnav">
       <summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 font-semibold uppercase tracking-[.04em] [&::-webkit-details-marker]:hidden">
         <span class="group-open:hidden">Menu</span><span class="hidden group-open:inline">Close</span>
         <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M2 6h18M2 11h18M2 16h18" stroke="currentColor" stroke-width="2"/></svg>
       </summary>
-      <nav class="absolute inset-x-0 top-full flex flex-col gap-1 border-b border-stone/40 bg-charcoal px-4 pb-6 pt-2" aria-label="Main">
+      <nav class="absolute inset-x-0 top-full flex h-[calc(100dvh-100%)] flex-col gap-1 bg-charcoal px-4 pb-10 pt-4" aria-label="Main">
         {nav.map((item) => (
-          <a href={item.href} class="border-b border-stone/30 py-3 text-lg font-semibold no-underline">{item.label}</a>
+          <a href={item.href} class="disp border-b border-stone/30 py-4 text-3xl no-underline">{item.label}</a>
         ))}
-        <div class="pt-4"><Pill href={bookHref}>Book the Hut</Pill></div>
+        <div class="pt-6"><Pill href={bookHref}>Book the Hut</Pill></div>
       </nav>
     </details>
   </div>
 </header>
+
+<script>
+  // The header persists across page swaps, so update the active link and close the menu ourselves.
+  document.addEventListener("astro:after-swap", () => {
+    const path = location.pathname;
+    document.querySelectorAll<HTMLAnchorElement>("[data-nav]").forEach((a) => {
+      a.classList.toggle("bg-stone/20", path.startsWith(a.dataset.nav!));
+    });
+    document.getElementById("mnav")?.removeAttribute("open");
+  });
+</script>
