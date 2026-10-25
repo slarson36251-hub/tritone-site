@@ -12,13 +12,13 @@ const path = Astro.url.pathname;
       <Image src={logo} alt="Tritone Productions" class="h-11 w-auto md:h-14" widths={[240, 480]} sizes="160px" loading="eager" />
     </a>
 
-    <nav class="hidden items-center gap-1 lg:flex" aria-label="Main">
+    <nav class="hidden items-center gap-1 xl:flex" aria-label="Main">
       {nav.map((item) => (
         <a
           href={item.href}
           data-nav={item.href}
           class:list={[
-            "rounded-full px-4 py-2 font-semibold no-underline transition-colors hover:bg-stone/15",
+            "whitespace-nowrap rounded-full px-3.5 py-2 font-semibold no-underline transition-colors hover:bg-stone/15",
             path.startsWith(item.href) && "bg-stone/20",
           ]}
         >{item.label}</a>
@@ -26,7 +26,7 @@ const path = Astro.url.pathname;
       <span class="ml-3"><Pill href={bookHref}>Book the Hut</Pill></span>
     </nav>
 
-    <details class="group lg:hidden" id="mnav">
+    <details class="group xl:hidden" id="mnav">
       <summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 font-semibold uppercase tracking-[.04em] [&::-webkit-details-marker]:hidden">
         <span class="group-open:hidden">Menu</span><span class="hidden group-open:inline">Close</span>
         <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M2 6h18M2 11h18M2 16h18" stroke="currentColor" stroke-width="2"/></svg>
