@@ -74,22 +74,22 @@
       },
       {
         "source": "/new-album",
-        "destination": "/bands",
+        "destination": "/listen",
         "type": 301
       },
       {
         "source": "/that-was-then-v1",
-        "destination": "/bands",
+        "destination": "/listen",
         "type": 301
       },
       {
         "source": "/turquoise-moon",
-        "destination": "/bands",
+        "destination": "/listen",
         "type": 301
       },
       {
         "source": "/the-distance-between-us",
-        "destination": "/bands",
+        "destination": "/listen",
         "type": 301
       },
       {

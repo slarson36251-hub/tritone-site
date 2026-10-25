@@ -1,0 +1,143 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import PageHead from "../components/PageHead.astro";
+import Pill from "../components/Pill.astro";
+import TrackList from "../components/TrackList.astro";
+import SoundCloudLite from "../components/SoundCloudLite.astro";
+import { featuredPlaylist } from "../lib/player";
+import pianoMics from "../assets/photos/fault-line-trio-piano-mics-feb-2026-hummingbird-hut-oakland.jpg";
+import levis from "../assets/photos/jason-levis-session-aug-2026-hummingbird-hut-oakland.jpg";
+import clint from "../assets/photos/clint-baker-band-session-may-2026-hummingbird-hut-oakland.jpg";
+import drums from "../assets/photos/fault-line-trio-drums-tracking-oct-2024-hummingbird-hut-oakland.jpg";
+
+const [release] = await getCollection("releases", ({ data }) => data.featured);
+const bands = (await getCollection("bands"))
+  .filter((b) => b.data.tracks.length > 0)
+  .sort((a, b) => a.data.order - b.data.order);
+
+// From the old Squarespace site. /that-was-then-v1 and /turquoise-moon embedded the same
+// SoundCloud track (648620705), so it appears once.
+const soundcloud = [
+  { id: "648620705", title: "That Was Then", note: "The old site also posted this track as Turquoise Moon." },
+  { id: "648624407", title: "The Distance Between Us" },
+];
+
+const strip = [
+  { img: levis, alt: "Jason Levis session at the Hummingbird Hut, Oakland, CA", href: "/sessions#levis" },
+  { img: clint, alt: "Clint Baker band session at the Hummingbird Hut, Oakland, CA", href: "/sessions#clint" },
+  { img: drums, alt: "Fault Line Trio drums tracking at the Hummingbird Hut, Oakland, CA", href: "/sessions" },
+];
+---
+<Base title="Listen · Tritone Productions · Oakland, CA" description="Hear everything Tritone Productions made: Fault Line Trio, Franco Nero, Lucky 7 and the SoundCloud archive, recorded and produced at the Hummingbird Hut in Oakland, CA.">
+  <PageHead eyebrow="Tritone Productions · Oakland, CA" title="Listen">
+    <p class="m-0 max-w-[60ch] text-[19px]">One place to hear everything Tritone made: records from the Hummingbird Hut, our bands, and the archive.</p>
+    <nav class="flex flex-wrap gap-2 pt-2" aria-label="On this page">
+      {[["#featured", "Featured"], ["#bands", "Bands"], ["#archive", "SoundCloud"], ["#hut", "The Hut"]].map(([href, label]) => (
+        <a href={href} class="inline-flex min-h-11 items-center rounded-full border border-stone/50 px-5 text-sm font-semibold no-underline transition-colors hover:border-white">{label}</a>
+      ))}
+    </nav>
+  </PageHead>
+
+  {release && (
+    <section id="featured" class="wrap pb-14 md:pb-20" aria-label="Featured release">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-6 md:gap-5">
+        <article class="tile reveal flex flex-col justify-between gap-8 p-6 md:col-span-4 md:p-9">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="eyebrow m-0 text-stone">Featured · Recorded at the Hut</p>
+              <h2 class="disp mb-0 mt-2 text-[clamp(2.4rem,6vw,4.4rem)] leading-[0.92]">{release.data.artist}</h2>
+            </div>
+            <button type="button" data-play={featuredPlaylist.embed} data-play-title={`${release.data.artist} · Spotify`}
+              class="flex min-h-12 cursor-pointer items-center gap-3 rounded-full bg-white px-6 font-semibold uppercase tracking-[.04em] text-black transition-transform hover:scale-[1.03]">
+              <svg width="12" height="14" viewBox="0 0 16 18" aria-hidden="true"><path d="M0 0l16 9-16 9z" fill="currentColor"/></svg>
+              Play
+            </button>
+          </div>
+          <ol class="m-0 list-none p-0">
+            {release.data.tracks.map((t, i) => (
+              <li class="rule flex items-baseline gap-4 border-t py-3.5">
+                <span class="w-6 shrink-0 text-sm tabular-nums text-stone">{String(i + 1).padStart(2, "0")}</span>
+                <strong class="min-w-0 flex-1 text-[19px]">{t.title}</strong>
+                <span class="shrink-0 text-sm text-stone">{t.note}</span>
+              </li>
+            ))}
+          </ol>
+          <div class="flex flex-col gap-4">
+            <p class="m-0 max-w-[62ch] text-[15px] text-white/80">{release.data.credits}</p>
+            <p class="m-0 text-sm text-stone">Plays in the player below and keeps going while you browse.</p>
+            <div class="flex flex-wrap gap-3">
+              {release.data.listenUrl && <Pill href={release.data.listenUrl} ghost external>{release.data.listenLabel}</Pill>}
+              <Pill href="/bands/fault-line-trio" ghost>The band</Pill>
+            </div>
+          </div>
+        </article>
+        <figure class="tile reveal m-0 min-h-[300px] md:col-span-2">
+          <Image src={pianoMics} alt="Grand piano with condenser mics at the Hummingbird Hut, Oakland, CA" widths={[480, 720]} sizes="(min-width: 761px) 30vw, 100vw" class="tile-img absolute inset-0 h-full w-full object-cover" />
+          <figcaption class="absolute bottom-3 left-3 m-0 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">Fault Line Trio · piano at the Hut</figcaption>
+        </figure>
+      </div>
+    </section>
+  )}
+
+  <section id="bands" class="wrap pb-14 md:pb-20" aria-labelledby="bands-h">
+    <div class="mb-5 flex items-end justify-between gap-4">
+      <div>
+        <p class="eyebrow m-0 text-stone">On stage</p>
+        <h2 id="bands-h" class="disp mb-0 mt-2 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">The Bands</h2>
+      </div>
+      <a href="/bands" class="shrink-0 whitespace-nowrap font-semibold">All bands →</a>
+    </div>
+    <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-2 md:gap-5">
+      {bands.map((b) => (
+        <article class="tile reveal p-5 md:p-8">
+          <div class="mb-5 flex items-end justify-between gap-4">
+            <div class="min-w-0">
+              <h3 class="disp m-0 text-[clamp(1.8rem,3.4vw,2.6rem)] leading-[0.95]"><a href={`/bands/${b.id}`} class="no-underline hover:underline">{b.data.name}</a></h3>
+              <p class="mb-0 mt-2 text-[15px] text-white/80">{b.data.tagline}</p>
+            </div>
+            <a href={`/bands/${b.id}`} class="grid size-10 shrink-0 place-items-center rounded-full bg-white text-black no-underline transition-transform hover:rotate-[-45deg]" aria-label={`${b.data.name} band page`}>→</a>
+          </div>
+          <TrackList tracks={b.data.tracks} artist={b.data.name} />
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section id="archive" class="wrap pb-14 md:pb-20" aria-labelledby="archive-h">
+    <div class="mb-5 flex items-end justify-between gap-4">
+      <div>
+        <p class="eyebrow m-0 text-stone">From the archive</p>
+        <h2 id="archive-h" class="disp mb-0 mt-2 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">SoundCloud</h2>
+      </div>
+      <a href="https://soundcloud.com/skatlarson" target="_blank" rel="noopener" class="shrink-0 whitespace-nowrap font-semibold">More →</a>
+    </div>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+      {soundcloud.map((t) => <SoundCloudLite trackId={t.id} title={t.title} note={t.note} />)}
+    </div>
+  </section>
+
+  <section id="hut" class="wrap pb-16 md:pb-24" aria-labelledby="hut-h">
+    <div class="tile reveal grid gap-6 !border-stone !bg-stone p-6 text-black md:grid-cols-[1fr_1.3fr] md:items-center md:gap-10 md:p-9">
+      <div class="flex flex-col gap-4">
+        <p class="eyebrow m-0">Hummingbird Hut · Oakland, CA</p>
+        <h2 id="hut-h" class="disp m-0 text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95]">Recorded at the Hummingbird Hut</h2>
+        <p class="m-0 max-w-[48ch] text-[17px]">Music production, tracking, overdubs, mixing and mastering in a real room in Oakland.</p>
+        <div class="flex flex-wrap gap-3 pt-1">
+          <a href="/sessions" class="inline-flex min-h-12 items-center rounded-full bg-black px-7 text-sm font-semibold uppercase tracking-[.04em] text-white no-underline transition-opacity hover:opacity-85">Session portfolio</a>
+          <a href="/hummingbird-hut" class="inline-flex min-h-12 items-center rounded-full border-2 border-black px-7 text-sm font-semibold uppercase tracking-[.04em] text-black no-underline transition-opacity hover:opacity-70">Tour the studio</a>
+        </div>
+      </div>
+      <ul class="m-0 grid list-none grid-cols-3 gap-3 p-0">
+        {strip.map((s) => (
+          <li>
+            <a href={s.href} class="group block overflow-hidden rounded-xl">
+              <Image src={s.img} alt={s.alt} widths={[240, 400]} sizes="(min-width: 761px) 16vw, 30vw" class="tile-img aspect-3/4 h-auto w-full object-cover group-hover:scale-105" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>
