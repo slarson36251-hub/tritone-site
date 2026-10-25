@@ -5,7 +5,9 @@ const shows = await getUpcomingShows(3);
 const day = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/Los_Angeles" });
 const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" });
 ---
-<section class="wrap rule border-t py-18">
+<section class="wrap py-18">
+  <div class="rule border-t pt-0"></div>
+  <div class="pt-18">
   <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
     <h2 class="disp m-0 text-[clamp(2rem,4.5vw,2.5rem)]">Next up</h2>
     <a href="/shows" class="font-semibold">All shows →</a>
@@ -23,4 +25,5 @@ const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digi
   ) : (
     <p class="m-0">Dates, venues and add-to-calendar links are on the <a href="/shows">Shows page</a>.</p>
   )}
+  </div>
 </section>
