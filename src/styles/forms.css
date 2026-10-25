@@ -1,0 +1,136 @@
+/* Form furniture for /book-the-hut and /free-track. Brand palette only:
+   charcoal #38383B, white, black, stone #A8A6A1 and alpha tints of those.
+   Plain CSS (not scoped) because the booking script builds calendar cells at runtime. */
+
+@layer components {
+.tf-card {
+  border-radius: 22px;
+  border: 1px solid rgb(168 166 161 / 0.32);
+  background: rgb(0 0 0 / 0.16);
+  padding: 22px 16px;
+}
+@media (min-width: 761px) {
+  .tf-card { padding: 34px 34px 30px; }
+}
+
+.tf-step { display: flex; align-items: baseline; gap: 12px; margin: 0 0 14px; }
+.tf-step-n {
+  font-family: var(--font-display, "Archivo Black", sans-serif);
+  font-size: 13px; color: #a8a6a1; letter-spacing: 0.04em;
+}
+.tf-step-t {
+  font-family: var(--font-display, "Archivo Black", sans-serif);
+  text-transform: uppercase; letter-spacing: -0.01em; font-size: 20px; margin: 0;
+}
+.tf-group + .tf-group, #hbh-form > .tf-group:first-child { margin-top: 34px; padding-top: 28px; border-top: 1px solid rgb(168 166 161 / 0.28); }
+
+.tf-field { margin: 0 0 18px; }
+.tf-field:last-child { margin-bottom: 0; }
+.tf-label { display: block; font-size: 14px; font-weight: 600; margin: 0 0 7px; }
+.tf-opt { font-weight: 400; color: #a8a6a1; }
+.tf-input {
+  display: block; width: 100%; box-sizing: border-box;
+  font: inherit; font-size: 17px; color: #fff;
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(168 166 161 / 0.45);
+  border-radius: 14px; padding: 0 16px; min-height: 56px;
+  transition: border-color 0.2s, background-color 0.2s;
+  appearance: none; -webkit-appearance: none;
+}
+textarea.tf-input { padding: 14px 16px; min-height: 108px; resize: vertical; line-height: 1.45; }
+.tf-input::placeholder { color: rgb(168 166 161 / 0.85); }
+.tf-input:hover { border-color: rgb(168 166 161 / 0.8); }
+.tf-input:focus { outline: none; border-color: #fff; background: rgb(255 255 255 / 0.09); }
+.tf-input[aria-invalid="true"] { border-color: #fff; box-shadow: inset 0 0 0 1px #fff; }
+.tf-err { display: none; margin: 8px 0 0; font-size: 14px; font-weight: 600; color: #fff; }
+.tf-err::before { content: "\2014\00a0"; color: #a8a6a1; }
+.tf-input[aria-invalid="true"] + .tf-err,
+.tf-err.is-on { display: block; }
+.tf-row { display: grid; gap: 0 14px; }
+@media (min-width: 560px) { .tf-row { grid-template-columns: 1fr 1fr; } }
+
+/* honeypot: offscreen, never display:none (some bots skip hidden fields) */
+.tf-hp { position: absolute; left: -6000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+.tf-notice {
+  margin: 16px 0 0; padding: 13px 16px; border-radius: 14px;
+  border: 1px solid rgb(168 166 161 / 0.5); background: rgb(168 166 161 / 0.12);
+  font-size: 15px;
+}
+.tf-notice a { color: #fff; font-weight: 600; }
+.tf-notice[hidden] { display: none; }
+
+.tf-btn {
+  display: flex; width: 100%; min-height: 60px; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 24px; border: 0; border-radius: 999px; cursor: pointer;
+  background: #fff; color: #000; font: inherit; font-weight: 700; font-size: 16px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  transition: transform 0.25s var(--ease-out-quint, ease), opacity 0.2s;
+}
+.tf-btn:hover { transform: translateY(-1px); }
+.tf-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+.tf-btn-ghost { background: transparent; color: #fff; border: 2px solid rgb(168 166 161 / 0.7); }
+.tf-foot { margin: 14px 0 0; text-align: center; font-size: 14px; color: #a8a6a1; }
+
+/* ---- booking: calendar ---- */
+.bk-cal { border: 1px solid rgb(168 166 161 / 0.32); border-radius: 18px; padding: 14px 10px 10px; }
+@media (min-width: 761px) { .bk-cal { padding: 18px 16px 14px; } }
+.bk-cal-head { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 12px; }
+.bk-cal-title { font-family: var(--font-display, "Archivo Black", sans-serif); text-transform: uppercase; font-size: 16px; letter-spacing: 0.02em; }
+.bk-nav {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid rgb(168 166 161 / 0.45); background: transparent; color: #fff; cursor: pointer; font-size: 20px;
+}
+.bk-nav:hover:not(:disabled) { border-color: #fff; }
+.bk-nav:disabled { opacity: 0.25; cursor: default; }
+.bk-dows, .bk-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.bk-dows span { text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #a8a6a1; padding-bottom: 6px; }
+.bk-cell {
+  aspect-ratio: 1 / 1; min-height: 40px; display: grid; place-items: center;
+  border-radius: 50%; font: inherit; font-size: 16px; border: 0; background: transparent; color: rgb(168 166 161 / 0.45);
+  width: 100%; max-width: 52px; justify-self: center; padding: 0;
+}
+button.bk-cell { color: #fff; font-weight: 600; cursor: pointer; border: 1px solid rgb(168 166 161 / 0.45); background: rgb(168 166 161 / 0.08); transition: border-color 0.15s, background-color 0.15s; }
+button.bk-cell:hover { border-color: #fff; }
+button.bk-cell[aria-pressed="true"] { background: #fff; border-color: #fff; color: #000; }
+.bk-skel {
+  grid-column: span 7; height: 236px; border-radius: 12px;
+  background: linear-gradient(100deg, rgb(168 166 161 / 0.1) 30%, rgb(168 166 161 / 0.24) 50%, rgb(168 166 161 / 0.1) 70%);
+  background-size: 200% 100%; animation: bk-shimmer 1.2s linear infinite;
+}
+@keyframes bk-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .bk-skel { animation: none; } }
+
+/* ---- booking: length stepper + start-time chips ---- */
+.bk-stepper { display: flex; align-items: center; gap: 10px; }
+.bk-step-btn {
+  width: 52px; height: 52px; flex: none; border-radius: 50%; border: 1px solid rgb(168 166 161 / 0.5);
+  background: transparent; color: #fff; font-size: 24px; line-height: 1; cursor: pointer;
+}
+.bk-step-btn:hover:not(:disabled) { border-color: #fff; }
+.bk-step-btn:disabled { opacity: 0.25; cursor: default; }
+.bk-step-val { flex: 1; text-align: center; font-family: var(--font-display, "Archivo Black", sans-serif); font-size: 26px; text-transform: uppercase; }
+.bk-step-val small { font-family: var(--font-body, sans-serif); font-size: 14px; font-weight: 600; color: #a8a6a1; letter-spacing: 0.08em; margin-left: 6px; }
+.bk-times { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 560px) { .bk-times { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.bk-time {
+  min-height: 48px; border-radius: 999px; border: 1px solid rgb(168 166 161 / 0.45);
+  background: transparent; color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.bk-time:hover { border-color: #fff; }
+.bk-time[aria-pressed="true"] { background: #fff; color: #000; border-color: #fff; }
+.bk-times-empty { grid-column: 1 / -1; margin: 0; color: #a8a6a1; font-size: 15px; }
+
+.bk-summary {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px;
+  margin: 26px 0 0; padding: 16px 18px; border-radius: 16px; background: rgb(168 166 161 / 0.14);
+}
+.bk-summary .eyebrow { color: #a8a6a1; font-size: 11px; }
+.bk-summary strong { font-size: 17px; }
+
+.tf-done { text-align: left; padding: 6px 0; }
+.tf-done[hidden], form[hidden], .tf-screen[hidden] { display: none; }
+.tf-check { width: 64px; height: 64px; border-radius: 50%; background: #fff; color: #000; display: grid; place-items: center; margin-bottom: 22px; }
+
+}

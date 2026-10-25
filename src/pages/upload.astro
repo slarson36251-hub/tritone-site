@@ -1,0 +1,60 @@
+---
+import Base from "../layouts/Base.astro";
+// Client upload landing. Clients arrive here from the link in their confirmation email;
+// the page itself never contains an upload link. Logic: src/lib/upload.ts.
+---
+<Base title="Sending files · Hummingbird Hut · Oakland, CA" description="Send session files to the Hummingbird Hut. Your upload link is in your confirmation email.">
+  <meta slot="head" name="robots" content="noindex" />
+  <section class="wrap pb-20 pt-10 md:pb-28 md:pt-16" id="tri-upload">
+    <div class="mx-auto flex max-w-[680px] flex-col gap-6">
+      <p class="eyebrow m-0 text-stone">Tritone Productions · Hummingbird Hut</p>
+
+      <!-- The real thing: a validated link behind a button (filled in by script). -->
+      <div data-panel hidden class="flex flex-col gap-6">
+        <h1 class="disp m-0 text-[clamp(2.6rem,8vw,4.6rem)] leading-[0.92]">Send your session files</h1>
+        <p class="m-0 text-[19px]" data-greet></p>
+        <ul class="m-0 list-none p-0" data-facts hidden></ul>
+        <div class="tile flex flex-col gap-4 p-6 md:p-8">
+          <p class="eyebrow m-0 text-stone">Files, if you have them</p>
+          <p class="m-0">The button below opens the upload folder on the studio drive. Anything you drop there lands straight on the drive I work from. No account to make, nothing to install.</p>
+          <p class="m-0">Useful to send ahead:</p>
+          <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+            {["Backing tracks", "Stems", "Reference mixes", "Charts", "Lyric sheets"].map((t) => (
+              <li class="rounded-full border border-stone/40 px-3.5 py-1.5 text-[15px] font-medium">{t}</li>
+            ))}
+          </ul>
+          <a data-link href="#" target="_blank" rel="noopener noreferrer" class="mt-2 inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 font-bold uppercase tracking-[.05em] text-black no-underline transition-transform hover:-translate-y-px">Drop your files</a>
+          <p class="m-0 text-sm text-stone">Or paste this into a browser:<br /><a data-link data-link-text href="#" target="_blank" rel="noopener noreferrer" class="break-all text-white"></a></p>
+          <p class="m-0 text-[15px] text-white/80">Optional, and it stays optional. Bring a drive instead, or turn up with nothing but the tunes. The session runs the same either way, and nobody is going to chase you for this.</p>
+        </div>
+        <p class="m-0 text-white/85">Anything you want me to know about the material beforehand, just reply to your confirmation email.</p>
+      </div>
+
+      <!-- No link, or a link we refused. Also what shows with scripting off. -->
+      <div data-fallback class="flex flex-col gap-6">
+        <h1 class="disp m-0 text-[clamp(2.6rem,8vw,4.6rem)] leading-[0.92]">Sending files</h1>
+        <p class="m-0 text-[19px]" data-greet hidden></p>
+        <ul class="m-0 list-none p-0" data-facts hidden></ul>
+        <div class="tile flex flex-col gap-4 p-6 md:p-8">
+          <p class="eyebrow m-0 text-stone">Files, if you have them</p>
+          <p class="m-0 text-[18px]" data-missing>Your upload link lives in your confirmation email. It's tied to your session, so it isn't something this page can work out on its own. Open that email and use the button there. If you can't find it, reply to me and I'll send you a fresh link.</p>
+          <p class="m-0 text-[18px]" data-refused hidden>The link this page was handed didn't come from the studio drive, so it hasn't been opened. Use the button in your confirmation email instead, or reply to me and I'll send you a fresh link.</p>
+          <p class="m-0 text-[15px] text-white/80">Sending anything ahead is optional either way. A session with no files sent in advance runs exactly the same.</p>
+        </div>
+      </div>
+
+      <address class="rule mt-4 flex flex-col gap-1 border-t pt-6 not-italic text-white/85">
+        <strong class="text-white">Scott Larson</strong>
+        <span>Tritone Productions</span>
+        <span>Hummingbird Hut · Oakland, CA</span>
+        <a href="mailto:scott@tritone-productions.com" class="mt-2 font-semibold text-white">scott@tritone-productions.com</a>
+        <a href="tel:+14152006291" class="font-semibold text-white">(415) 200-6291</a>
+      </address>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initUpload } from "../lib/upload";
+  document.addEventListener("astro:page-load", initUpload);
+</script>
