@@ -1,31 +1,96 @@
 ---
 import Base from "../layouts/Base.astro";
 import PageHead from "../components/PageHead.astro";
-import { getUpcomingShows } from "../lib/shows";
+import Pill from "../components/Pill.astro";
+import ShowCard from "../components/shows/ShowCard.astro";
+import ShowRow from "../components/shows/ShowRow.astro";
+import { getUpcomingShows, getPastShows, SITE, type Show } from "../lib/shows";
 
-const shows = await getUpcomingShows(20);
-const fmt = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" });
-const events = shows.map((s) => ({
-  "@context": "https://schema.org", "@type": "MusicEvent", name: s.title, startDate: s.start.toISOString(),
-  location: { "@type": "Place", name: s.venue }, ...(s.poster ? { image: s.poster } : {}),
-}));
+const CARDS = 12;
+const upcoming = await getUpcomingShows(CARDS + 30);
+const featured = upcoming.slice(0, CARDS);
+const later = upcoming.slice(CARDS);
+const past = await getPastShows(20);
+
+// schema.org MusicEvent list. Venue name and city only: never a street address or geo.
+const absolute = (u: string) => new URL(u, SITE).href;
+const event = (s: Show) => ({
+  "@context": "https://schema.org",
+  "@type": "MusicEvent",
+  name: s.title,
+  startDate: s.allDay ? s.start.toISOString().slice(0, 10) : s.start.toISOString(),
+  endDate: s.allDay ? s.end.toISOString().slice(0, 10) : s.end.toISOString(),
+  eventStatus: s.cancelled ? "https://schema.org/EventCancelled" : "https://schema.org/EventScheduled",
+  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+  location: {
+    "@type": "Place",
+    name: s.venue,
+    ...(s.city ? { address: { "@type": "PostalAddress", addressLocality: s.city } } : {}),
+  },
+  performer: { "@type": "MusicGroup", name: s.band },
+  organizer: { "@type": "Organization", name: "Tritone Productions", url: SITE },
+  url: `${SITE}/shows`,
+  ...(s.poster ? { image: absolute(s.poster) } : {}),
+  ...(s.tickets ? { offers: { "@type": "Offer", url: s.tickets } } : {}),
+  ...(s.genre ? { description: s.genre } : {}),
+});
+const schema = upcoming.map(event);
 ---
-<Base title="Shows · Tritone Productions · Bay Area jazz" description="Upcoming shows by Tritone Productions bands around the Bay Area.">
-  <script type="application/ld+json" slot="head" set:html={JSON.stringify(events)} />
-  <PageHead eyebrow="Live" title="Shows" />
-  <section class="wrap pb-20">
-    {shows.length ? (
-      <ul class="rule m-0 grid list-none gap-8 border-t p-0 pt-8 md:grid-cols-2">
-        {shows.map((s) => (
-          <li class="flex flex-col gap-3">
-            {s.poster && <img src={s.poster} alt={`${s.title} poster`} loading="lazy" class="h-auto w-full rounded-md" />}
-            <span class="font-semibold uppercase tracking-[.04em]">{fmt.format(s.start)}</span>
-            <strong class="disp text-2xl">{s.title}</strong>
-            <span>{s.venue}</span>
-            {s.url && <a href={s.url} class="font-semibold">Tickets →</a>}
-          </li>
-        ))}
-      </ul>
-    ) : <p>New dates coming soon. Follow along on Instagram for announcements.</p>}
+<Base title="Shows · Tritone Productions · Bay Area jazz" description="Upcoming shows by Tritone Productions bands around the Bay Area: dates, venues, lineups, tickets and add-to-calendar links.">
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(schema)} />
+  <link slot="head" rel="alternate" type="text/calendar" title="Tritone Productions shows" href="/shows.ics" />
+
+  <PageHead eyebrow="Live · Bay Area" title="Shows">
+    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-8">
+      <p class="m-0 max-w-[56ch] text-[19px]">
+        Hard Bop Quintet, Franco Nero, Lucky 7, the Scott Larson Quartet and friends, on stages around the Bay.
+      </p>
+      {upcoming.length > 0 && (
+        <a href="/shows.ics" class="eyebrow inline-flex min-h-11 shrink-0 items-center gap-2 no-underline hover:underline" download="tritone-shows.ics">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.5h13M5 1v3M11 1v3" stroke="currentColor" stroke-width="1.5"/></svg>
+          All dates (.ics)
+        </a>
+      )}
+    </div>
+  </PageHead>
+
+  <section class="wrap pb-16 md:pb-20" aria-labelledby="upcoming-h">
+    <div class="rule mb-8 flex items-baseline justify-between gap-4 border-t pt-6">
+      <h2 id="upcoming-h" class="disp m-0 text-[clamp(1.6rem,3.5vw,2.1rem)]">Upcoming</h2>
+      {upcoming.length > 0 && <span class="eyebrow text-stone">{upcoming.length} {upcoming.length === 1 ? "date" : "dates"}</span>}
+    </div>
+
+    {featured.length ? (
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+        {featured.map((s, i) => <ShowCard show={s} eager={i === 0} />)}
+      </div>
+    ) : (
+      <div class="flex flex-col items-start gap-5 rounded-md border border-stone/40 bg-black/25 p-6 md:p-10">
+        <p class="disp m-0 text-[clamp(2rem,6vw,3.25rem)] leading-none">New dates<br />coming soon</p>
+        <p class="m-0 max-w-[48ch] text-stone">The bands are between runs. Follow along on Instagram for announcements, or book a band for your own event.</p>
+        <Pill href="/contact">Book a band</Pill>
+      </div>
+    )}
+
+    {later.length > 0 && (
+      <div class="mt-14">
+        <h3 class="eyebrow m-0 mb-3 text-stone">Further ahead</h3>
+        <ul class="rule m-0 list-none border-t p-0">
+          {later.map((s) => <ShowRow show={s} href={`/shows/${s.id}.ics`} />)}
+        </ul>
+        <p class="m-0 mt-3 text-sm text-stone">Tap a date to add it to your calendar.</p>
+      </div>
+    )}
   </section>
+
+  {past.length > 0 && (
+    <section class="wrap pb-20" aria-labelledby="past-h">
+      <div class="rule mb-2 border-t pt-6">
+        <h2 id="past-h" class="disp m-0 text-[clamp(1.6rem,3.5vw,2.1rem)]">Past shows</h2>
+      </div>
+      <ul class="m-0 list-none p-0">
+        {past.map((s) => <ShowRow show={s} past />)}
+      </ul>
+    </section>
+  )}
 </Base>

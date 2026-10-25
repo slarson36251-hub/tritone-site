@@ -1,0 +1,13 @@
+---
+import { googleCalendarUrl, type Show } from "../../lib/shows";
+interface Props { show: Show }
+const { show } = Astro.props;
+const btn = "inline-flex min-h-11 items-center justify-center rounded-full border border-stone/60 px-4 text-sm font-semibold no-underline transition-colors hover:border-white";
+---
+<div class="flex flex-col gap-2">
+  <span class="eyebrow text-[11px] text-stone">Add to calendar</span>
+  <div class="flex flex-wrap gap-2">
+    <a href={googleCalendarUrl(show)} target="_blank" rel="noopener" class={btn} aria-label={`Add ${show.title} to Google Calendar`}>Google</a>
+    <a href={`/shows/${show.id}.ics`} download={`${show.id}.ics`} class={btn} aria-label={`Download ${show.title} for Apple Calendar or Outlook`}>Apple / Outlook</a>
+  </div>
+</div>
