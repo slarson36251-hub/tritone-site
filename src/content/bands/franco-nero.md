@@ -12,4 +12,7 @@ tracks:
   - { title: "Mustn't Grumble", src: "/audio/franco-nero/mustnt-grumble.mp3" }
   - { title: Pacifica, src: "/audio/franco-nero/pacifica.mp3" }
   - { title: Garden of Love, credit: Don Drummond, src: "/audio/franco-nero/garden-of-love.mp3" }
+genres: [Ska, Rocksteady]
+seoTitle: "Franco Nero · San Francisco Ska and Rocksteady Band"
+seoDescription: "Franco Nero plays ska and rocksteady from San Francisco, with Hammond organ, trombone and guitars. Listen to Caffeine, Pacifica and more, then book the band."
 ---

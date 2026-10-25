@@ -15,4 +15,7 @@ tracks:
   - { title: "Sad Days Indeed!", src: "/audio/lucky-7/sad-days-indeed.mp3" }
   - { title: "Black & Blue", src: "/audio/lucky-7/black-and-blue.mp3" }
   - { title: Come Sunday, src: "/audio/lucky-7/come-sunday.mp3" }
+genres: [] # TODO(scott): genre for the MusicGroup schema
+seoTitle: "Lucky 7 · Bay Area Band · Listen to Nine Tracks"
+seoDescription: "Lucky 7, a Tritone Productions band from the Bay Area, with trumpet, trombone and clarinet up front. Hear St. James Infirmary, Mood Indigo and Come Sunday."
 ---

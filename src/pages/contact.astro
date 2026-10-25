@@ -1,14 +1,9 @@
 ---
 import Base from "../layouts/Base.astro";
 import { bookHref } from "../lib/nav";
-
-const socials = [
-  { label: "Instagram", href: "https://www.instagram.com/tritone_productions/" },
-  { label: "Facebook", href: "https://www.facebook.com/tritoneproductions" },
-  { label: "SoundCloud", href: "https://soundcloud.com/skatlarson" },
-];
+import { ORG_ID, SITE, SOCIALS as socials } from "../lib/seo";
 ---
-<Base title="Contact · Tritone Productions · Oakland, CA" description="Write or call Scott Larson at Tritone Productions, music production in Oakland, CA, about recording at the Hummingbird Hut or booking a band.">
+<Base title="Contact Tritone Productions · Book a Studio Day or Band" description="Contact Scott Larson at Tritone Productions, music production in Oakland, CA: book a session at the Hummingbird Hut recording studio or a Bay Area band." breadcrumbs={[{ name: "Contact", path: "/contact" }]} schema={[{ "@type": "ContactPage", "@id": `${SITE}/contact#page`, url: `${SITE}/contact`, name: "Contact Tritone Productions", about: { "@id": ORG_ID } }]}>
   <section class="wrap pb-12 pt-10 md:pb-16 md:pt-16">
     <p class="eyebrow m-0 text-stone">Tritone Productions · Music production · Oakland, CA</p>
     <h1 class="disp mb-0 mt-4 text-[clamp(3.2rem,11vw,8.6rem)] leading-[0.86]">Say <span class="outline-type">hello</span></h1>

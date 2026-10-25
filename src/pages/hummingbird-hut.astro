@@ -3,6 +3,7 @@ import { Image } from "astro:assets";
 import Base from "../layouts/Base.astro";
 import Pill from "../components/Pill.astro";
 import { bookHref } from "../lib/nav";
+import { SITE, hummingbirdHut } from "../lib/seo";
 
 import heroPhoto from "../assets/photos/fault-line-trio-piano-mics-feb-2026-hummingbird-hut-oakland.jpg";
 import roomPhoto from "../assets/photos/solomon-alber-ensemble-oct-2025-hummingbird-hut-oakland.jpg";
@@ -66,8 +67,10 @@ const credits = [
   { name: "Tim Rowe", id: "tim" },
   { name: "Nima Hafez", id: "nima" },
 ];
+
+const studio = hummingbirdHut(new URL(heroPhoto.src, SITE).href, services);
 ---
-<Base title="Hummingbird Hut · Recording studio · Music production · Oakland, CA" description="Tritone Productions' private recording studio in Oakland, CA, for small acoustic groups, from solo piano and jazz trios to eight-piece country bands. Tracking, overdubs, mixing and mastering prep.">
+<Base title="Hummingbird Hut · Recording Studio in Oakland, CA" description="Private recording studio in Oakland, CA for small acoustic groups, from solo piano and jazz trios to country bands. Tracking, overdubs, mixing, mastering prep." breadcrumbs={[{ name: "Hummingbird Hut", path: "/hummingbird-hut" }]} schema={[studio]}>
 
   <!-- Hero -->
   <section class="wrap grid gap-8 pb-14 pt-10 md:grid-cols-12 md:items-end md:gap-10 md:pb-20 md:pt-16">

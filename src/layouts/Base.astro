@@ -11,14 +11,34 @@ import { ClientRouter } from "astro:transitions";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import PlayerDock from "../components/PlayerDock.astro";
+import { getCollection } from "astro:content";
+import { PAGE_CARDS, SITE, breadcrumbs as crumbList, canonicalUrl, cardPath, cleanPath, organization, website, type Crumb } from "../lib/seo";
 
 interface Props {
+  /** ~50-60 characters, unique per page. */
   title: string;
+  /** ~140-160 characters, unique per page. */
   description: string;
+  /** Share image (absolute or site path). Default: this page's generated 1200x630 card. */
   image?: string;
+  imageAlt?: string;
+  /** Trail after "Home", e.g. [{ name: "Bands", path: "/bands" }, { name: band, path: `/bands/${slug}` }]. */
+  breadcrumbs?: Crumb[];
+  /** Extra JSON-LD nodes for this page (no @context: they join the page's @graph). */
+  schema?: object[];
+  noindex?: boolean;
 }
-const { title, description, image } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+const { title, description, image, imageAlt, breadcrumbs, schema = [], noindex = false } = Astro.props;
+const path = cleanPath(Astro.url.pathname);
+const canonical = canonicalUrl(path);
+// Every page without its own image gets a generated card; unknown paths fall back to the home card.
+const bandPaths = new Set((await getCollection("bands")).map((b) => `/bands/${b.id}`));
+const card = image ? undefined : cardPath(path in PAGE_CARDS || bandPaths.has(path) ? path : "/");
+const ogImage = new URL(image ?? card!, SITE).href;
+const graph = {
+  "@context": "https://schema.org",
+  "@graph": [organization(), website(), ...(breadcrumbs?.length ? [crumbList(breadcrumbs)] : []), ...schema],
+};
 ---
 <!doctype html>
 <html lang="en">
@@ -33,13 +53,23 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:url" content={canonical} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Tritone Productions" />
-    {image && <meta property="og:image" content={new URL(image, Astro.site)} />}
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content={ogImage} />
+    {card && <meta property="og:image:width" content="1200" />}
+    {card && <meta property="og:image:height" content="630" />}
+    {card && <meta property="og:image:type" content="image/png" />}
+    <meta property="og:image:alt" content={imageAlt ?? title} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {card && <meta name="twitter:image" content={ogImage} />}
+    {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content="#38383B" />
     <link rel="icon" href="/favicon.png" type="image/png" />
     <link rel="preload" href={displayFont} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={bodyFont} as="font" type="font/woff2" crossorigin />
     <ClientRouter fallback="swap" />
+    <script type="application/ld+json" set:html={JSON.stringify(graph)} />
     <slot name="head" />
   </head>
   <body class="m-0 min-h-dvh bg-charcoal text-white antialiased">

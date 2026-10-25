@@ -4,23 +4,11 @@ import Hero from "../components/home/Hero.astro";
 import Bento from "../components/home/Bento.astro";
 import NextUp from "../components/home/NextUp.astro";
 
-// Organization schema: city and region only. Never a street address or geo coordinates.
-const org = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Tritone Productions",
-  url: "https://tritone-productions.com",
-  description: "Music production and the Hummingbird Hut recording studio, Oakland, CA.",
-  email: "scott@tritone-productions.com",
-  founder: { "@type": "Person", name: "Scott Larson" },
-  address: { "@type": "PostalAddress", addressLocality: "Oakland", addressRegion: "CA", addressCountry: "US" },
-};
 ---
 <Base
-  title="Tritone Productions · Music production and the Hummingbird Hut recording studio · Oakland, CA"
-  description="Tritone Productions is music production in Oakland, CA: the Hummingbird Hut, a private recording studio, and a family of Bay Area jazz groups run by trombonist Scott Larson."
+  title="Tritone Productions · Music Production · Oakland, CA"
+  description="Music production in Oakland, CA: the Hummingbird Hut recording studio and Bay Area bands for hire, from hard bop jazz to ska, led by trombonist Scott Larson."
 >
-  <script type="application/ld+json" slot="head" set:html={JSON.stringify(org)} />
   <Hero />
   <Bento />
   <NextUp />

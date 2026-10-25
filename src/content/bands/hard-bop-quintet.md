@@ -11,6 +11,9 @@ lineup:
   - { name: Eric Markowitz, instrument: Bass }
   - { name: Evan Hughes / Smith Dobson, instrument: Drums }
 # TODO(scott): recordings for the track list (no audio on the old site)
+genres: [Jazz, Hard bop]
+seoTitle: "Hard Bop Quintet · Bay Area Hard Bop Jazz Band for Hire"
+seoDescription: "Bay Area jazz band led by trombonist Scott Larson and trumpeter Jay Sanders: hard bop, boogaloo and blues, a Club Deluxe regular for over a decade."
 ---
 The Hard Bop Quintet is a jazz group from the San Francisco Bay Area, inspired by the fiery style of jazz of the same name, which fueled much of the 1960s New York jazz scene.
 
