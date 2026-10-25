@@ -1,7 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
 import Hero from "../components/home/Hero.astro";
-import Marquee from "../components/home/Marquee.astro";
 import Bento from "../components/home/Bento.astro";
 import NextUp from "../components/home/NextUp.astro";
 
@@ -23,7 +22,6 @@ const org = {
 >
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(org)} />
   <Hero />
-  <Marquee />
   <Bento />
   <NextUp />
 </Base>
