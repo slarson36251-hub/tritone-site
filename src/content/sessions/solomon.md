@@ -32,6 +32,7 @@ albums:
     url: https://dobrydobry.bandcamp.com/album/jokes-and-games
     tracks: 7
     note: Recorded and mixed at the Hummingbird Hut
+    art: ../../assets/albums/dobry-dobry-jokes-and-games.jpg
 photos:
   - src: ../../assets/sessions/solomon-alber-ensemble-oct-2025-hummingbird-hut-oakland.webp
     alt: Five musicians with violin, viola, clarinet, accordion and tapan drum gathered on a rug in the live room

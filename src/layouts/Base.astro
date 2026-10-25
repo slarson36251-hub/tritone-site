@@ -72,7 +72,14 @@ const graph = {
     <ClientRouter fallback="swap" />
     <script type="application/ld+json" set:html={JSON.stringify(graph)} />
     <slot name="head" />
-  </head>
+      <script>
+      // Scroll reveals (.reveal) only animate once JS runs, so no-JS readers and crawlers see every section.
+      // ClientRouter copies <html> attributes from each new page, so set the flag again after a swap.
+      const markJs = () => document.documentElement.classList.add("js");
+      markJs();
+      document.addEventListener("astro:after-swap", markJs);
+    </script>
+</head>
   <body class="m-0 min-h-dvh bg-charcoal text-white antialiased">
     <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-white focus:px-4 focus:py-2 focus:text-black">Skip to content</a>
     <Header />

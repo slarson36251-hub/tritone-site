@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import Pill from "../Pill.astro";
 import photo from "../../assets/photos/fault-line-trio-drums-tracking-oct-2024-hummingbird-hut-oakland.jpg";
 ---
@@ -21,7 +21,9 @@ import photo from "../../assets/photos/fault-line-trio-drums-tracking-oct-2024-h
     </div>
   </div>
   <div class="relative md:col-span-5">
-    <Image
+    <Picture
+      formats={["avif"]}
+      fallbackFormat="webp"
       src={photo}
       alt="Fault Line Trio drums set up for tracking at the Hummingbird Hut, Oakland, CA"
       widths={[480, 720, 960]}

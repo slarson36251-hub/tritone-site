@@ -38,7 +38,7 @@ const strip = [
         <article class="tile reveal flex flex-col justify-between gap-8 p-6 md:col-span-4 md:p-9">
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="min-w-0">
-              <p class="eyebrow m-0 text-stone">Featured · Recorded at the Hut</p>
+              <p class="eyebrow m-0 text-white/75">Featured · Recorded at the Hut</p>
               <h2 class="disp mb-0 mt-2 text-[clamp(2.4rem,6vw,4.4rem)] leading-[0.92]">{release.data.artist}</h2>
             </div>
             <button type="button" data-play={featuredPlaylist.embed} data-play-title={`${release.data.artist} · Spotify`}
@@ -50,15 +50,15 @@ const strip = [
           <ol class="m-0 list-none p-0">
             {release.data.tracks.map((t, i) => (
               <li class="rule flex items-baseline gap-4 border-t py-3.5">
-                <span class="w-6 shrink-0 text-sm tabular-nums text-stone">{String(i + 1).padStart(2, "0")}</span>
+                <span class="w-6 shrink-0 text-sm tabular-nums text-white/70">{String(i + 1).padStart(2, "0")}</span>
                 <strong class="min-w-0 flex-1 text-[19px]">{t.title}</strong>
-                <span class="shrink-0 text-sm text-stone">{t.note}</span>
+                <span class="shrink-0 text-sm text-white/70">{t.note}</span>
               </li>
             ))}
           </ol>
           <div class="flex flex-col gap-4">
             <p class="m-0 max-w-[62ch] text-[15px] text-white/80">{release.data.credits}</p>
-            <p class="m-0 text-sm text-stone">Plays in the player below and keeps going while you browse.</p>
+            <p class="m-0 text-sm text-white/70">Plays in the player below and keeps going while you browse.</p>
             <div class="flex flex-wrap gap-3">
               {release.data.listenUrl && <Pill href={release.data.listenUrl} ghost external>{release.data.listenLabel}</Pill>}
               <Pill href="/bands/fault-line-trio" ghost>The band</Pill>

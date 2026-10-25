@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Image, Picture } from "astro:assets";
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import Pill from "../../components/Pill.astro";
@@ -114,7 +114,7 @@ const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}
   {photo && (
     <section class="wrap pb-14 md:pb-20">
       <figure class="tile reveal m-0">
-        <Image src={photo} alt={photoAlt ?? name} widths={[480, 900, 1400]} sizes="(min-width: 1280px) 1200px, 100vw" class="block h-auto w-full" />
+        <Picture formats={["avif"]} fallbackFormat="webp" src={photo} alt={photoAlt ?? name} widths={[480, 900, 1400]} sizes="(min-width: 1280px) 1200px, 100vw" class="block h-auto w-full" />
       </figure>
     </section>
   )}
@@ -133,7 +133,7 @@ const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}
           <li class="w-[62vw] max-w-[260px] shrink-0 snap-start">
             <a href={`/gallery#${p.id}`} class="group flex flex-col gap-2 no-underline">
               <span class="tile block aspect-[2/3]">
-                <Image src={p.img} alt={p.alt} widths={[260, 520]} sizes="260px" class="tile-img absolute inset-0 h-full w-full object-cover group-hover:scale-105" />
+                <Picture formats={["avif"]} fallbackFormat="webp" src={p.img} alt={p.alt} widths={[240, 360, 520]} sizes="(min-width: 761px) 260px, 62vw" class="tile-img absolute inset-0 h-full w-full object-cover group-hover:scale-105" />
               </span>
               <span class="text-sm font-semibold leading-tight">{p.title}</span>
               <span class="-mt-1.5 text-xs text-stone">{p.sub}</span>
