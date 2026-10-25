@@ -206,5 +206,8 @@ const DIST = join(ROOT, "dist");
 const built = existsSync(join(DIST, "index.html"));
 test("the tracker is bundled and posts to the Firestore commit endpoint", { skip: !built && "dist/ not built" }, () => {
   const js = readdirSync(join(DIST, "_astro")).filter((f) => f.endsWith(".js")).map((f) => readFileSync(join(DIST, "_astro", f), "utf8"));
-  assert.ok(js.some((s) => s.includes(":commit") && s.includes("REQUEST_TIME") && s.includes("firestore.googleapis.com")), "tracker bundled");
+  // The endpoint host lives in the shared analytics-schema chunk (the admin page imports it too).
+  const all = js.join("\n");
+  assert.ok(js.some((s) => s.includes(":commit") && s.includes("REQUEST_TIME")), "tracker bundled");
+  assert.ok(all.includes("firestore.googleapis.com"), "Firestore host bundled");
 });
