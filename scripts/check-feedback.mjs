@@ -154,7 +154,7 @@ try {
     await shot(page, `${tag}-4-error`);
     log.reply = { status: 200, body: { name: "x" } };
     await press(page.locator("#fb-send"));
-    await page.locator("#fb-panel .fb-status", { hasText: "Sent ✓" }).waitFor();
+    await page.locator("#fb-panel .fb-status", { hasText: "Sent to Claude ✓" }).waitFor();
     await shot(page, `${tag}-5-sent`);
     const req = log.firestore.at(-1);
     assert.equal(req.method, "POST");

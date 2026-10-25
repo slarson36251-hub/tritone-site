@@ -83,7 +83,7 @@ function build() {
   ta = el("textarea", { id: "fb-note", rows: 4, maxLength: 7900, placeholder: SpeechRec ? "Tap Talk and speak, or type here" : "Type your note here", "aria-label": "Your note" });
   micBtn = el("button", { type: "button", class: "fb-btn", id: "fb-mic" });
   const cancelBtn = el("button", { type: "button", class: "fb-btn", id: "fb-cancel", textContent: "Cancel" });
-  sendBtn = el("button", { type: "button", class: "fb-btn fb-primary", id: "fb-send", textContent: "Send" });
+  sendBtn = el("button", { type: "button", class: "fb-btn fb-primary", id: "fb-send", textContent: "Send to Claude" });
   const row = el("div", { class: "fb-row" });
   if (SpeechRec) row.append(micBtn);
   row.append(el("span", { class: "fb-spacer" }), cancelBtn, sendBtn);
@@ -333,7 +333,7 @@ async function send() {
     }
     sent++;
     saveCount();
-    setStatus(`Sent ✓  ${sent} ${sent === 1 ? "note" : "notes"} this session`);
+    setStatus(`Sent to Claude ✓  ${sent} ${sent === 1 ? "note" : "notes"} this session. Say "read my feedback" in chat when you are done.`);
     renderLaunch();
     ta.value = "";
     setTimeout(() => { if (mode === "panel" && !ta.value) cancel(); }, 1400);
