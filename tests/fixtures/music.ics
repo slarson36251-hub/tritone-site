@@ -1,0 +1,192 @@
+BEGIN:VCALENDAR
+PRODID:-//Google Inc//Google Calendar 70.9054//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Music
+X-WR-TIMEZONE:America/Los_Angeles
+BEGIN:VTIMEZONE
+TZID:America/Los_Angeles
+X-LIC-LOCATION:America/Los_Angeles
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0800
+TZOFFSETTO:-0700
+TZNAME:PDT
+DTSTART:19700308T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:-0700
+TZOFFSETTO:-0800
+TZNAME:PST
+DTSTART:19701101T020000
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260612T200000
+DTEND;TZID=America/Los_Angeles:20260612T210000
+RRULE:FREQ=MONTHLY;BYDAY=2FR
+EXDATE;TZID=America/Los_Angeles:20261211T200000
+UID:77l8i8dkdkph9qt71u52it0pvb@google.com
+SUMMARY:Angela LaFlamme
+LOCATION:Rite Spot Cafe
+DESCRIPTION:genre: Vintage jazz & blues\nlineup: Angela LaFlamme - vocals\; Scott Larson - trombone\; Nick C
+ ulp - piano\; Aaron Cohen - bass\npresented by: Tritone Productions\nnotes: No cover\, two sets
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260807T200000
+DTEND;TZID=America/Los_Angeles:20260807T235500
+RECURRENCE-ID;TZID=America/Los_Angeles:20260814T200000
+UID:77l8i8dkdkph9qt71u52it0pvb@google.com
+SUMMARY:Angela LaFlamme
+LOCATION:Rite Spot Cafe
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260828T113000
+DTEND;TZID=America/Los_Angeles:20260828T130000
+RRULE:FREQ=MONTHLY;BYDAY=4FR
+UID:curm4m0sqn2jru233n01b0labt@google.com
+SUMMARY:David Parker
+LOCATION:Salesforce Park
+DESCRIPTION:genre: Jazz standards\nnotes: Free outdoor lunchtime set on the rooftop park
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261215T210000
+DTEND;TZID=America/Los_Angeles:20261215T233000
+UID:69ijacj571ij8b9kckpj8b9kcphj2b9pcoqm8b9m74sm2db66tgm8e1g74@google.com
+SUMMARY:Lucky 7
+LOCATION:Verdi Club
+DESCRIPTION:Scott Larson - trombone \nHenry Hung - trumpet \nJames Dunning - trumpet \nPatrick Wolfe - clari
+ net/ tenor \nMyles Bosien - guitar \nSafa Shokri - bass\nposter: /sessions/clint-baker-band-session-may-2026-hummingbird-hut-oakland.jpg
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261108T150000
+DTEND;TZID=America/Los_Angeles:20261108T180000
+UID:0n8nviblvbft6uv6d3pltpg8jq@google.com
+SUMMARY:Scott Larson Quartet @ The Deluxe
+LOCATION:1511 Haight St\, San Francisco\, CA 94117
+DESCRIPTION:lineup: Scott Larson - trombone\; Nick Culp - piano\; Bryan Bowman - drums\; Aaron Cohn - bass\npre
+ sented by: Tritone Productions\nnotes: $5 cover\, three sets\, 3–6 PM\ntickets: https://www.eventbrite.com/e/scott-l
+ arson-quartet-at-the-deluxe-tickets-1000000000001
+END:VEVENT
+BEGIN:VEVENT
+DTSTART:20261106T040000Z
+DTEND:20261106T070000Z
+UID:c8r6ap3668q3cb9o65hmab9k6dhjgb9p60q3cbb46lh3gp9kcgo36e9g68@google.com
+SUMMARY:Hard Bop Quintet
+LOCATION:Dawn Club
+DESCRIPTION:Jay Sanders - trumpet \nScott Larson - trombone \nKeith Saunders - piano \nEric Markowitz - bass\nSmith Dobson - drums\ngenre: Hard bop
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Chicago:20261120T183000
+DTEND;TZID=America/Chicago:20261120T233000
+UID:6opmap36ccp30b9mc5im2b9kcpim4b9o6tijcbb365h64chl6lh3gp3560@google.com
+SUMMARY:Angela Laflames
+LOCATION:The Sound Room
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261205T190000
+DTEND;TZID=America/Los_Angeles:20261205T213000
+UID:housecon20261205@google.com
+SUMMARY:Fault Line Trio
+LOCATION:4321 Example Ave\, Oakland\, CA 94610
+DESCRIPTION:lineup: Jay Sanders - piano\; Safa Shokri - bass\; Tim Rowe - drums\nnotes: Listening room\, RSVP for the address\nposter: /sessions/fault-line-trio-jay-sanders-piano-feb-2026-hummingbird-hut-oakland.jpg
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20270117
+DTEND;VALUE=DATE:20270118
+UID:fest20270117@google.com
+SUMMARY:Franco Nero @ Jack London Square
+LOCATION:Jack London Square\, Oakland\, CA
+DESCRIPTION:genre: Italian film soundtracks\, jazz\ntickets: https://www.example.org/winter-fest
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20270205T200000
+DTEND;TZID=America/Los_Angeles:20270205T220000
+UID:yoshis20270205@google.com
+SUMMARY:Hard Bop Quintet @ Yoshi's
+LOCATION:Yoshi's\, 510 Embarcadero W\, Oakland\, CA 94607
+DESCRIPTION:<b>genre:</b> Hard bop<br>tickets: <a href="https://yoshis.com/events/hard-bop-quintet">https://yoshis.com/events/hard-bop-quintet</a>
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261231T190000
+DTEND;TZID=America/Los_Angeles:20261231T230000
+UID:5q94oum332f6ed2b54hdhjvmui@google.com
+SUMMARY:[TEMPLATE] Band @ Venue
+LOCATION:Venue name\, street address\, city\, CA ZIP
+DESCRIPTION:DUPLICATE FOR EACH GIG - edit the title\, date\, location and the fields below.\n\ngenre: \nlineup: Name - instrument\; Name - instrument\npresented by: Tritone Productions\nnotes: doors\, cover\, set times\ntickets: 
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261110T180000
+DTEND;TZID=America/Los_Angeles:20261110T210000
+UID:rehearsal20261110@google.com
+SUMMARY:Rehearsal - Bogaloo
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261218T150000
+DTEND;TZID=America/Los_Angeles:20261218T214500
+UID:6oojcdhgcosjebb2c4r3ib9k6tj3eb9p6srjcb9ic5hm6dr5c5hjcohp64@google.com
+SUMMARY:Franco Nero Holiday Party
+LOCATION:Stanford University
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261018T150000
+DTEND;TZID=America/Los_Angeles:20261018T180000
+UID:c4q3adr5cli3ibb271h6ab9k6kojcb9pcko3ibb66som4d3264q3aphhc4@google.com
+SUMMARY:Scott Larson Quartet
+LOCATION:The DeLuxe
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261021T200000
+DTEND;TZID=America/Los_Angeles:20261021T233000
+UID:6kqjcc9j6sp68bb46sojgb9kc4q3cb9ochgjgbb171im4d3465j3aphhc4@google.com
+SUMMARY:Angela LaFlamme
+LOCATION:Broadway Studios
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260927T160000
+DTEND;TZID=America/Los_Angeles:20260927T200000
+UID:4r7uv53nhuct6qhb2n9skje99g@google.com
+SUMMARY:Angela LaFlamme
+LOCATION:Ivy Room
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260909T190000
+DTEND;TZID=America/Los_Angeles:20260909T230000
+UID:cpj3cphkc8pm4bb569hj2b9k6go34b9oc4sj2b9j61j6cphgc5gm8db268@google.com
+SUMMARY:Nick Culp Quartet
+LOCATION:Low Bar
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260903T200000
+DTEND;TZID=America/Los_Angeles:20260904T000000
+UID:pastdawn20260903@google.com
+SUMMARY:Hard Bop Quintet
+LOCATION:Dawn Club
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260902T193000
+DTEND;TZID=America/Los_Angeles:20260902T220000
+UID:6gom6d9m6cr36bb2ckomcb9kc8pj8bb264q68b9g64r66db670sjeoj26s@google.com
+SUMMARY:Toots Big Band
+LOCATION:Toot's Tavern
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260912T130000
+DTEND;TZID=America/Los_Angeles:20260912T181500
+UID:c5h66p1o6cqjcb9p60pjcb9kcgp64bb169ijcbb3cko66pj460omcc9m6g@google.com
+SUMMARY:Angela LaFlamme
+LOCATION:The Cigar Bar & Grill
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20260721T190000
+DTEND;TZID=America/Los_Angeles:20260721T220000
+UID:0ru8pv544b0lrpp9b395bpbmn9@google.com
+SUMMARY:Hard Bop Quintet
+LOCATION:The DeLuxe
+END:VEVENT
+END:VCALENDAR

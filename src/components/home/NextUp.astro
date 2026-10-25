@@ -1,9 +1,8 @@
 ---
 import { getUpcomingShows } from "../../lib/shows";
+import ShowRow from "../shows/ShowRow.astro";
 
 const shows = await getUpcomingShows(3);
-const day = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/Los_Angeles" });
-const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" });
 ---
 <section class="wrap py-18">
   <div class="rule border-t pt-0"></div>
@@ -14,13 +13,7 @@ const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digi
   </div>
   {shows.length ? (
     <ul class="rule m-0 list-none border-t p-0">
-      {shows.map((s) => (
-        <li class="rule grid gap-1 border-b px-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)_auto] md:items-baseline md:gap-6">
-          <span class="font-semibold uppercase tracking-[.04em]">{day.format(s.start)} · {time.format(s.start)}</span>
-          <strong class="text-[19px]">{s.title}</strong>
-          <span>{s.venue}</span>
-        </li>
-      ))}
+      {shows.map((s) => <ShowRow show={s} href="/shows" />)}
     </ul>
   ) : (
     <p class="m-0">Dates, venues and add-to-calendar links are on the <a href="/shows">Shows page</a>.</p>
