@@ -28,6 +28,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Test against the fixture calendar
+        run: SHOWS_FIXTURE=tests/fixtures/music.ics npm run build && npm test
       - run: npm run build
         env:
           MUSIC_CALENDAR_ID: ${{ vars.MUSIC_CALENDAR_ID }}
