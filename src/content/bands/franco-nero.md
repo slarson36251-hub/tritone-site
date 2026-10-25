@@ -8,8 +8,8 @@ photo: ../../assets/photos/franco-nero-band-live-hammond.jpg
 photoAlt: Franco Nero playing live in black and white, two guitars, trombone, upright bass, drums and a Hammond organ
 # TODO(scott): bio (the old site had none) and lineup
 tracks:
-  - { title: Caffeine, src: "https://static1.squarespace.com/static/62b7586b3006a46437ca5e0c/t/62b77e8581859f4db59cdeb1/1656193380679/Caffeine.mp3" }
-  - { title: "Mustn't Grumble", src: "https://static1.squarespace.com/static/62b7586b3006a46437ca5e0c/t/62b77f003495104834b2b43d/1656193380687/Mustn_t+Grumble.mp3" }
-  - { title: Pacifica, src: "https://static1.squarespace.com/static/62b7586b3006a46437ca5e0c/t/62b77f5173eeca06ef4a3932/1656193380692/Pacifica.mp3" }
-  - { title: Garden of Love, credit: Don Drummond, src: "https://static1.squarespace.com/static/62b7586b3006a46437ca5e0c/t/62b784f30ef24b68087fcde5/1656194309730/Garden+of+Love.mp3" }
+  - { title: Caffeine, src: "/audio/franco-nero/caffeine.mp3" }
+  - { title: "Mustn't Grumble", src: "/audio/franco-nero/mustnt-grumble.mp3" }
+  - { title: Pacifica, src: "/audio/franco-nero/pacifica.mp3" }
+  - { title: Garden of Love, credit: Don Drummond, src: "/audio/franco-nero/garden-of-love.mp3" }
 ---
