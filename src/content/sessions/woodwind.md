@@ -1,10 +1,10 @@
 ---
-artist: Woodwind Trio
+artist: "Echo's Bones"
 project: Flutes and reeds
 date: 2025-04-13
 when: April 2025
 sessions:
-  - { date: "Apr 13, 2025", what: Woodwind Trio Recording, hours: "10:00 AM to 7:00 PM · 9 hrs" }
+  - { date: "Apr 13, 2025", what: "Echo's Bones Recording", hours: "10:00 AM to 7:00 PM · 9 hrs" }
 photos:
   - src: ../../assets/sessions/woodwind-trio-session-apr-2025-hummingbird-hut-oakland.webp
     alt: Three woodwind players standing at mics around the live room with flutes and clarinets on stands
