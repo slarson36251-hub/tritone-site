@@ -126,7 +126,7 @@ button.bk-cell[aria-pressed="true"] { background: #fff; border-color: #fff; colo
   display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px;
   margin: 26px 0 0; padding: 16px 18px; border-radius: 16px; background: rgb(168 166 161 / 0.14);
 }
-.bk-summary .eyebrow { color: #a8a6a1; font-size: 11px; }
+.bk-summary .eyebrow { color: rgb(255 255 255 / 0.75); font-size: 13px; }
 .bk-summary strong { font-size: 17px; }
 
 .tf-done { text-align: left; padding: 6px 0; }
