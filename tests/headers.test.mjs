@@ -21,7 +21,7 @@ test('firebase.json sets the security headers on "**"', () => {
   assert.equal(header("Referrer-Policy"), "strict-origin-when-cross-origin");
   assert.equal(header("X-Frame-Options"), "SAMEORIGIN");
   assert.equal(header("Cross-Origin-Opener-Policy"), "same-origin-allow-popups");
-  for (const f of ["camera=()", "microphone=()", "geolocation=()", "interest-cohort=()"])
+  for (const f of ["camera=()", "microphone=(self)", "geolocation=()", "interest-cohort=()"])
     assert.ok(header("Permissions-Policy")?.includes(f), `Permissions-Policy has ${f}`);
   assert.ok(header("Content-Security-Policy"), "an enforced Content-Security-Policy");
   assert.equal(header("Content-Security-Policy-Report-Only"), undefined, "no leftover report-only policy");
