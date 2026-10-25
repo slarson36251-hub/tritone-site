@@ -1,0 +1,98 @@
+---
+// The tape shelf: one row of session boxes, newest left, on a stone plank. Scrolls sideways
+// (snap on phones; arrow buttons on wider screens). With `tabs`, the boxes are the tabs for
+// the panels on /sessions; otherwise they are plain links to each session page.
+import Tape from "./Tape.astro";
+import type { Session } from "../../lib/sessions";
+
+interface Props {
+  sessions: Session[];
+  tabs?: boolean;
+  /** The selected tape when the page is first served (tabs only). */
+  selected?: string;
+  /** Tapes carry the cover view-transition names. */
+  morph?: boolean;
+  /** First cover loads eagerly with high priority. */
+  priority?: boolean;
+  label: string;
+}
+const { sessions, tabs = false, selected, morph = false, priority = false, label } = Astro.props;
+---
+<div class="shelf" data-shelf>
+  <div class="shelf-head">
+    <slot />
+    <div class="shelf-nav" aria-hidden="true">
+      <button type="button" class="shelf-btn" data-shelf-dir="-1" tabindex="-1" title="Scroll left">
+        <svg width="16" height="16" viewBox="0 0 18 18"><path d="M11 2L4 9l7 7" fill="none" stroke="currentColor" stroke-width="2.2" /></svg>
+      </button>
+      <button type="button" class="shelf-btn" data-shelf-dir="1" tabindex="-1" title="Scroll right">
+        <svg width="16" height="16" viewBox="0 0 18 18"><path d="M7 2l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" /></svg>
+      </button>
+    </div>
+  </div>
+  <div class="tapes" data-tapes {...(tabs ? { role: "tablist", "aria-label": label } : { role: "list", "aria-label": label })}>
+    {sessions.map((s, i) =>
+      tabs ? (
+        <Tape session={s} tab selected={s.id === selected} priority={priority && i === 0} morph={morph} />
+      ) : (
+        <div role="listitem" class="tape-slot"><Tape session={s} priority={priority && i === 0} morph={morph} /></div>
+      ),
+    )}
+  </div>
+  <div class="plank" aria-hidden="true"></div>
+</div>
+
+<style>
+  .shelf-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+  .shelf-nav { display: none; gap: 8px; flex-shrink: 0; }
+  @media (min-width: 761px) { .shelf-nav { display: flex; } }
+  .shelf-btn {
+    display: grid; place-items: center; width: 44px; height: 44px; border-radius: 9999px; cursor: pointer;
+    background: transparent; color: var(--color-white); border: 1px solid rgb(168 166 161 / 0.5);
+    transition: background 0.2s, color 0.2s, opacity 0.2s;
+  }
+  .shelf-btn:hover { background: var(--color-white); color: var(--color-black); }
+  .shelf-btn:disabled { opacity: 0.3; cursor: default; background: transparent; color: var(--color-white); }
+  .tapes {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 2px;
+    /* Room above for the lifted (selected/hovered) tape, and for the focus ring. */
+    padding: 22px 2px 6px;
+    scrollbar-width: none;
+  }
+  .tapes::-webkit-scrollbar { display: none; }
+  @media (min-width: 600px) { .tapes { gap: 14px; } }
+  @media (min-width: 1024px) { .tapes { gap: 18px; } }
+  .tape-slot { display: contents; }
+  .plank { height: 10px; border-radius: 2px; background: var(--color-stone); box-shadow: 0 6px 18px rgb(0 0 0 / 0.45); }
+  @media (prefers-reduced-motion: no-preference) { .tapes { scroll-behavior: smooth; } }
+</style>
+
+<script>
+  // Arrow buttons page the shelf; they dim at either end.
+  function setup() {
+    document.querySelectorAll<HTMLElement>("[data-shelf]").forEach((shelf) => {
+      if (shelf.dataset.ready) return;
+      shelf.dataset.ready = "1";
+      const row = shelf.querySelector<HTMLElement>("[data-tapes]")!;
+      const btns = shelf.querySelectorAll<HTMLButtonElement>("[data-shelf-dir]");
+      const sync = () => {
+        const max = row.scrollWidth - row.clientWidth - 2;
+        btns.forEach((b) => (b.disabled = b.dataset.shelfDir === "-1" ? row.scrollLeft <= 2 : row.scrollLeft >= max));
+      };
+      btns.forEach((b) =>
+        b.addEventListener("click", () => row.scrollBy({ left: Number(b.dataset.shelfDir) * row.clientWidth * 0.8 })),
+      );
+      row.addEventListener("scroll", sync, { passive: true });
+      new ResizeObserver(sync).observe(row);
+      sync();
+    });
+  }
+  setup();
+  document.addEventListener("astro:page-load", setup);
+</script>

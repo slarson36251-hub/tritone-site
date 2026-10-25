@@ -63,12 +63,15 @@ export interface OgCard {
   /** Huge day number at right (optional). */
   num?: string;
   mon?: string;
+  /** A photo file (local path) shown as a full-height panel at right, e.g. a session cover. */
+  photo?: string;
 }
 
 export async function renderOg(card: OgCard): Promise<Buffer> {
   const { display, body, logo } = await load();
   const left = 72;
-  const textMax = card.num ? 720 : 1056;
+  const PHOTO_W = 440;
+  const textMax = card.num ? 720 : card.photo ? W - PHOTO_W - left - 48 : 1056;
   const head = fit(display, card.headline.toUpperCase(), textMax, 92, 3);
   const lineH = head.size * 1.0;
   const headTop = 210;
@@ -99,8 +102,14 @@ export async function renderOg(card: OgCard): Promise<Buffer> {
 
   const logoPng = await sharp(logo).resize({ width: 260 }).png().toBuffer();
   const logoMeta = await sharp(logoPng).metadata();
+  const layers: sharp.OverlayOptions[] = [{ input: logoPng, left, top: H - 56 - (logoMeta.height ?? 80) }];
+  if (card.photo) {
+    // Re-encoded through sharp, so none of the photo's own metadata comes along.
+    const photo = await sharp(card.photo).resize(PHOTO_W, H, { fit: "cover", position: "attention" }).png().toBuffer();
+    layers.push({ input: photo, left: W - PHOTO_W, top: 0 });
+  }
   return sharp(Buffer.from(svg))
-    .composite([{ input: logoPng, left, top: H - 56 - (logoMeta.height ?? 80) }])
+    .composite(layers)
     .png({ compressionLevel: 9 })
     .toBuffer(); // sharp writes no EXIF/XMP unless asked: the privacy check stays happy.
 }
