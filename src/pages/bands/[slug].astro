@@ -1,0 +1,156 @@
+---
+import { Image } from "astro:assets";
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import Pill from "../../components/Pill.astro";
+import BandArt from "../../components/BandArt.astro";
+import TrackList from "../../components/TrackList.astro";
+import { postersFor } from "../../lib/posters";
+
+export async function getStaticPaths() {
+  const bands = (await getCollection("bands")).sort((a, b) => a.data.order - b.data.order);
+  return bands.map((band, i) => ({ params: { slug: band.id }, props: { band, next: bands[(i + 1) % bands.length], index: i } }));
+}
+interface Props { band: CollectionEntry<"bands">; next: CollectionEntry<"bands">; index: number }
+const { band, next, index } = Astro.props;
+const { name, tagline, lineup, tracks, spotify, photo, photoAlt, poster } = band.data;
+const { Content } = await render(band);
+const hasBio = Boolean(band.body?.trim());
+// Posters featuring this band, minus the one already in the hero.
+const strip = postersFor(band.id).filter((p) => p.img.src !== poster?.src);
+const slug = band.id;
+const heroRatio = poster ? `${poster.width} / ${poster.height}` : "5 / 4";
+---
+<Base title={`${name} · Tritone Productions · Oakland, CA`} description={tagline} image={poster?.src}>
+  <section class="wrap pb-12 pt-6 md:pb-20 md:pt-10">
+    <a href="/bands" class="eyebrow inline-flex min-h-11 items-center gap-2 text-stone no-underline hover:text-white"><span aria-hidden="true">←</span> All bands</a>
+
+    <div class="mt-4 grid gap-6 md:grid-cols-12 md:gap-10">
+      <div class="flex flex-col gap-6 md:order-2 md:col-span-5">
+        <div class="tile relative w-full !bg-black" style={`aspect-ratio:${heroRatio}`} transition:name={`poster-${slug}`}>
+          <BandArt band={band} widths={[480, 720, 1000]} sizes="(min-width: 761px) 40vw, 100vw" eager align="center" />
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-8 md:col-span-7 md:pt-6">
+        <div>
+          <p class="eyebrow m-0 text-stone">Tritone Productions · Band {String(index + 1).padStart(2, "0")}</p>
+          <h1 class="disp mb-0 mt-3 text-[clamp(3rem,8vw,6.2rem)] leading-[0.9]"><span class="inline-block" transition:name={`band-${slug}`}>{name}</span></h1>
+          <p class="mb-0 mt-5 max-w-[44ch] text-[19px] text-white/90 md:text-[21px]">{tagline}</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          {spotify && (
+            <button type="button" data-play={spotify} data-play-title={`${name} · Spotify`}
+              class="flex min-h-12 cursor-pointer items-center gap-3 rounded-full bg-white px-7 text-sm font-semibold uppercase tracking-[.04em] text-black transition-transform hover:scale-[1.03]">
+              <svg width="12" height="14" viewBox="0 0 16 18" aria-hidden="true"><path d="M0 0l16 9-16 9z" fill="currentColor"/></svg>
+              Listen
+            </button>
+          )}
+          {tracks.length > 0 && (
+            <a href="#listen" class="flex min-h-12 items-center gap-3 rounded-full bg-white px-7 text-sm font-semibold uppercase tracking-[.04em] text-black no-underline transition-transform hover:scale-[1.03]">
+              <svg width="12" height="14" viewBox="0 0 16 18" aria-hidden="true"><path d="M0 0l16 9-16 9z" fill="currentColor"/></svg>
+              {tracks.length} tracks
+            </a>
+          )}
+          <Pill href="/contact" ghost>Book this band</Pill>
+        </div>
+
+        {lineup.length > 0 && (
+          <div>
+            <h2 class="eyebrow m-0 text-stone">Lineup</h2>
+            <ul class="m-0 mt-3 list-none p-0">
+              {lineup.map((m) => (
+                <li class="rule flex items-baseline justify-between gap-4 border-t py-3">
+                  <span class="text-[19px] font-semibold">{m.name}</span>
+                  <span class="text-right text-stone">{m.instrument}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {hasBio && (
+          <div class="bio max-w-[62ch] text-[17px] text-white/88">
+            <h2 class="eyebrow m-0 mb-3 text-stone">About</h2>
+            <Content />
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  {tracks.length > 0 && (
+    <section id="listen" class="wrap pb-14 md:pb-20">
+      <div class="tile reveal p-5 md:p-9">
+        <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p class="eyebrow m-0 text-stone">Listen</p>
+            <h2 class="disp mb-0 mt-2 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">{name}</h2>
+          </div>
+          <p class="m-0 text-sm text-stone">{tracks.length} tracks</p>
+        </div>
+        <TrackList tracks={tracks} artist={name} />
+      </div>
+    </section>
+  )}
+
+  {photo && (
+    <section class="wrap pb-14 md:pb-20">
+      <figure class="tile reveal m-0">
+        <Image src={photo} alt={photoAlt ?? name} widths={[480, 900, 1400]} sizes="(min-width: 1280px) 1200px, 100vw" class="block h-auto w-full" />
+      </figure>
+    </section>
+  )}
+
+  {strip.length > 0 && (
+    <section class="pb-14 md:pb-20" aria-labelledby="posters-h">
+      <div class="wrap mb-5 flex items-end justify-between gap-4">
+        <div>
+          <p class="eyebrow m-0 text-stone">From the wall</p>
+          <h2 id="posters-h" class="disp mb-0 mt-2 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">Posters</h2>
+        </div>
+        <a href="/gallery" class="shrink-0 font-semibold">Gallery →</a>
+      </div>
+      <ul class="strip wrap m-0 flex list-none snap-x snap-mandatory gap-4 overflow-x-auto pt-0 pb-3">
+        {strip.map((p) => (
+          <li class="w-[62vw] max-w-[260px] shrink-0 snap-start">
+            <a href={`/gallery#${p.id}`} class="group flex flex-col gap-2 no-underline">
+              <span class="tile block aspect-[2/3]">
+                <Image src={p.img} alt={p.alt} widths={[260, 520]} sizes="260px" class="tile-img absolute inset-0 h-full w-full object-cover group-hover:scale-105" />
+              </span>
+              <span class="text-sm font-semibold leading-tight">{p.title}</span>
+              <span class="-mt-1.5 text-xs text-stone">{p.sub}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <section class="wrap pb-16 md:pb-24">
+    <div class="grid gap-4 md:grid-cols-2 md:gap-5">
+      <a href={`/bands/${next.id}`} class="tile reveal group flex min-h-[180px] flex-col justify-between gap-6 p-6 no-underline md:p-8">
+        <p class="eyebrow m-0 text-stone">Next band</p>
+        <div class="flex items-end justify-between gap-4">
+          <h2 class="disp m-0 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">{next.data.name}</h2>
+          <span class="grid size-12 shrink-0 place-items-center rounded-full bg-white text-xl text-black transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+        </div>
+      </a>
+      <a href="/contact" class="tile reveal group flex min-h-[180px] flex-col justify-between gap-6 !border-stone !bg-stone p-6 text-black no-underline md:p-8">
+        <p class="eyebrow m-0">Clubs · parties · festivals</p>
+        <div class="flex items-end justify-between gap-4">
+          <h2 class="disp m-0 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">Book {name}</h2>
+          <span class="grid size-12 shrink-0 place-items-center rounded-full bg-black text-xl text-white transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .bio :global(p) { margin: 0 0 1em; }
+  .bio :global(p:last-child) { margin-bottom: 0; }
+  .strip { scrollbar-width: thin; scrollbar-color: rgb(168 166 161 / .5) transparent; scroll-padding-inline: 16px; }
+  @media (min-width: 761px) { .strip { scroll-padding-inline: 40px; } }
+</style>

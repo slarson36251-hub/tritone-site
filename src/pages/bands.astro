@@ -1,11 +1,79 @@
 ---
+import { getCollection } from "astro:content";
 import Base from "../layouts/Base.astro";
 import PageHead from "../components/PageHead.astro";
 import Pill from "../components/Pill.astro";
+import BandArt from "../components/BandArt.astro";
+
+const bands = (await getCollection("bands")).sort((a, b) => a.data.order - b.data.order);
+const [lead, ...rest] = bands;
+const num = (i: number) => String(i + 1).padStart(2, "0");
+// Desktop bento spans for the bands after the lead (6-column grid).
+const spans = ["md:col-span-2 md:row-span-2", "md:col-span-2 md:min-h-[520px]", "md:col-span-2 md:min-h-[520px]", "md:col-span-2 md:min-h-[520px]"];
 ---
-<Base title="The Bands · Tritone Productions · Oakland, CA" description="Hard Bop Quintet · Franco Nero · Lucky 7 · Scott Larson Quartet · Fault Line Trio. Hard bop, boogaloo, afro-cuban and down-home blues, booked for clubs, parties and festivals.">
+<Base title="The Bands · Tritone Productions · Oakland, CA" description="Hard Bop Quintet · Franco Nero · Lucky 7 · Scott Larson Quartet · Fault Line Trio. Hard bop, boogaloo, afro-cuban, ska and rocksteady, booked for clubs, parties and festivals.">
   <PageHead eyebrow="Tritone Productions" title="The Bands">
-    <p class="m-0 max-w-[60ch] text-[19px]">Hard Bop Quintet · Franco Nero · Lucky 7 · Scott Larson Quartet · Fault Line Trio. Hard bop, boogaloo, afro-cuban and down-home blues, booked for clubs, parties and festivals.</p>
-    <div class="pt-2"><Pill href="/contact">Book a band</Pill></div>
+    <p class="m-0 max-w-[60ch] text-[19px]">Hard bop, boogaloo, afro-cuban, ska, rocksteady and down-home blues, booked for clubs, parties and festivals.</p>
+    <div class="flex flex-wrap gap-3 pt-2">
+      <Pill href="/contact">Book a band</Pill>
+      <Pill href="/gallery" ghost>Poster gallery</Pill>
+    </div>
   </PageHead>
+
+  <section class="wrap pb-16 md:pb-24" aria-label="Bands">
+    <ul class="m-0 grid list-none grid-cols-1 gap-4 p-0 md:auto-rows-[minmax(300px,auto)] md:grid-cols-6 md:gap-5">
+
+      <li class="md:col-span-4 md:row-span-2">
+        <a href={`/bands/${lead.id}`} class="tile reveal group grid h-full no-underline md:grid-cols-[1fr_1fr]">
+          <div class="relative aspect-[2/3] overflow-hidden bg-black md:order-2 md:aspect-auto" transition:name={`poster-${lead.id}`}>
+            <BandArt band={lead} widths={[400, 640, 900]} sizes="(min-width: 761px) 34vw, 100vw" eager fit="contain" />
+          </div>
+          <div class="flex flex-col justify-between gap-8 p-6 md:p-9">
+            <div>
+              <p class="eyebrow m-0 text-stone">{num(0)} · Featured</p>
+              <h2 class="disp mb-0 mt-3 text-[clamp(2.6rem,5.4vw,4.6rem)] leading-[0.92]"><span class="inline-block" transition:name={`band-${lead.id}`}>{lead.data.name}</span></h2>
+              <p class="mb-0 mt-4 max-w-[38ch] text-[17px] text-white/85">{lead.data.tagline}</p>
+            </div>
+            {lead.data.lineup.length > 0 && (
+              <ul class="m-0 list-none p-0 text-[15px]">
+                {lead.data.lineup.map((m) => (
+                  <li class="rule flex justify-between gap-4 border-t py-2"><span class="font-semibold">{m.name}</span><span class="text-stone">{m.instrument}</span></li>
+                ))}
+              </ul>
+            )}
+            <span class="flex items-center gap-3 font-semibold">Meet the band <span class="grid size-10 place-items-center rounded-full bg-white text-black transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span></span>
+          </div>
+        </a>
+      </li>
+
+      {rest.map((b, i) => (
+        <li class={spans[i]}>
+          <a href={`/bands/${b.id}`} class="tile reveal group block h-full min-h-[480px] no-underline">
+            <div class="absolute inset-0 overflow-hidden" transition:name={`poster-${b.id}`}>
+              <BandArt band={b} widths={[400, 640, 900]} sizes="(min-width: 761px) 30vw, 100vw" />
+            </div>
+            <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-black/0"></div>
+            <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-6">
+              <div class="min-w-0">
+                <p class="eyebrow m-0 text-stone">{num(i + 1)}</p>
+                <h2 class="disp mb-0 mt-2 text-[clamp(1.9rem,3vw,2.5rem)] leading-[0.95]"><span class="inline-block" transition:name={`band-${b.id}`}>{b.data.name}</span></h2>
+                <p class="mb-0 mt-2 line-clamp-2 text-[15px] text-white/85">{b.data.tagline}</p>
+              </div>
+              <span class="grid size-10 shrink-0 place-items-center rounded-full bg-white text-black transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+            </div>
+          </a>
+        </li>
+      ))}
+
+      <li class="md:col-span-6">
+        <a href="/contact" class="tile reveal group flex min-h-[200px] flex-col justify-between gap-6 !border-stone !bg-stone p-6 text-black no-underline md:p-8">
+          <p class="eyebrow m-0">Clubs · parties · festivals</p>
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <h2 class="disp m-0 text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]">Book a band</h2>
+            <span class="grid size-14 place-items-center rounded-full bg-black text-2xl text-white transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+          </div>
+        </a>
+      </li>
+    </ul>
+  </section>
 </Base>
