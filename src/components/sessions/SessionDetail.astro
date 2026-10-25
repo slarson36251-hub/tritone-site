@@ -4,6 +4,7 @@
 import { Picture, getImage } from "astro:assets";
 import { render } from "astro:content";
 import LiteYouTube from "./LiteYouTube.astro";
+import Bandcamp from "./Bandcamp.astro";
 import { coverTransition, type Session } from "../../lib/sessions";
 
 interface Props {
@@ -87,6 +88,15 @@ const full = await Promise.all(rest.map((p) => getImage({ src: p.src, width: 160
       ))}
     </div>
   </div>
+
+  {d.albums.length > 0 && (
+    <div>
+      <Sub class="eyebrow mb-4 mt-0 text-stone">Listen · the record</Sub>
+      <div class="grid gap-5 md:grid-cols-2">
+        {d.albums.map((a) => <Bandcamp {...a} />)}
+      </div>
+    </div>
+  )}
 
   {d.videos.length > 0 && (
     <div>
