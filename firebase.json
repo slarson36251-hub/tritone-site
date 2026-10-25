@@ -122,5 +122,8 @@
         "type": 301
       }
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }
