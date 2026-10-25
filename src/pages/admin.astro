@@ -1,0 +1,220 @@
+---
+// Scott's private visitor dashboard. Not linked anywhere, noindex, kept out of the sitemap
+// (it drops noindex pages) and out of llms*.txt. The page itself is a static shell: every number
+// is read in the browser from Firestore "hits" after an email-link sign-in (Firestore rules let
+// only ADMIN_EMAILS read). /admin?demo=1 renders the whole dashboard from generated sample data.
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import logo from "../assets/logo/tritone-wordmark-white.png";
+import { getShows } from "../lib/shows";
+import { VENUES } from "../data/venues";
+import { CHANNELS } from "../lib/admin/links";
+import "../lib/admin/admin.css";
+
+// Build-time context for show-date annotations and the link builder. Names and dates only:
+// no venue addresses, nothing about where the Hut is.
+const shows = (await getShows()).map((s) => ({
+  slug: s.slug, title: s.title, band: s.band, venue: s.venue, start: s.start.toISOString(), cancelled: s.cancelled,
+}));
+const bands = (await getCollection("bands"))
+  .sort((a, b) => (a.data.order ?? 0) - (b.data.order ?? 0))
+  .map((b) => ({ slug: b.id, name: b.data.name, tracks: (b.data.tracks ?? []).map((t: { title: string }) => t.title) }));
+const venues = VENUES.map((v) => v.name);
+const data = JSON.stringify({ shows, bands, venues, built: new Date().toISOString() });
+const ranges = [
+  ["today", "Today"],
+  ["7d", "7 days"],
+  ["30d", "30 days"],
+  ["90d", "90 days"],
+  ["custom", "Custom"],
+];
+---
+<Base title="Visitors · Tritone admin" description="Private visitor dashboard for Tritone Productions: who visits the site, where they come from, and what they are interested in." noindex>
+  <script type="application/json" id="adm-data" set:html={data} />
+  <div id="adm" class="adm wrap" data-state="boot">
+    <div class="adm-demo" id="adm-demo" hidden>
+      <strong>Demo data</strong>
+      <span>Generated sample visitors so you can preview the dashboard. Nothing here is real.</span>
+      <a href="/admin">Exit demo</a>
+    </div>
+
+    <header class="adm-head">
+      <div>
+        <p class="eyebrow adm-eyebrow">Tritone Productions · Private</p>
+        <h1 class="disp adm-title">Visitors</h1>
+        <p class="adm-who" id="adm-who" aria-live="polite"></p>
+      </div>
+      <div class="adm-head-actions" id="adm-head-actions" hidden>
+        <button type="button" class="adm-btn" id="adm-csv">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+          Export CSV
+        </button>
+        <button type="button" class="adm-btn adm-btn-ghost" id="adm-signout">Sign out</button>
+      </div>
+    </header>
+
+    <!-- Sign in -->
+    <section class="adm-auth" id="adm-auth" hidden aria-labelledby="adm-auth-h">
+      <div class="adm-card adm-auth-card">
+        <Image src={logo} alt="Tritone Productions" class="adm-auth-logo" widths={[240, 480]} sizes="180px" loading="eager" />
+        <h2 class="disp adm-h2" id="adm-auth-h">Sign in</h2>
+        <p class="adm-muted" id="adm-auth-lead">Enter your email and Firebase sends you a one-time sign-in link. No password.</p>
+        <form id="adm-auth-form" novalidate>
+          <label class="tf-label" for="adm-email">Email</label>
+          <input class="adm-input" id="adm-email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com" />
+          <button class="adm-btn adm-btn-primary adm-btn-block" id="adm-auth-btn" type="submit">Email me a sign-in link</button>
+        </form>
+        <p class="adm-notice" id="adm-auth-msg" role="status" hidden></p>
+        <p class="adm-muted adm-small">Just looking? <a href="/admin?demo=1">Preview with demo data</a>.</p>
+      </div>
+    </section>
+
+    <!-- Dashboard -->
+    <div class="adm-app" id="adm-app" hidden>
+      <div class="adm-toolbar" role="group" aria-label="Date range">
+        <div class="adm-seg" id="adm-range">
+          {ranges.map(([k, label]) => <button type="button" data-range={k} aria-pressed="false">{label}</button>)}
+        </div>
+        <div class="adm-custom" id="adm-custom" hidden>
+          <label><span>From</span><input type="date" class="adm-input adm-date" id="adm-from" /></label>
+          <label><span>To</span><input type="date" class="adm-input adm-date" id="adm-to" /></label>
+          <button type="button" class="adm-btn" id="adm-apply">Apply</button>
+        </div>
+        <div class="adm-toolbar-end">
+          <button type="button" class="adm-switch" id="adm-compare" role="switch" aria-checked="true"><span class="adm-switch-k" aria-hidden="true"></span>Compare to previous</button>
+          <button type="button" class="adm-btn adm-btn-ghost adm-btn-icon" id="adm-refresh" aria-label="Reload the numbers">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="adm-status" id="adm-status" role="status" aria-live="polite"></p>
+
+      <nav class="adm-jump" aria-label="Dashboard sections">
+        <a href="#s-overview">Overview</a><a href="#s-sources">Sources</a><a href="#s-outreach">Outreach</a><a href="#s-interest">Interest</a><a href="#s-pages">Pages</a><a href="#s-audience">Audience</a><a href="#s-activity">Activity</a>
+      </nav>
+
+      <section class="adm-live adm-card" id="adm-live" aria-label="Live now"></section>
+
+      <section id="s-overview" class="adm-section" aria-label="Overview">
+        <div class="adm-kpis" id="adm-kpis"></div>
+        <div class="adm-grid">
+          <article class="adm-card adm-span-12 adm-insights" aria-labelledby="h-ins">
+            <h2 class="adm-h" id="h-ins">What changed</h2>
+            <ul class="adm-ins" id="adm-insights"></ul>
+          </article>
+          <article class="adm-card adm-span-12" aria-labelledby="h-traffic">
+            <div class="adm-card-head">
+              <h2 class="adm-h" id="h-traffic">Traffic over time</h2>
+              <p class="adm-sub" id="adm-traffic-sub"></p>
+            </div>
+            <div class="adm-legend" id="adm-legend" role="group" aria-label="Tap a source to highlight it"></div>
+            <div class="adm-chart" id="adm-traffic" tabindex="0" aria-describedby="adm-traffic-help">
+              <div class="adm-tip" id="adm-tip" hidden></div>
+            </div>
+            <p class="adm-sub" id="adm-traffic-help">Bars are visits, stacked by where they came from. Dashed line: previous period. <span class="adm-note-icon">♪</span> marks show dates (filled = upcoming). Tap or use ← → for details.</p>
+            <details class="adm-table-view"><summary>Show as a table</summary><div id="adm-traffic-table"></div></details>
+          </article>
+        </div>
+      </section>
+
+      <section id="s-sources" class="adm-section" aria-labelledby="h-sources">
+        <h2 class="adm-section-h disp" id="h-sources">Where they come from</h2>
+        <div class="adm-grid">
+          <article class="adm-card adm-span-7"><h3 class="adm-h">Sources</h3><div id="adm-sources"></div></article>
+          <article class="adm-card adm-span-5 adm-card-ai"><h3 class="adm-h">AI assistants</h3><p class="adm-sub">Visits sent by ChatGPT, Perplexity, Claude, Gemini, Copilot and others, and where they landed.</p><div id="adm-ai"></div></article>
+          <article class="adm-card adm-span-12"><h3 class="adm-h">Referring sites</h3><p class="adm-sub">Every site that sent someone, with the bucket it counts toward. <span class="adm-pill-new">new</span> = not seen in the previous period.</p><div id="adm-refs" class="adm-cols"></div></article>
+        </div>
+      </section>
+
+      <section id="s-outreach" class="adm-section" aria-labelledby="h-outreach">
+        <h2 class="adm-section-h disp" id="h-outreach">Outreach &amp; venues</h2>
+        <div class="adm-grid">
+          <article class="adm-card adm-span-7"><h3 class="adm-h">Links you shared</h3><p class="adm-sub">Each tagged link (utm_campaign), with the channels inside it. Interest = visits that clicked tickets, played, asked to book…</p><div id="adm-campaigns"></div></article>
+          <article class="adm-card adm-span-5" aria-labelledby="h-builder">
+            <h3 class="adm-h" id="h-builder">Link builder</h3>
+            <p class="adm-sub">Make a trackable link for a venue, club, post or flyer. Visits from it show up in the table.</p>
+            <form id="adm-lb" class="adm-lb" novalidate>
+              <label class="tf-label" for="lb-page">Page</label>
+              <select class="adm-input" id="lb-page"></select>
+              <label class="tf-label" for="lb-name">Venue, club or campaign</label>
+              <input class="adm-input" id="lb-name" list="lb-venues" autocomplete="off" placeholder="e.g. The DeLuxe, Nov 8" />
+              <datalist id="lb-venues"></datalist>
+              <label class="tf-label" for="lb-channel">Where you'll share it</label>
+              <select class="adm-input" id="lb-channel">
+                {CHANNELS.map((c) => <option value={c.id}>{c.label}</option>)}
+              </select>
+              <label class="tf-label" for="lb-content">Variant <span class="tf-opt">(optional, e.g. window-poster)</span></label>
+              <input class="adm-input" id="lb-content" autocomplete="off" />
+            </form>
+            <div class="adm-lb-out" id="lb-out" hidden>
+              <code class="adm-url" id="lb-url"></code>
+              <div class="adm-lb-actions">
+                <button type="button" class="adm-btn adm-btn-primary" id="lb-copy">Copy link</button>
+                <button type="button" class="adm-btn adm-btn-ghost" id="lb-save">Save</button>
+              </div>
+              <figure class="adm-qr" id="lb-qr-wrap">
+                <div id="lb-qr"></div>
+                <figcaption>
+                  <span>QR code for flyers and posters (error correction M).</span>
+                  <span class="adm-lb-actions">
+                    <button type="button" class="adm-btn adm-btn-ghost" id="lb-png">Download PNG</button>
+                    <button type="button" class="adm-btn adm-btn-ghost" id="lb-svg">SVG</button>
+                  </span>
+                </figcaption>
+              </figure>
+            </div>
+            <div id="lb-saved"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="s-interest" class="adm-section" aria-labelledby="h-interest">
+        <h2 class="adm-section-h disp" id="h-interest">Who's interested &amp; why</h2>
+        <div class="adm-grid">
+          <article class="adm-card adm-span-6"><h3 class="adm-h">Booking funnel</h3><p class="adm-sub">From a visit to asking for studio time.</p><div id="adm-funnel"></div><div id="adm-asks"></div></article>
+          <article class="adm-card adm-span-6"><h3 class="adm-h">Interest actions</h3><div id="adm-events"></div></article>
+          <article class="adm-card adm-span-6"><h3 class="adm-h">Why: by source</h3><p class="adm-sub">Share of each source's visits that did something.</p><div id="adm-why-src"></div></article>
+          <article class="adm-card adm-span-6"><h3 class="adm-h">Why: by landing page</h3><p class="adm-sub">Where interested visitors started.</p><div id="adm-why-land"></div></article>
+          <article class="adm-card adm-span-12"><h3 class="adm-h">What got attention</h3><div class="adm-attn" id="adm-attn"></div></article>
+        </div>
+      </section>
+
+      <section id="s-pages" class="adm-section" aria-labelledby="h-pages">
+        <h2 class="adm-section-h disp" id="h-pages">Pages</h2>
+        <div class="adm-grid">
+          <article class="adm-card adm-span-6"><h3 class="adm-h">Top pages</h3><div id="adm-pages"></div></article>
+          <article class="adm-card adm-span-6"><h3 class="adm-h">Landing pages</h3><p class="adm-sub">The first page of each visit.</p><div id="adm-landing"></div></article>
+        </div>
+      </section>
+
+      <section id="s-audience" class="adm-section" aria-labelledby="h-audience">
+        <h2 class="adm-section-h disp" id="h-audience">Audience</h2>
+        <div class="adm-grid">
+          <article class="adm-card adm-span-4"><h3 class="adm-h">Devices</h3><div id="adm-devices"></div><h3 class="adm-h adm-h-gap">Languages</h3><div id="adm-langs"></div></article>
+          <article class="adm-card adm-span-8"><h3 class="adm-h">Regions</h3><p class="adm-sub">Approximate region from the browser's time zone. No cities, no IP addresses.</p><div id="adm-regions" class="adm-cols"></div></article>
+          <article class="adm-card adm-span-12"><h3 class="adm-h">When they visit</h3><p class="adm-sub">Visits by weekday and hour (your clock). Brighter = busier: good times to post.</p><div id="adm-heat" class="adm-heat"></div></article>
+        </div>
+      </section>
+
+      <section id="s-activity" class="adm-section" aria-labelledby="h-activity">
+        <h2 class="adm-section-h disp" id="h-activity">Recent visits</h2>
+        <p class="adm-sub">Anonymous journeys: where each visit came from, the pages it saw and what it did. No names, emails or addresses are ever collected.</p>
+        <ol class="adm-feed" id="adm-feed"></ol>
+        <button type="button" class="adm-btn adm-btn-ghost" id="adm-more" hidden>Show more</button>
+      </section>
+    </div>
+
+    <footer class="adm-foot">
+      <button type="button" class="adm-switch" id="adm-self" role="switch" aria-checked="true"><span class="adm-switch-k" aria-hidden="true"></span><span id="adm-self-label">Don't count my visits in this browser</span></button>
+      <p class="adm-muted adm-small">First-party, cookieless counts stored in Firestore. Time zone is the only location signal; the studio appears only as Oakland, CA.</p>
+    </footer>
+  </div>
+  <noscript><p class="wrap">The dashboard needs JavaScript.</p></noscript>
+</Base>
+
+<script>
+  import { init, teardown } from "../lib/admin/dashboard";
+  document.addEventListener("astro:page-load", () => { if (document.getElementById("adm")) init(); });
+  document.addEventListener("astro:before-swap", teardown);
+</script>
