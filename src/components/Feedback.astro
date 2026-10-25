@@ -1,0 +1,27 @@
+---
+// Scott's private "click and talk" feedback overlay for the beta site. Off for everyone:
+// it only loads on tritone-site.web.app (or a preview channel) after ?feedback=on, and never on
+// tritone-productions.com. This tiny check is all a normal visitor runs; the overlay itself is a
+// separate, dynamically imported module (src/lib/feedback-overlay.ts).
+---
+<script>
+  import { FEEDBACK_FLAG, feedbackHostAllowed, feedbackParam } from "../lib/feedback-gate";
+
+  function check() {
+    // localhost only under `astro dev`: import.meta.env.DEV is false in builds, so this is dropped.
+    const devHost = import.meta.env.DEV && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    if (!devHost && !feedbackHostAllowed(location.hostname)) return;
+    let on = false;
+    try {
+      const want = feedbackParam(location.search);
+      if (want === "on") localStorage.setItem(FEEDBACK_FLAG, "1");
+      if (want === "off") localStorage.removeItem(FEEDBACK_FLAG);
+      on = localStorage.getItem(FEEDBACK_FLAG) === "1";
+    } catch {
+      on = feedbackParam(location.search) === "on"; // storage blocked: this page only
+    }
+    if (on) import("../lib/feedback-overlay").then((m) => m.init());
+    else document.getElementById("fb-root")?.remove();
+  }
+  document.addEventListener("astro:page-load", check);
+</script>

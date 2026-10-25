@@ -84,6 +84,8 @@ test("every off-site script, image and frame in dist/ is allowed by the CSP", { 
   for (const [f, s] of [...js, ...html]) {
     for (const m of s.matchAll(/https:\/\/script\.google\.com\/macros\/[^"'`\s]+/g))
       assert.ok(allows("connect-src", "https://script.google.com"), `${f}: fetches ${m[0]}`);
+    if (s.includes("https://firestore.googleapis.com/"))
+      assert.ok(allows("connect-src", "https://firestore.googleapis.com"), `${f}: fetches Firestore`);
     for (const m of s.matchAll(/https:\/\/(open\.spotify\.com|www\.youtube-nocookie\.com|w\.soundcloud\.com)\/embed/g))
       assert.ok(allows("frame-src", `https://${m[1]}`), `${f}: embeds ${m[1]}`);
   }

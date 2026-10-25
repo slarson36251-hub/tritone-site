@@ -44,6 +44,15 @@ To add a session:
   Do it before the Squarespace site is cancelled, or the players go silent.
 - Old Squarespace URLs (`/hard-bop-quintet`, `/franco-nero`, `/lucky-7`, `/about`, `/home`, ...) are 301 redirects in `firebase.json`.
 
+## Beta-site feedback (Scott only)
+On https://tritone-site.web.app (or a preview channel), open any page with `?feedback=on` once: a **Feedback** button
+appears bottom-left on every page in that browser. Tap it, tap the thing to comment on (or **Whole page**), tap **Talk**
+and speak (or type), then **Send**. `?feedback=off` hides it again. It never loads on tritone-productions.com.
+- Notes go to Firestore (`feedback` collection, create-only per `firestore.rules`) with the `FEEDBACK_API_KEY` repo
+  variable (built in as `PUBLIC_FEEDBACK_API_KEY`). Read them with the **Feedback notes** workflow (artifact `feedback.json`).
+- Code: `src/components/Feedback.astro` (gate), `src/lib/feedback-overlay.ts` (overlay, loaded on demand).
+  Browser check: `PUBLIC_FEEDBACK_API_KEY=test-key npm run build && node scripts/check-feedback.mjs`.
+
 ## Privacy (hard rule)
 The studio's street address must never be published or inferable. Only "Oakland, CA".
 No maps, no geo in schema, no photo metadata, and never read the Hummingbird Hut calendar.
