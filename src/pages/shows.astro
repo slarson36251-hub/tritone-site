@@ -36,7 +36,7 @@ const event = (s: Show) => ({
 });
 const schema = upcoming.map(event);
 ---
-<Base title="Shows · Tritone Productions · Bay Area jazz" description="Upcoming shows by Tritone Productions bands around the Bay Area: dates, venues, lineups, tickets and add-to-calendar links.">
+<Base title="Shows · Tritone Productions · Bay Area" description="Upcoming shows by Tritone Productions bands around the Bay Area: dates, venues, lineups, tickets and add-to-calendar links.">
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(schema)} />
   <link slot="head" rel="alternate" type="text/calendar" title="Tritone Productions shows" href="/shows.ics" />
 

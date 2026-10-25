@@ -11,14 +11,15 @@ const org = {
   "@type": "Organization",
   name: "Tritone Productions",
   url: "https://tritone-productions.com",
+  description: "Music production and the Hummingbird Hut recording studio, Oakland, CA.",
   email: "scott@tritone-productions.com",
   founder: { "@type": "Person", name: "Scott Larson" },
   address: { "@type": "PostalAddress", addressLocality: "Oakland", addressRegion: "CA", addressCountry: "US" },
 };
 ---
 <Base
-  title="Tritone Productions · Hummingbird Hut recording studio and Bay Area jazz · Oakland, CA"
-  description="Tritone Productions is the Hummingbird Hut, a private recording studio in Oakland, CA, and a family of Bay Area jazz groups run by trombonist Scott Larson."
+  title="Tritone Productions · Music production and the Hummingbird Hut recording studio · Oakland, CA"
+  description="Tritone Productions is music production in Oakland, CA: the Hummingbird Hut, a private recording studio, and a family of Bay Area jazz groups run by trombonist Scott Larson."
 >
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(org)} />
   <Hero />
