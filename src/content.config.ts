@@ -97,7 +97,7 @@ const sessions = defineCollection({
       links: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
       // A released album from the session: Bandcamp's player (album id from the page's bc-page-properties item_id).
       albums: z
-        .array(z.object({ bandcampId: z.string().regex(/^\d+$/), title: z.string(), artist: z.string(), url: z.string().url(), tracks: z.number().int().positive(), note: z.string().optional() }))
+        .array(z.object({ bandcampId: z.string().regex(/^\d+$/), title: z.string(), artist: z.string(), url: z.string().url(), tracks: z.number().int().positive(), note: z.string().optional(), art: image().optional() }))
         .default([]),
     }),
 });

@@ -3,7 +3,7 @@
 // Durations appear once a track's metadata has loaded (preload="none" keeps the page light).
 // With a cover, the list sits beside a "deck": the cover as a record sleeve, a disc that slides
 // out and spins while a track plays, the current title and one big play/pause button.
-import { Image } from "astro:assets";
+import { Image, Picture } from "astro:assets";
 import type { ImageMetadata } from "astro";
 interface Props {
   tracks: { title: string; src: string; credit?: string }[];
@@ -19,7 +19,7 @@ const { tracks, artist, cover, coverAlt } = Astro.props;
     <div class="tl-deck">
       <div class="tl-sleeve">
         <span class="tl-disc" aria-hidden="true"><span class="tl-label"></span></span>
-        <Image src={cover} alt={coverAlt ?? artist} widths={[320, 480, 720]} sizes="(min-width: 761px) 340px, 70vw" class="tl-cover" />
+        <Picture formats={["avif"]} fallbackFormat="webp" src={cover} alt={coverAlt ?? artist} widths={[200, 320, 480, 600]} sizes="(min-width: 1024px) 280px, (min-width: 761px) 230px, 28vw" class="tl-cover" />
       </div>
       <div class="tl-now">
         <button type="button" class="tl-big" aria-label={`Play ${tracks[0].title}`}>

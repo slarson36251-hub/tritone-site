@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Image, Picture } from "astro:assets";
 import { getCollection } from "astro:content";
 import studioPhoto from "../../assets/photos/fault-line-trio-piano-mics-feb-2026-hummingbird-hut-oakland.jpg";
 import gearPhoto from "../../assets/photos/fault-line-trio-mix-maag-trident-hummingbird-hut-oakland.jpg";
@@ -46,7 +46,7 @@ const recent = [
     )}
 
     <a href="/hummingbird-hut" class="tile reveal group min-h-[320px] md:col-span-2 md:row-span-2">
-      <Image src={studioPhoto} alt="Grand piano with condenser mics at the Hummingbird Hut, Oakland, CA" widths={[480, 720]} sizes="(min-width: 761px) 30vw, 100vw" class="tile-img absolute inset-0 h-full w-full object-cover" />
+      <Picture formats={["avif"]} fallbackFormat="webp" src={studioPhoto} alt="Grand piano with condenser mics at the Hummingbird Hut, Oakland, CA" widths={[480, 720]} sizes="(min-width: 761px) 30vw, 100vw" class="tile-img absolute inset-0 h-full w-full object-cover" />
       <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/0"></div>
       <div class="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-6">
         <p class="eyebrow m-0 text-stone">The studio</p>
@@ -69,7 +69,7 @@ const recent = [
           <li>
             <a href={`/sessions#${s.id}`} class="group flex flex-col gap-2 no-underline">
               <span class="block overflow-hidden rounded-xl">
-                <Image src={s.img} alt={`${s.name} session at the Hummingbird Hut, Oakland, CA`} widths={[240, 400]} sizes="(min-width: 761px) 14vw, 30vw" class="tile-img aspect-3/4 h-auto w-full object-cover group-hover:scale-105" />
+                <Picture formats={["avif"]} fallbackFormat="webp" src={s.img} alt={`${s.name} session at the Hummingbird Hut, Oakland, CA`} widths={[240, 400]} sizes="(min-width: 761px) 14vw, 30vw" class="tile-img aspect-3/4 h-auto w-full object-cover group-hover:scale-105" />
               </span>
               <span class="text-sm font-semibold leading-tight">{s.name}</span>
               <span class="-mt-1.5 text-xs text-stone">{s.when}</span>
@@ -103,7 +103,7 @@ const recent = [
     </a>
 
     <div class="tile reveal min-h-[220px] md:col-span-2">
-      <Image src={gearPhoto} alt="Maag and Trident EQs in the Hummingbird Hut rack" widths={[400, 640]} sizes="(min-width: 761px) 30vw, 100vw" class="tile-img absolute inset-0 h-full w-full object-cover" />
+      <Picture formats={["avif"]} fallbackFormat="webp" src={gearPhoto} alt="Maag and Trident EQs in the Hummingbird Hut rack" widths={[400, 640]} sizes="(min-width: 761px) 30vw, 100vw" class="tile-img absolute inset-0 h-full w-full object-cover" />
       <p class="absolute bottom-3 left-3 m-0 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">The rack: Maag · Trident</p>
     </div>
   </div>

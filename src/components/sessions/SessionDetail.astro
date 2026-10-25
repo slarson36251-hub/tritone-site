@@ -55,7 +55,7 @@ const full = await Promise.all(rest.map((p) => getImage({ src: p.src, width: 160
           widths={[400, 600, 800, 1200]}
           sizes="(min-width: 1280px) 500px, (min-width: 761px) 40vw, calc(100vw - 32px)"
           loading={eager ? "eager" : "lazy"}
-          fetchpriority={eager && level === 1 ? "high" : undefined}
+          fetchpriority={eager ? "high" : undefined}
           class="block h-auto w-full"
         />
       </span>

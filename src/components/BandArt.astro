@@ -1,7 +1,7 @@
 ---
 // A band's hero art: its poster (or photo), or a typographic card when there is none.
 // Fills its (relatively positioned) parent.
-import { Image } from "astro:assets";
+import { Picture } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
@@ -19,7 +19,9 @@ const { poster, posterAlt, name } = band.data;
 const words = name.split(" ");
 ---
 {poster ? (
-  <Image
+  <Picture
+    formats={["avif"]}
+    fallbackFormat="webp"
     style={fit === "contain" ? "padding:4%" : undefined}
     src={poster}
     alt={posterAlt ?? `${name} poster`}

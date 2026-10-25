@@ -1,6 +1,10 @@
 ---
 // A Bandcamp album player (bandcamp.com/EmbeddedPlayer), sized to its track list, beside a
-// "buy it from the band" card that links to the album page.
+// "buy it from the band" card that links to the album page. The player loads only when someone
+// presses play: until then it is the album art (self-hosted) and a button, so Bandcamp's frame
+// never competes with the page's own images. Without JavaScript the button is a link to the album.
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
 interface Props {
   bandcampId: string;
   title: string;
@@ -8,26 +12,60 @@ interface Props {
   url: string;
   tracks: number;
   note?: string;
+  art?: ImageMetadata;
 }
-const { bandcampId, title, artist, url, tracks, note } = Astro.props;
+const { bandcampId, title, artist, url, tracks, note, art } = Astro.props;
 const src = `https://bandcamp.com/EmbeddedPlayer/album=${bandcampId}/size=large/bgcol=333333/linkcol=ffffff/tracklist=true/artwork=small/transparent=true/`;
 // Header with small artwork, then one row per track, then the footer.
 const height = 120 + tracks * 33 + 30;
 ---
 <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
-  <iframe
-    src={src}
-    title={`${title} by ${artist} on Bandcamp`}
-    loading="lazy"
-    seamless
-    class="block w-full rounded-xl border border-stone/25 bg-charcoal"
-    style={`height:${height}px`}
-  ></iframe>
+  <a
+    href={url}
+    target="_blank"
+    rel="noopener"
+    class="bc-lite group relative flex w-full flex-col overflow-hidden rounded-xl border border-stone/25 bg-charcoal no-underline"
+    style={`min-height:${height}px`}
+    data-bc-src={src}
+    data-bc-title={`${title} by ${artist} on Bandcamp`}
+    data-bc-height={height}
+    aria-label={`Play ${title} by ${artist} (loads Bandcamp's player)`}
+  >
+    {art && (
+      <Image src={art} alt="" widths={[360, 560, 800]} sizes="(min-width: 1024px) 560px, calc(100vw - 32px)" loading="lazy" class="tile-img absolute inset-0 h-full w-full object-cover object-top group-hover:scale-[1.03]" />
+    )}
+    <span class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" aria-hidden="true"></span>
+    <span class="relative mt-auto flex items-center gap-4 p-5 md:p-7">
+      <span class="grid size-16 shrink-0 place-items-center rounded-full bg-white text-black shadow-[0_4px_18px_rgb(0_0_0/.35)] transition-transform group-hover:scale-110 group-focus-visible:scale-110" aria-hidden="true">
+        <svg width="18" height="20" viewBox="0 0 16 18" class="ml-1"><path d="M0 0l16 9-16 9z" fill="currentColor" /></svg>
+      </span>
+      <span class="flex min-w-0 flex-col">
+        <span class="disp text-[clamp(1.4rem,3vw,2rem)] leading-[0.95] text-white">{title}</span>
+        <span class="text-[15px] text-white/85">{artist} · {tracks} tracks · plays here</span>
+      </span>
+    </span>
+  </a>
   <div class="tile flex flex-col gap-4 p-6 md:p-8">
-    <p class="eyebrow m-0 text-stone">Support the band</p>
+    <p class="eyebrow m-0 text-white/75">Support the band</p>
     <h3 class="disp m-0 text-[clamp(1.8rem,3.4vw,2.6rem)] leading-[0.95]">{title}</h3>
     <p class="m-0 text-white/85">by {artist}{note ? `. ${note}.` : "."}</p>
-    <p class="m-0 text-[15px] text-stone">Like what you hear? Buy the album straight from the band on Bandcamp. Most of every sale goes to the musicians.</p>
+    <p class="m-0 text-[15px] text-white/75">Like what you hear? Buy the album straight from the band on Bandcamp. Most of every sale goes to the musicians.</p>
     <a href={url} target="_blank" rel="noopener" class="mt-1 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-white px-7 text-sm font-semibold uppercase tracking-[.04em] text-black no-underline transition-transform hover:scale-[1.03]">Buy on Bandcamp <span aria-hidden="true">↗</span></a>
   </div>
 </div>
+
+<script>
+  // One delegated listener for every album (survives ClientRouter swaps).
+  document.addEventListener("click", (e) => {
+    const a = (e.target as Element | null)?.closest?.<HTMLAnchorElement>("a.bc-lite[data-bc-src]");
+    if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    const f = document.createElement("iframe");
+    f.src = a.dataset.bcSrc!;
+    f.title = a.dataset.bcTitle || "Bandcamp player";
+    f.className = "block w-full rounded-xl border border-stone/25 bg-charcoal";
+    f.style.height = `${a.dataset.bcHeight}px`;
+    a.replaceWith(f);
+    f.focus();
+  });
+</script>
