@@ -42,6 +42,27 @@ import { featuredPlaylist } from "../lib/player";
 </style>
 
 <script>
+  import { swapFunctions } from "astro:transitions/client";
+
+  // Astro's default swap re-inserts persisted elements, which reloads iframes and stops the music.
+  // Swap everything around the dock and the header instead, so neither is ever moved.
+  const KEEP = new Set(["player-dock", "site-header"]);
+  document.addEventListener("astro:before-swap", (e) => {
+    e.swap = () => {
+      const doc = e.newDocument;
+      swapFunctions.deselectScripts(doc);
+      swapFunctions.swapRootAttributes(doc);
+      swapFunctions.swapHeadElements(doc);
+      const restoreFocus = swapFunctions.saveFocus();
+      const kept = (el: Element) => KEEP.has(el.getAttribute("data-astro-transition-persist") ?? "");
+      for (const el of [...document.body.children]) if (!kept(el)) el.remove();
+      const dock = document.getElementById("dock");
+      for (const el of [...doc.body.children]) if (!kept(el)) document.body.insertBefore(el, dock);
+      for (const { name, value } of [...doc.body.attributes]) document.body.setAttribute(name, value);
+      restoreFocus();
+    };
+  });
+
   function setup() {
     const dock = document.getElementById("dock")!;
     if (dock.dataset.ready) return; // persisted across navigations: wire up once
