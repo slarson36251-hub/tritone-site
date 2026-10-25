@@ -15,10 +15,11 @@ interface Props {
   art?: ImageMetadata;
 }
 const { bandcampId, title, artist, url, tracks, note, art } = Astro.props;
-const src = `https://bandcamp.com/EmbeddedPlayer/album=${bandcampId}/size=large/bgcol=000000/linkcol=ffffff/tracklist=true/artwork=small/transparent=true/`;
+const src = `https://bandcamp.com/EmbeddedPlayer/album=${bandcampId}/size=large/bgcol=ffffff/linkcol=38383b/tracklist=true/artwork=small/`;
 // Header with small artwork, then one row per track, then the footer.
 const height = 120 + tracks * 33 + 30;
-// Bandcamp's own text is small and grey and can't be styled inside its frame, so the frame is
+// Bandcamp's own text is small and can't be styled inside its frame (on a dark background its track list is
+// dim grey whatever the colors), so it runs on white with charcoal links, and the frame is
 // laid out narrower and scaled up by ZOOM: everything in it, text included, reads 30% larger.
 const ZOOM = 1.3;
 ---
@@ -67,7 +68,7 @@ const ZOOM = 1.3;
     const h = Number(a.dataset.bcHeight);
     const z = Number(a.dataset.bcZoom) || 1;
     const box = document.createElement("div");
-    box.className = "w-full overflow-hidden rounded-xl border border-stone/25 bg-black";
+    box.className = "w-full overflow-hidden rounded-xl border border-stone/25 bg-white";
     box.style.height = `${Math.round(h * z)}px`;
     const f = document.createElement("iframe");
     f.src = a.dataset.bcSrc!;
