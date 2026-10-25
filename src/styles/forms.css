@@ -134,3 +134,12 @@ button.bk-cell[aria-pressed="true"] { background: #fff; border-color: #fff; colo
 .tf-check { width: 64px; height: 64px; border-radius: 50%; background: #fff; color: #000; display: grid; place-items: center; margin-bottom: 22px; }
 
 }
+
+/* "Request an earlier time" (under the start times). */
+.bk-req { border-top: 1px solid rgb(168 166 161 / 0.3); padding-top: 22px; }
+.bk-req .tf-btn-ghost { width: auto; min-height: 48px; padding: 0 22px; font-size: 14px; }
+.bk-req-form { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; padding: 20px;
+  border: 1px solid rgb(168 166 161 / 0.35); border-radius: 16px; background: rgb(255 255 255 / 0.03); }
+.bk-req-form .tf-field { margin: 0; }
+.bk-req-form input[type="date"], .bk-req-form input[type="time"] { color-scheme: dark; }
+#hbh-req-done[hidden] { display: none; }

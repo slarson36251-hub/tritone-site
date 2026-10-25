@@ -12,7 +12,7 @@ import "../styles/forms.css";
       <p class="m-0 max-w-[44ch] text-[19px]">Pick an open day, choose how long you need, and tell Scott what you're recording. Requests hold the date while he takes a look.</p>
       <ul class="m-0 flex list-none flex-wrap gap-2 p-0 text-[14px] font-semibold" aria-label="Studio hours">
         <li class="rounded-full border border-stone/45 px-3.5 py-1.5">Weekends 10 am to 10 pm</li>
-        <li class="rounded-full border border-stone/45 px-3.5 py-1.5">Weekday evenings 6 to 10 pm</li>
+        <li class="rounded-full border border-stone/45 px-3.5 py-1.5">Weekday afternoons and evenings 4 to 10 pm</li>
       </ul>
     </div>
 
@@ -47,6 +47,63 @@ import "../styles/forms.css";
             <p class="tf-label" id="hbh-time-label">Start time</p>
             <div class="bk-times" id="hbh-times" role="group" aria-labelledby="hbh-time-label">
               <p class="bk-times-empty">Loading open times…</p>
+            </div>
+          </div>
+
+          <div class="bk-req mt-6">
+            <p class="m-0 text-[15px] text-white/75">Need a morning, a weekday daytime slot, or a time the calendar doesn't show?</p>
+            <button type="button" class="tf-btn tf-btn-ghost mt-3" id="hbh-req-open" aria-expanded="false" aria-controls="hbh-req">Request an earlier time</button>
+
+            <form id="hbh-req" class="bk-req-form" novalidate hidden aria-labelledby="hbh-req-title">
+              <h3 class="tf-step-t m-0" id="hbh-req-title">Request a time</h3>
+              <p class="m-0 text-[15px] text-white/75">Any day, any start time. Scott reads every request and replies within a day. Nothing is held until he does.</p>
+              <div class="tf-row">
+                <div class="tf-field">
+                  <label class="tf-label" for="hbh-req-name">Your name</label>
+                  <input class="tf-input" id="hbh-req-name" type="text" autocomplete="name" maxlength="120" required aria-describedby="hbh-req-name-err" />
+                  <p class="tf-err" id="hbh-req-name-err"></p>
+                </div>
+                <div class="tf-field">
+                  <label class="tf-label" for="hbh-req-email">Email</label>
+                  <input class="tf-input" id="hbh-req-email" type="email" autocomplete="email" inputmode="email" maxlength="200" required aria-describedby="hbh-req-email-err" />
+                  <p class="tf-err" id="hbh-req-email-err"></p>
+                </div>
+              </div>
+              <div class="tf-row">
+                <div class="tf-field">
+                  <label class="tf-label" for="hbh-req-date">Preferred date</label>
+                  <input class="tf-input" id="hbh-req-date" type="date" required aria-describedby="hbh-req-date-err" />
+                  <p class="tf-err" id="hbh-req-date-err"></p>
+                </div>
+                <div class="tf-field">
+                  <label class="tf-label" for="hbh-req-time">Preferred start time</label>
+                  <input class="tf-input" id="hbh-req-time" type="time" step="900" required aria-describedby="hbh-req-time-err" />
+                  <p class="tf-err" id="hbh-req-time-err"></p>
+                </div>
+              </div>
+              <div class="tf-row">
+                <div class="tf-field">
+                  <label class="tf-label" for="hbh-req-hours">Length (hours)</label>
+                  <input class="tf-input" id="hbh-req-hours" type="number" min="1" max="12" step="1" value="3" inputmode="numeric" required aria-describedby="hbh-req-hours-err" />
+                  <p class="tf-err" id="hbh-req-hours-err"></p>
+                </div>
+                <div class="tf-field">
+                  <label class="tf-label" for="hbh-req-phone">Phone <span class="font-normal text-white/70">(optional)</span></label>
+                  <input class="tf-input" id="hbh-req-phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" />
+                </div>
+              </div>
+              <div class="tf-field">
+                <label class="tf-label" for="hbh-req-note">Note <span class="font-normal text-white/70">(optional)</span></label>
+                <textarea class="tf-input" id="hbh-req-note" rows="3" maxlength="2000" aria-describedby="hbh-req-note-err" placeholder="What you're recording, who's playing, any flexibility on the time."></textarea>
+                <p class="tf-err" id="hbh-req-note-err"></p>
+              </div>
+              <div class="tf-hp" aria-hidden="true"><input id="hbh-req-company" type="text" tabindex="-1" autocomplete="off" /></div>
+              <div class="tf-notice" id="hbh-req-msg" role="alert" hidden></div>
+              <button type="submit" class="tf-btn" id="hbh-req-submit">Send the request</button>
+            </form>
+
+            <div class="tf-notice mt-4" id="hbh-req-done" role="status" tabindex="-1" hidden>
+              <strong>Request sent.</strong> Check your inbox for a copy. Scott will reply within a day.
             </div>
           </div>
         </section>
@@ -129,7 +186,7 @@ import "../styles/forms.css";
         <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">02</span><span><strong>Scott confirms by email,</strong> usually within a day. Every session is confirmed personally.</span></li>
         <li class="rule flex gap-4 border-y py-4"><span class="disp text-stone">03</span><span><strong>Your confirmation</strong> carries the address and a link for sending files ahead.</span></li>
       </ol>
-      <p class="m-0 text-[15px] text-stone">Need a weekday daytime slot or something the calendar doesn't show? Special arrangements are possible: write to <a href="mailto:scott@tritone-productions.com" class="font-semibold text-white">scott@tritone-productions.com</a>.</p>
+      <p class="m-0 text-[15px] text-white/75">Need a time the calendar doesn't show? Use "Request an earlier time" under the start times, or write to <a href="mailto:scott@tritone-productions.com" class="font-semibold text-white">scott@tritone-productions.com</a>.</p>
     </div>
 
   </section>
@@ -137,5 +194,7 @@ import "../styles/forms.css";
 
 <script>
   import { initBooking } from "../lib/booking";
+  import { initTimeRequest } from "../lib/booking-request";
   document.addEventListener("astro:page-load", initBooking);
+  document.addEventListener("astro:page-load", initTimeRequest);
 </script>
