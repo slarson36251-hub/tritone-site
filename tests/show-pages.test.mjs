@@ -77,8 +77,8 @@ test("fixture: private and personal entries never reach dist/", { skip: !fixture
     .join("\n");
   for (const bad of ["Pick up Madi", "Evergreen", "Antigen", "Private Way", "4321 Example", "Holiday Party", "Rehearsal", "[TEMPLATE]", "Terry's", "94618", "94619", "94610"])
     assert.ok(!all.includes(bad), `found "${bad}" in dist`);
-  assert.ok(existsSync(new URL("shows/scott-larson-quartet-club-deluxe-san-francisco-2026-11-08.html", DIST)));
-  const deluxe = ld(read("shows/scott-larson-quartet-club-deluxe-san-francisco-2026-11-08.html")).find((o) => o["@type"] === "MusicEvent");
+  assert.ok(existsSync(new URL("shows/scott-larson-quartet-the-deluxe-san-francisco-2026-11-08.html", DIST)));
+  const deluxe = ld(read("shows/scott-larson-quartet-the-deluxe-san-francisco-2026-11-08.html")).find((o) => o["@type"] === "MusicEvent");
   assert.equal(deluxe.location.address.streetAddress, "1511 Haight St");
   assert.equal(deluxe.offers.price, "5.00");
   const moved = ld(read("shows/nick-culp-quartet-low-bar-oakland-2026-12-03.html")).find((o) => o["@type"] === "MusicEvent");
