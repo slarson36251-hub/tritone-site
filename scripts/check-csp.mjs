@@ -126,6 +126,16 @@ for (const ytPage of pages.filter((p) => /<a[^>]*class="yt\b/.test(src(p)))) {
   break;
 }
 
+// SoundCloud click-to-load players.
+const scPage = pages.find((p) => /data-sc-src=/.test(src(p)));
+if (scPage) {
+  await page.goto(ORIGIN + scPage, { waitUntil: "networkidle" });
+  await tryStep(`soundcloud on ${scPage}`, async () => {
+    await page.locator("[data-sc-src]").first().click();
+    await page.waitForSelector('iframe[src*="w.soundcloud.com"]', { state: "attached", timeout: 5000 });
+  });
+}
+
 // Shows: add-to-calendar links stay links; download the .ics.
 const show = pages.find((p) => p.startsWith("/shows/"));
 if (show) {

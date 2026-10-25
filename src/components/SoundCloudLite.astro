@@ -1,0 +1,58 @@
+---
+// Click-to-load SoundCloud player. Nothing from SoundCloud loads until someone presses play:
+// the button is swapped for the real iframe (autoplaying) on click.
+interface Props {
+  trackId: string;
+  title: string;
+  note?: string;
+}
+const { trackId, title, note } = Astro.props;
+const src =
+  `https://w.soundcloud.com/player/?url=${encodeURIComponent(`https://api.soundcloud.com/tracks/${trackId}`)}` +
+  `&color=%23a8a6a1&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`;
+// Static, decorative waveform bars (deterministic per track so builds are stable).
+let seed = Number(trackId.slice(-5));
+const bars = Array.from({ length: 48 }, () => {
+  seed = (seed * 9301 + 49297) % 233280;
+  return 22 + Math.round((seed / 233280) * 78);
+});
+---
+<article class="tile reveal flex flex-col gap-5 p-5 md:p-8">
+  <div>
+    <p class="eyebrow m-0 text-stone">SoundCloud</p>
+    <h3 class="disp mb-0 mt-2 text-[clamp(1.8rem,3.4vw,2.6rem)] leading-[0.95]">{title}</h3>
+    {note && <p class="mb-0 mt-2 text-sm text-stone">{note}</p>}
+  </div>
+  <div class="sc-slot" data-sc-slot>
+    <button type="button" data-sc-src={src} data-sc-title={title}
+      class="sc-btn group flex h-[166px] w-full cursor-pointer items-center gap-4 rounded-xl border border-stone/30 bg-black/40 px-4 text-left text-white transition-colors hover:border-stone/70 md:gap-5 md:px-5"
+      aria-label={`Play ${title} (loads the SoundCloud player)`}>
+      <span class="grid size-14 shrink-0 place-items-center rounded-full bg-white text-black transition-transform group-hover:scale-105">
+        <svg class="ml-0.5" width="14" height="16" viewBox="0 0 16 18" aria-hidden="true"><path d="M0 0l16 9-16 9z" fill="currentColor"/></svg>
+      </span>
+      <span class="flex h-16 min-w-0 flex-1 items-center gap-[3px] overflow-hidden" aria-hidden="true">
+        {bars.map((h) => <i class="block w-[3px] shrink-0 rounded-full bg-stone/45" style={`height:${h}%`}></i>)}
+      </span>
+    </button>
+  </div>
+  <p class="m-0 text-xs text-stone">Press play to load SoundCloud's player.</p>
+</article>
+
+<script>
+  // Delegated once per document; survives ClientRouter swaps because it listens on document.
+  document.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-sc-src]");
+    if (!btn) return;
+    const slot = btn.closest<HTMLElement>("[data-sc-slot]")!;
+    // One thing at a time: pause any self-hosted track that's playing.
+    document.querySelectorAll("audio").forEach((a) => a.pause());
+    const f = document.createElement("iframe");
+    f.title = `${btn.dataset.scTitle} on SoundCloud`;
+    f.src = btn.dataset.scSrc!;
+    f.width = "100%";
+    f.height = "166";
+    f.allow = "autoplay; encrypted-media";
+    f.setAttribute("style", "border:0;border-radius:12px;display:block;color-scheme:normal");
+    slot.replaceChildren(f);
+  });
+</script>

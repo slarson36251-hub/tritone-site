@@ -14,6 +14,7 @@ export const PHONE = "+1-415-200-6291";
 export const SOCIALS = [
   { label: "Instagram", href: "https://www.instagram.com/tritone_productions/" },
   { label: "Facebook", href: "https://www.facebook.com/tritoneproductions" },
+  { label: "SoundCloud", href: "https://soundcloud.com/skatlarson" },
 ];
 
 /** City-level address only. */
