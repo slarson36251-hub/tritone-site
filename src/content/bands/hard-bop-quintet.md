@@ -4,6 +4,8 @@ order: 1
 tagline: Hard bop from the San Francisco Bay Area, with boogaloo, afro-cuban, bebop and down-home blues in the mix.
 poster: ../../assets/posters/hard-bop-quintet-club-deluxe-poster.jpg
 posterAlt: Hard Bop Quintet poster, Live at Club Deluxe, a trumpeter drawn in blue and gold against a cream background
+videos:
+  - { id: IMM5DiRS2bI, title: Hard Bop Quintet }
 lineup:
   - { name: Scott Larson, instrument: Trombone }
   - { name: Jay Sanders, instrument: Trumpet }

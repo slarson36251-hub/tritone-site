@@ -88,7 +88,7 @@ export function hummingbirdHut(image: string, services: { t: string; d: string }
     "@id": HUT_ID,
     name: "Hummingbird Hut",
     alternateName: "Hummingbird Hut recording studio",
-    description: "Private recording studio in Oakland, CA for small acoustic groups, from solo piano and jazz trios to eight-piece country bands.",
+    description: "Private recording studio in Oakland, CA: whole bands tracked live in one room on multiple mics, plus overdubs and mixing.",
     url: canonicalUrl("/hummingbird-hut"),
     image,
     email: EMAIL,

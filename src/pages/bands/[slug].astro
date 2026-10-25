@@ -5,6 +5,7 @@ import Base from "../../layouts/Base.astro";
 import Pill from "../../components/Pill.astro";
 import BandArt from "../../components/BandArt.astro";
 import TrackList from "../../components/TrackList.astro";
+import LiteYouTube from "../../components/sessions/LiteYouTube.astro";
 import { postersFor } from "../../lib/posters";
 import { SITE, canonicalUrl, cardPath, musicGroup } from "../../lib/seo";
 
@@ -14,7 +15,7 @@ export async function getStaticPaths() {
 }
 interface Props { band: CollectionEntry<"bands">; next: CollectionEntry<"bands">; index: number }
 const { band, next, index } = Astro.props;
-const { name, tagline, lineup, tracks, spotify, photo, photoAlt, poster, seoTitle, seoDescription } = band.data;
+const { name, tagline, lineup, tracks, videos, spotify, photo, photoAlt, poster, seoTitle, seoDescription } = band.data;
 const { Content } = await render(band);
 const hasBio = Boolean(band.body?.trim());
 // Posters featuring this band, minus the one already in the hero.
@@ -83,6 +84,17 @@ const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}
       </div>
     </div>
   </section>
+
+  {videos.length > 0 && (
+    <section id="watch" class="wrap pb-14 md:pb-20">
+      <p class="eyebrow m-0 text-stone">Watch</p>
+      <div class="mt-4 grid gap-6 md:grid-cols-2">
+        {videos.map((v) => (
+          <LiteYouTube id={v.id} title={v.title} note={v.note} alt={`${name} playing live: ${v.title}`} />
+        ))}
+      </div>
+    </section>
+  )}
 
   {tracks.length > 0 && (
     <section id="listen" class="wrap pb-14 md:pb-20">

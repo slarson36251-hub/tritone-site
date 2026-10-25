@@ -34,6 +34,8 @@ const bands = defineCollection({
       tracks: z
         .array(z.object({ title: z.string(), src: z.string(), credit: z.string().optional() }))
         .default([]),
+      // YouTube videos (id from the watch URL) shown as click-to-load players.
+      videos: z.array(z.object({ id: z.string(), title: z.string(), note: z.string().optional() })).default([]),
       // Spotify embed URL: shows a Listen button that plays in the persistent dock.
       spotify: z.string().url().optional(),
       // Genres for the MusicGroup schema (only what the band actually plays).
