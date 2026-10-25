@@ -5,7 +5,6 @@ import Base from "../layouts/Base.astro";
 import PageHead from "../components/PageHead.astro";
 import Pill from "../components/Pill.astro";
 import TrackList from "../components/TrackList.astro";
-import SoundCloudLite from "../components/SoundCloudLite.astro";
 import { featuredPlaylist } from "../lib/player";
 import pianoMics from "../assets/photos/fault-line-trio-piano-mics-feb-2026-hummingbird-hut-oakland.jpg";
 import levis from "../assets/photos/jason-levis-session-aug-2026-hummingbird-hut-oakland.jpg";
@@ -17,24 +16,17 @@ const bands = (await getCollection("bands"))
   .filter((b) => b.data.tracks.length > 0)
   .sort((a, b) => a.data.order - b.data.order);
 
-// From the old Squarespace site. /that-was-then-v1 and /turquoise-moon embedded the same
-// SoundCloud track (648620705), so it appears once.
-const soundcloud = [
-  { id: "648620705", title: "That Was Then", note: "The old site also posted this track as Turquoise Moon." },
-  { id: "648624407", title: "The Distance Between Us" },
-];
-
 const strip = [
   { img: levis, alt: "Jason Levis session at the Hummingbird Hut, Oakland, CA", href: "/sessions#levis" },
   { img: clint, alt: "Clint Baker band session at the Hummingbird Hut, Oakland, CA", href: "/sessions#clint" },
   { img: drums, alt: "Fault Line Trio drums tracking at the Hummingbird Hut, Oakland, CA", href: "/sessions" },
 ];
 ---
-<Base title="Listen · Tritone Productions · Oakland, CA" description="Hear everything Tritone Productions made: Fault Line Trio, Franco Nero, Lucky 7 and the SoundCloud archive, recorded and produced at the Hummingbird Hut in Oakland, CA.">
+<Base title="Listen · Tritone Productions · Oakland, CA" description="Hear everything Tritone Productions made: Fault Line Trio, Franco Nero and Lucky 7, recorded and produced at the Hummingbird Hut in Oakland, CA.">
   <PageHead eyebrow="Tritone Productions · Oakland, CA" title="Listen">
-    <p class="m-0 max-w-[60ch] text-[19px]">One place to hear everything Tritone made: records from the Hummingbird Hut, our bands, and the archive.</p>
+    <p class="m-0 max-w-[60ch] text-[19px]">One place to hear everything Tritone made: records from the Hummingbird Hut and our bands.</p>
     <nav class="flex flex-wrap gap-2 pt-2" aria-label="On this page">
-      {[["#featured", "Featured"], ["#bands", "Bands"], ["#archive", "SoundCloud"], ["#hut", "The Hut"]].map(([href, label]) => (
+      {[["#featured", "Featured"], ["#bands", "Bands"], ["#hut", "The Hut"]].map(([href, label]) => (
         <a href={href} class="inline-flex min-h-11 items-center rounded-full border border-stone/50 px-5 text-sm font-semibold no-underline transition-colors hover:border-white">{label}</a>
       ))}
     </nav>
@@ -105,18 +97,6 @@ const strip = [
     </div>
   </section>
 
-  <section id="archive" class="wrap pb-14 md:pb-20" aria-labelledby="archive-h">
-    <div class="mb-5 flex items-end justify-between gap-4">
-      <div>
-        <p class="eyebrow m-0 text-stone">From the archive</p>
-        <h2 id="archive-h" class="disp mb-0 mt-2 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">SoundCloud</h2>
-      </div>
-      <a href="https://soundcloud.com/skatlarson" target="_blank" rel="noopener" class="shrink-0 whitespace-nowrap font-semibold">More →</a>
-    </div>
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
-      {soundcloud.map((t) => <SoundCloudLite trackId={t.id} title={t.title} note={t.note} />)}
-    </div>
-  </section>
 
   <section id="hut" class="wrap pb-16 md:pb-24" aria-labelledby="hut-h">
     <div class="tile reveal grid gap-6 !border-stone !bg-stone p-6 text-black md:grid-cols-[1fr_1.3fr] md:items-center md:gap-10 md:p-9">

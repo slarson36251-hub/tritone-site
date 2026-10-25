@@ -51,7 +51,7 @@ const venueList = [...venues.values()].sort((a, b) => b.count - a.count || a.ven
       </p>
       {upcoming.length > 0 && (
         <div class="flex shrink-0 flex-col gap-2">
-          <span class="eyebrow text-[11px] text-white/80">Subscribe to every date</span>
+          <span class="eyebrow text-[13px] text-white/80">Subscribe to every date</span>
           <div class="flex flex-wrap gap-2">
             <a href={googleSubscribe} target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone/60 px-4 text-sm font-semibold no-underline hover:border-white" aria-label="Google Calendar: subscribe to Tritone shows">
               <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.5h13M5 1v3M11 1v3" stroke="currentColor" stroke-width="1.5"/></svg>
@@ -71,7 +71,7 @@ const venueList = [...venues.values()].sort((a, b) => b.count - a.count || a.ven
     </div>
 
     {featured.length ? (
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
         {featured.map((s, i) => <ShowCard show={s} eager={i === 0} />)}
       </div>
     ) : (

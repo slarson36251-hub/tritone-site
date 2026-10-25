@@ -1,7 +1,7 @@
 ---
 // Everything about one session: name, intro, cover, session log, people, gear notes, videos, photos.
 // Used for the panels on /sessions (level 2, link to the page) and for /sessions/<id> (level 1, hero morph).
-import { Picture } from "astro:assets";
+import { Picture, getImage } from "astro:assets";
 import { render } from "astro:content";
 import LiteYouTube from "./LiteYouTube.astro";
 import { coverTransition, type Session } from "../../lib/sessions";
@@ -24,6 +24,8 @@ const [cover, ...rest] = d.photos;
 const H = level === 1 ? "h1" : "h2";
 const Sub = level === 1 ? "h2" : "h3";
 const lead = (p: { date?: string; label?: string }) => p.date ?? p.label;
+// Full, uncropped versions for the photo viewer (the grid crops to 4:3).
+const full = await Promise.all(rest.map((p) => getImage({ src: p.src, width: 1600, format: "webp" })));
 ---
 <div class="flex flex-col gap-10 md:gap-14">
   <div class="flex max-w-[820px] flex-col gap-3">
@@ -99,9 +101,9 @@ const lead = (p: { date?: string; label?: string }) => p.date ?? p.label;
     <div>
       <Sub class="eyebrow mb-4 mt-0 text-stone">{d.photosHeading}</Sub>
       <div class="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
-        {rest.map((p) => (
+        {rest.map((p, i) => (
           <figure class="m-0 flex flex-col gap-2">
-            <span class="tile block !rounded-[10px]">
+            <button type="button" class="tile group/zoom relative block w-full cursor-zoom-in !rounded-[10px] border-0 p-0 text-left" data-zoom={full[i].src} data-zoom-alt={p.alt} data-zoom-caption={[lead(p), p.caption].filter(Boolean).join(". ")} aria-label={`View full photo: ${p.alt}`}>
               <Picture
                 src={p.src}
                 alt={p.alt}
@@ -112,8 +114,9 @@ const lead = (p: { date?: string; label?: string }) => p.date ?? p.label;
                 loading="lazy"
                 class="tile-img block aspect-[4/3] h-auto w-full object-cover"
               />
-            </span>
-            <figcaption class="text-[13px] leading-snug text-stone">{lead(p) && <b class="font-semibold text-white">{lead(p)}.</b>} {p.caption}</figcaption>
+              <span class="pointer-events-none absolute right-2 top-2 grid size-8 place-items-center rounded-full bg-black/70 text-sm opacity-80 transition-opacity group-hover/zoom:opacity-100" aria-hidden="true">⤢</span>
+            </button>
+            <figcaption class="text-[14px] leading-snug text-stone">{lead(p) && <b class="font-semibold text-white">{lead(p)}.</b>} {p.caption}</figcaption>
           </figure>
         ))}
       </div>
@@ -147,3 +150,29 @@ const lead = (p: { date?: string; label?: string }) => p.date ?? p.label;
     .sheet dd { padding-top: 2px; }
   }
 </style>
+
+<script>
+  // Photo viewer: tap a session photo to see it whole, uncropped. One dialog for the page.
+  function viewer() {
+    let d = document.getElementById("photo-viewer") as HTMLDialogElement | null;
+    if (d) return d;
+    d = document.createElement("dialog");
+    d.id = "photo-viewer";
+    d.className = "photo-viewer";
+    d.innerHTML = '<figure><img alt=""><figcaption></figcaption></figure><button type="button" class="pv-close" aria-label="Close photo">✕</button>';
+    d.addEventListener("click", (e) => { if (e.target === d || (e.target as HTMLElement).closest(".pv-close")) d!.close(); });
+    document.body.append(d);
+    return d;
+  }
+  document.addEventListener("click", (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>("[data-zoom]");
+    if (!b) return;
+    const d = viewer();
+    const img = d.querySelector("img")!;
+    img.src = b.dataset.zoom!;
+    img.alt = b.dataset.zoomAlt ?? "";
+    d.querySelector("figcaption")!.textContent = b.dataset.zoomCaption ?? "";
+    d.showModal();
+  });
+  document.addEventListener("astro:before-swap", () => document.getElementById("photo-viewer")?.remove());
+</script>

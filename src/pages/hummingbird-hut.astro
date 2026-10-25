@@ -73,10 +73,12 @@ const studio = hummingbirdHut(new URL(heroPhoto.src, SITE).href, services);
 <Base title="Hummingbird Hut · Recording Studio in Oakland, CA" description="Private recording studio in Oakland, CA: whole bands tracked live in one room, multi-mic, with Dante, headphone mixes, overdubs and mixing." breadcrumbs={[{ name: "Hummingbird Hut", path: "/hummingbird-hut" }]} schema={[studio]}>
 
   <!-- Hero -->
-  <section class="wrap grid gap-8 pb-14 pt-10 md:grid-cols-12 md:items-end md:gap-10 md:pb-20 md:pt-16">
-    <div class="flex flex-col gap-6 md:col-span-7">
+  <section class="wrap grid gap-8 pb-14 pt-10 md:grid-cols-12 md:items-center md:gap-10 md:pb-20 md:pt-16">
+    <div class="flex flex-col gap-5 md:col-span-12">
       <p class="eyebrow m-0 text-stone">Recording studio · Music production · Oakland, CA</p>
-      <h1 class="disp m-0 text-[clamp(3.3rem,11vw,4.8rem)] leading-[0.86] md:text-[clamp(4rem,7.2vw,6.4rem)]">Humming&shy;bird <span class="outline-type">Hut</span></h1>
+      <h1 class="disp m-0 text-[clamp(2.6rem,10vw,4.2rem)] leading-[0.9] md:whitespace-nowrap md:text-[clamp(3rem,6.4vw,6rem)]">Humming&shy;bird <span class="outline-type">Hut</span></h1>
+    </div>
+    <div class="flex flex-col gap-6 md:col-span-7">
       <p class="m-0 max-w-[46ch] text-[19px] md:text-[21px]">A small, private room for musicians who play together. A grand piano, ribbon and condenser pairs, tube preamps, and enough time to get the take.</p>
       <div class="flex flex-wrap gap-3 pt-1">
         <Pill href={bookHref}>Book the Hut</Pill>
@@ -84,7 +86,7 @@ const studio = hummingbirdHut(new URL(heroPhoto.src, SITE).href, services);
       </div>
     </div>
     <figure class="tile reveal m-0 md:col-span-5">
-      <Image src={heroPhoto} alt="Grand piano with the lid up and four condenser and ribbon mics in A/B pairs" widths={[480, 720, 902]} sizes="(min-width: 761px) 40vw, 100vw" loading="eager" fetchpriority="high" class="block aspect-[4/5] h-auto w-full object-cover md:aspect-[3/4]" />
+      <Image src={heroPhoto} alt="Grand piano with the lid up and four condenser and ribbon mics in A/B pairs" widths={[480, 720, 902]} sizes="(min-width: 761px) 40vw, 100vw" loading="eager" fetchpriority="high" class="block aspect-[4/5] h-auto w-full object-cover md:aspect-[4/3]" />
       <figcaption class="absolute bottom-3 left-3 right-3 m-0 w-fit rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">Feb 2026 · U87 and R-121 pairs on the grand</figcaption>
     </figure>
   </section>
@@ -100,11 +102,13 @@ const studio = hummingbirdHut(new URL(heroPhoto.src, SITE).href, services);
           <Image src={roomPhoto} alt="Five musicians with violin, viola, clarinet, accordion and tapan drum gathered on a rug in the live room" widths={[480, 720, 917]} sizes="40vw" class="block aspect-[4/3] h-auto w-full object-cover" />
         </div>
       </div>
-      <ol class="m-0 list-none p-0 md:col-span-7">
+      <div class="flex flex-col gap-5 md:col-span-7">
+      <p class="m-0 max-w-[60ch] text-[19px] text-white/90">Whether you're one musician at the piano, a jazz trio, a woodwind ensemble, a live quintet, or a country band building an album, we can work with you. Tell us what you're after and we'll get creative with the setup.</p>
+      <ol class="m-0 list-none p-0">
         {sizes.map((s) => (
           <li class="rule border-t last:border-b">
             <a href={`/sessions#${s.id}`} class="group grid grid-cols-[4.2rem_1fr_auto] items-center gap-4 py-5 no-underline md:grid-cols-[6.5rem_1fr_auto] md:py-6">
-              <span class="disp text-[3.2rem] leading-none text-stone transition-colors group-hover:text-white md:text-[4.6rem]" aria-hidden="true">{s.n}</span>
+              <span class="flex flex-col items-start" aria-hidden="true"><span class="disp text-[3.2rem] leading-none text-stone transition-colors group-hover:text-white md:text-[4.6rem]">{s.n}</span><span class="eyebrow text-[12px] text-white/70">{s.n === "1" ? "player" : "players"}</span></span>
               <span class="flex flex-col gap-1">
                 <span class="text-[19px] font-semibold md:text-[22px]">{s.what}<span class="sr-only">, {s.n === "1" ? "one player" : `${s.n} players`}</span></span>
                 <span class="text-[15px] text-stone">{s.who}</span>
@@ -114,6 +118,7 @@ const studio = hummingbirdHut(new URL(heroPhoto.src, SITE).href, services);
           </li>
         ))}
       </ol>
+      </div>
     </div>
   </section>
 

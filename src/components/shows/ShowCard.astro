@@ -1,49 +1,33 @@
 ---
 import type { Show } from "../../lib/shows";
-import Pill from "../Pill.astro";
 import DateBlock from "./DateBlock.astro";
 import Poster from "./Poster.astro";
-import AddToCalendar from "./AddToCalendar.astro";
 import { fullDate, timeRange } from "./format";
 
 interface Props { show: Show; eager?: boolean }
 const { show, eager = false } = Astro.props;
 ---
-<article class="flex min-w-0 flex-col overflow-hidden rounded-md border border-stone/40 bg-white/[.03]" aria-labelledby={`show-${show.id}`}>
-  <a href={`/shows/${show.slug}`} class="block" tabindex="-1" aria-hidden="true">
-    <Poster show={show} eager={eager} compactFallback />
-  </a>
+<article class="group relative flex min-w-0 flex-col overflow-hidden rounded-md border border-stone/40 bg-white/[.03] transition-colors hover:border-white/70" aria-labelledby={`show-${show.id}`}>
+  {show.poster && <Poster show={show} eager={eager} />}
 
-  <div class="flex flex-1 flex-col gap-5 p-5 md:p-6">
-    <div class="flex items-start gap-4">
+  <div class="flex flex-1 flex-col gap-3 p-4">
+    <div class="flex items-start gap-3">
       <DateBlock date={show.start} name={`date-${show.slug}`} />
-      <div class="flex min-w-0 flex-col gap-1">
-        <h3 id={`show-${show.id}`} class:list={["disp m-0 text-[1.45rem] leading-[1.05] [overflow-wrap:anywhere]", show.cancelled && "line-through decoration-2"]}><a href={`/shows/${show.slug}`} class="no-underline hover:underline">{show.band}</a></h3>
-        <p class="m-0 font-semibold leading-snug">{show.venue}</p>
-        <p class="m-0 leading-snug text-white/80">
+      <div class="flex min-w-0 flex-col gap-0.5">
+        <h3 id={`show-${show.id}`} class:list={["disp m-0 text-[1.2rem] leading-[1.05] [overflow-wrap:anywhere]", show.cancelled && "line-through decoration-2"]}>
+          <a href={`/shows/${show.slug}`} class="no-underline after:absolute after:inset-0 after:content-[''] group-hover:underline">{show.band}</a>
+        </h3>
+        <p class="m-0 text-[15px] font-semibold leading-snug">{show.venue}</p>
+        <p class="m-0 text-[15px] leading-snug text-white/80">
           {show.city && show.city !== show.venue && <span class="whitespace-nowrap">{show.city} · </span>}
           <span class="sr-only">{fullDate(show)}, </span><span class="whitespace-nowrap">{timeRange(show)}</span>
         </p>
-        {show.genre && <p class="eyebrow m-0 mt-1 text-[11px] text-white/80">{show.genre}</p>}
       </div>
     </div>
 
-    {show.lineup.length > 0 && (
-      <ul class="m-0 flex list-none flex-col gap-1 border-t border-stone/30 p-0 pt-4 text-[15px]" aria-label="Lineup">
-        {show.lineup.map((m) => (
-          <li class="flex justify-between gap-4">
-            <span class="min-w-0 [overflow-wrap:anywhere]">{m.name}</span>
-            {m.role && <span class="shrink-0 text-white/80">{m.role}</span>}
-          </li>
-        ))}
-      </ul>
-    )}
-
-    {show.notes && <p class="m-0 text-[15px] text-white/80">{show.notes}</p>}
-
-    <div class="mt-auto flex flex-col gap-3 border-t border-stone/30 pt-4">
-      {show.tickets && !show.cancelled && <div><Pill href={show.tickets} external>Tickets</Pill></div>}
-      {!show.cancelled && <AddToCalendar show={show} />}
+    <div class="mt-auto flex items-center justify-between gap-3 border-t border-stone/30 pt-3">
+      <span class="text-sm font-semibold" aria-hidden="true">{show.cancelled ? "Cancelled" : "Details, lineup, add to calendar"} <span class="inline-block transition-transform group-hover:translate-x-1">→</span></span>
+      {show.tickets && !show.cancelled && <a href={show.tickets} target="_blank" rel="noopener" class="relative z-10 shrink-0 text-sm font-semibold">Tickets ↗</a>}
     </div>
   </div>
 </article>
