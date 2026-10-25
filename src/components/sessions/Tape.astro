@@ -1,0 +1,106 @@
+---
+// One tape box on the shelf. It is always a real link to /sessions/<id>; on /sessions the shelf
+// script turns a click into "open this session's panel" (role=tab), elsewhere it just navigates.
+import { Picture } from "astro:assets";
+import { tapeDate, coverTransition, type Session } from "../../lib/sessions";
+
+interface Props {
+  session: Session;
+  /** On /sessions: a tab controlling the panel p-<id>. */
+  tab?: boolean;
+  selected?: boolean;
+  /** First visible cover: load now, high priority. */
+  priority?: boolean;
+  /** Carry the cover's view-transition name (only where the hero is not on the same page). */
+  morph?: boolean;
+}
+const { session, tab = false, selected = false, priority = false, morph = false } = Astro.props;
+const { id } = session;
+const { artist, project, photos } = session.data;
+const tabAttrs = tab
+  ? { role: "tab", id: `t-${id}`, "aria-controls": `p-${id}`, "aria-selected": String(selected), tabindex: selected ? "0" : "-1" }
+  : {};
+---
+<a href={`/sessions/${id}`} class="tape" data-session={id} {...tabAttrs}>
+  <span class="tape-cover" style={morph ? `view-transition-name:${coverTransition(id)}` : undefined}>
+    <Picture
+      src={photos[0].src}
+      alt=""
+      formats={["avif"]}
+      fallbackFormat="webp"
+      widths={[240, 360, 480]}
+      sizes="(min-width: 1024px) 190px, (min-width: 600px) 30vw, 46vw"
+      loading={priority ? "eager" : "lazy"}
+      fetchpriority={priority ? "high" : undefined}
+      class="tape-img"
+    />
+  </span>
+  <span class="tape-label">
+    <span class="tape-name">{artist}</span>
+    <span class="tape-meta">{project}</span>
+    <span class="tape-date">{tapeDate(session)}</span>
+  </span>
+</a>
+
+<style>
+  .tape {
+    position: relative;
+    display: block;
+    flex: 0 0 46%;
+    aspect-ratio: 5 / 7;
+    scroll-snap-align: start;
+    border-radius: 3px;
+    background: var(--color-charcoal);
+    color: var(--color-charcoal);
+    text-decoration: none;
+    overflow: hidden;
+    /* The spine: a stone strip down the left edge. */
+    box-shadow: inset 9px 0 0 var(--color-stone);
+    transition: transform 0.25s var(--ease-out-quint), box-shadow 0.25s var(--ease-out-quint);
+  }
+  @media (min-width: 600px) { .tape { flex-basis: calc((100% - 2 * 14px) / 3.3); } }
+  @media (min-width: 1024px) { .tape { flex-basis: calc((100% - 5 * 18px) / 6); } }
+  .tape-cover { position: absolute; inset: 0 0 0 9px; display: block; overflow: hidden; }
+  .tape :global(.tape-img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.85) contrast(1.05);
+    transition: filter 0.25s ease;
+  }
+  .tape-label {
+    position: absolute;
+    left: 18px;
+    right: 10px;
+    bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 10px 8px;
+    background: var(--color-white);
+    transform: rotate(-1.2deg);
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.25);
+  }
+  .tape-name { font-family: var(--font-display); text-transform: uppercase; font-size: 16px; line-height: 1.02; letter-spacing: -0.01em; }
+  .tape-meta { font-size: 12px; font-weight: 600; line-height: 1.3; }
+  .tape-date {
+    margin-top: 3px;
+    padding-top: 4px;
+    border-top: 1px solid var(--color-stone);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+  .tape:hover :global(.tape-img), .tape[aria-selected="true"] :global(.tape-img), .tape:focus-visible :global(.tape-img) { filter: none; }
+  .tape:hover { transform: translateY(-6px); }
+  .tape[aria-selected="true"] {
+    transform: translateY(-14px);
+    box-shadow: inset 9px 0 0 var(--color-white), 0 0 0 2px var(--color-white);
+  }
+  .tape:focus-visible { outline: 2px solid var(--color-white); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    .tape, .tape :global(.tape-img) { transition: none; }
+  }
+</style>

@@ -1,0 +1,29 @@
+---
+artist: Solomon Alber
+project: Five players
+date: 2025-10-26
+when: Oct 26 to Dec 7, 2025
+sessions:
+  - { date: "Dec 7, 2025", what: Mixing, hours: 4 hrs }
+  - { date: "Nov 30, 2025", what: Mixing, hours: 5 hrs }
+  - { date: "Sun Oct 26, 2025", what: Tracking, hours: "11:00 AM to 4:00 PM · 5 hrs" }
+people:
+  - { name: Solomon Alber, role: Clarinet }
+  - { name: Dave Rosenfeld, role: "Mandolin, violin" }
+  - { name: Sharon Mitchell, role: Viola }
+  - { name: Zina Pozen, role: Accordion }
+  - { name: Ariel Luckey, role: Tapan drum }
+notes:
+  - heading: "Mics · Oct 26, 2025"
+    rows:
+      - { label: Accordion, value: U87 pair on WA-2MPX }
+      - { label: Clarinet, value: "Coles 4038 on AEA TRP, house ribbon on WA-2MPX" }
+      - { label: Strings, value: "KM 184 on mandolin, AEA KU5A on viola" }
+      - { label: Tapan, value: "TLM 103 low, KM 184 high, Daking II" }
+photos:
+  - src: ../../assets/sessions/solomon-alber-ensemble-oct-2025-hummingbird-hut-oakland.webp
+    alt: Five musicians with violin, viola, clarinet, accordion and tapan drum gathered on a rug in the live room
+    date: "Oct 26, 2025 · 2:55 PM"
+    caption: During the session.
+---
+Five players tracked live in one day, then two mix sessions.

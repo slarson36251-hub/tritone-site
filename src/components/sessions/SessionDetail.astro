@@ -1,0 +1,149 @@
+---
+// Everything about one session: name, intro, cover, session log, people, gear notes, videos, photos.
+// Used for the panels on /sessions (level 2, link to the page) and for /sessions/<id> (level 1, hero morph).
+import { Picture } from "astro:assets";
+import { render } from "astro:content";
+import LiteYouTube from "./LiteYouTube.astro";
+import { coverTransition, type Session } from "../../lib/sessions";
+
+interface Props {
+  session: Session;
+  level?: 1 | 2;
+  /** Load the cover now (it is above the fold). */
+  eager?: boolean;
+  /** Give the cover the view-transition name the shelf tape carries. */
+  morph?: boolean;
+  /** Show the "Open session page" link (panels on /sessions). */
+  pageLink?: boolean;
+}
+const { session, level = 2, eager = false, morph = false, pageLink = false } = Astro.props;
+const { id } = session;
+const d = session.data;
+const { Content } = await render(session);
+const [cover, ...rest] = d.photos;
+const H = level === 1 ? "h1" : "h2";
+const Sub = level === 1 ? "h2" : "h3";
+const lead = (p: { date?: string; label?: string }) => p.date ?? p.label;
+---
+<div class="flex flex-col gap-10 md:gap-14">
+  <div class="flex max-w-[820px] flex-col gap-3">
+    <p class="eyebrow m-0 text-stone">Hummingbird Hut · Oakland, CA · {d.when}</p>
+    <H class="disp m-0 text-[clamp(2.4rem,7vw,4.6rem)] leading-[0.92]">{d.artist}</H>
+    <div class="lede max-w-[62ch] text-[18px] text-white/85 md:text-[19px]"><Content /></div>
+    {pageLink && (
+      <p class="m-0 pt-1"><a href={`/sessions/${id}`} class="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline">Open session page <span aria-hidden="true">→</span></a></p>
+    )}
+  </div>
+
+  <div class="grid items-start gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-10">
+    <figure class="m-0 flex flex-col gap-2.5">
+      <span class="tile block !rounded-[10px]" style={morph ? `view-transition-name:${coverTransition(id)}` : undefined}>
+        <Picture
+          src={cover.src}
+          alt={cover.alt}
+          formats={["avif"]}
+      fallbackFormat="webp"
+          widths={[400, 600, 800, 1200]}
+          sizes="(min-width: 1280px) 500px, (min-width: 761px) 40vw, calc(100vw - 32px)"
+          loading={eager ? "eager" : "lazy"}
+          fetchpriority={eager && level === 1 ? "high" : undefined}
+          class="block h-auto w-full"
+        />
+      </span>
+      <figcaption class="text-[14px] text-stone">{lead(cover) && <b class="font-semibold text-white">{lead(cover)}.</b>} {cover.caption}</figcaption>
+    </figure>
+
+    <div class="flex min-w-0 flex-col gap-8">
+      {d.sessions.length > 0 && (
+        <div>
+          <Sub class="eyebrow mb-3 mt-0 text-stone">Sessions</Sub>
+          <dl class="sheet m-0">
+            {d.sessions.map((s) => (
+              <>
+                <dt>{s.date}</dt>
+                <dd>{[s.what, s.hours].filter(Boolean).join(", ")}{s.gear && <>{s.what || s.hours ? ". " : ""}<span class="text-white/80">{s.gear}</span></>}</dd>
+              </>
+            ))}
+          </dl>
+        </div>
+      )}
+      {d.people.length > 0 && (
+        <div>
+          <Sub class="eyebrow mb-3 mt-0 text-stone">{d.peopleHeading}</Sub>
+          <ul class="people m-0 list-none p-0">
+            {d.people.map((p) => <li><b>{p.name}</b><span>{p.role}</span></li>)}
+          </ul>
+        </div>
+      )}
+      {d.notes.map((n) => (
+        <div>
+          <Sub class="eyebrow mb-3 mt-0 text-stone">{n.heading}</Sub>
+          <dl class="sheet m-0">
+            {n.rows.map((r) => <><dt>{r.label}</dt><dd>{r.value}</dd></>)}
+          </dl>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  {d.videos.length > 0 && (
+    <div>
+      <Sub class="eyebrow mb-4 mt-0 text-stone">{d.videosHeading}</Sub>
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {d.videos.map((v) => <LiteYouTube id={v.youtubeId} title={v.title} alt={v.alt} note={v.note} />)}
+      </div>
+    </div>
+  )}
+
+  {rest.length > 0 && (
+    <div>
+      <Sub class="eyebrow mb-4 mt-0 text-stone">{d.photosHeading}</Sub>
+      <div class="grid grid-cols-2 gap-x-3 gap-y-5 md:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
+        {rest.map((p) => (
+          <figure class="m-0 flex flex-col gap-2">
+            <span class="tile block !rounded-[10px]">
+              <Picture
+                src={p.src}
+                alt={p.alt}
+                formats={["avif"]}
+      fallbackFormat="webp"
+                widths={[240, 360, 480, 720]}
+                sizes="(min-width: 1024px) 290px, (min-width: 761px) 30vw, calc(50vw - 22px)"
+                loading="lazy"
+                class="tile-img block aspect-[4/3] h-auto w-full object-cover"
+              />
+            </span>
+            <figcaption class="text-[13px] leading-snug text-stone">{lead(p) && <b class="font-semibold text-white">{lead(p)}.</b>} {p.caption}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
+<style>
+  .lede :global(p) { margin: 0; }
+  .lede :global(p + p) { margin-top: 0.8em; }
+  .sheet {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    border-top: 1px solid rgb(168 166 161 / 0.35);
+  }
+  .sheet dt, .sheet dd { margin: 0; padding: 11px 0; border-bottom: 1px solid rgb(168 166 161 / 0.35); }
+  .sheet dt { padding-right: 20px; color: var(--color-stone); font-size: 14px; padding-top: 13px; font-variant-numeric: tabular-nums; }
+  .sheet dd { font-size: 16px; font-variant-numeric: tabular-nums; }
+  .people {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    column-gap: 24px;
+    border-top: 1px solid rgb(168 166 161 / 0.35);
+  }
+  .people li { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgb(168 166 161 / 0.35); }
+  .people b { font-weight: 600; }
+  .people span { color: var(--color-stone); text-align: right; }
+  @media (max-width: 420px) {
+    .sheet { grid-template-columns: minmax(0, 1fr); }
+    .sheet dt { padding-bottom: 0; border-bottom: 0; }
+    .sheet dd { padding-top: 2px; }
+  }
+</style>

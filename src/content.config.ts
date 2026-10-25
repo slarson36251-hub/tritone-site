@@ -44,4 +44,54 @@ const bands = defineCollection({
     }),
 });
 
-export const collections = { releases, bands };
+
+// One recording session (or a run of them) at the Hummingbird Hut: one Markdown file each in
+// src/content/sessions/<id>.md, where <id> is the deep link (/sessions#<id>) and the page (/sessions/<id>).
+// The body is the short intro under the name. Names, roles, dates and gear only as the session notes have them.
+// Never an address: the place is "Hummingbird Hut, Oakland, CA" and nothing more.
+const sessions = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/sessions" }),
+  schema: ({ image }) =>
+    z.object({
+      artist: z.string(),
+      // Second line on the tape label, e.g. "Joseph's Bones" or "Solo piano".
+      project: z.string(),
+      // The date on the tape. The shelf sorts newest first by it.
+      date: z.coerce.date(),
+      // Overrides the tape's "Aug 15 · 2026" when the day is not known, e.g. "Jul · 2025".
+      dateLabel: z.string().optional(),
+      // The span in the eyebrow: "Hummingbird Hut · Oakland, CA · <when>".
+      when: z.string(),
+      // Session log, newest first: date as shown, what happened, the hours, optional gear.
+      sessions: z
+        .array(z.object({ date: z.string(), what: z.string().optional(), hours: z.string().optional(), gear: z.string().optional() }))
+        .default([]),
+      people: z.array(z.object({ name: z.string(), role: z.string() })).default([]),
+      peopleHeading: z.string().default("In the room"),
+      // Gear and mic notes, grouped: [{ heading, rows: [{ label, value }] }].
+      notes: z
+        .array(z.object({ heading: z.string(), rows: z.array(z.object({ label: z.string(), value: z.string() })) }))
+        .default([]),
+      // The first photo is the cover (tape, hero, share card). `date` is the bold caption lead, e.g. "Oct 15, 2024 · 3:07 PM";
+      // `label` stands in when there is no date ("Mix chain").
+      photos: z
+        .array(
+          z.object({
+            src: image(),
+            alt: z.string(),
+            caption: z.string(),
+            date: z.string().optional(),
+            label: z.string().optional(),
+          }),
+        )
+        .min(1),
+      photosHeading: z.string().default("More from the session"),
+      // YouTube videos: the page shows the thumbnail and loads the player (youtube-nocookie) on click.
+      videos: z
+        .array(z.object({ youtubeId: z.string().regex(/^[\w-]{11}$/), title: z.string(), alt: z.string(), note: z.string().optional() }))
+        .default([]),
+      videosHeading: z.string().default("Watch · videos from these sessions"),
+    }),
+});
+
+export const collections = { releases, bands, sessions };

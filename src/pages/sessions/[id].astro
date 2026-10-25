@@ -1,0 +1,45 @@
+---
+// One session's own page, /sessions/<id>: the same content as its panel on /sessions, with its own
+// title, description and share card. The cover morphs from the tape on /sessions (view transition).
+import { getSessions, summary, type Session } from "../../lib/sessions";
+import Base from "../../layouts/Base.astro";
+import Shelf from "../../components/sessions/Shelf.astro";
+import SessionDetail from "../../components/sessions/SessionDetail.astro";
+
+export async function getStaticPaths() {
+  const sessions = await getSessions();
+  return sessions.map((session) => ({ params: { id: session.id }, props: { session, others: sessions.filter((s) => s.id !== session.id) } }));
+}
+interface Props { session: Session; others: Session[] }
+const { session, others } = Astro.props;
+const { id } = session;
+const { artist } = session.data;
+const site = Astro.site!;
+// Breadcrumbs only: no place, no address.
+const ld = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Sessions", item: new URL("/sessions", site).href },
+    { "@type": "ListItem", position: 2, name: artist, item: new URL(`/sessions/${id}`, site).href },
+  ],
+};
+---
+<Base title={`${artist} · Session at the Hummingbird Hut · Oakland, CA`} description={summary(session)} image={`/og/sessions/${id}.png`}>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(ld)} />
+  <article class="wrap pb-16 pt-6 md:pb-24 md:pt-10">
+    <a href={`/sessions#${id}`} class="eyebrow mb-6 inline-flex min-h-11 items-center gap-2 text-stone no-underline hover:text-white md:mb-8"><span aria-hidden="true">←</span> All sessions</a>
+    <SessionDetail session={session} level={1} eager morph />
+  </article>
+
+  <section class="bg-black pb-8 pt-10 md:pb-12 md:pt-14" aria-labelledby="more-h">
+    <div class="wrap">
+      <Shelf sessions={others} label="More sessions">
+        <div class="flex flex-col gap-2">
+          <p class="eyebrow m-0 text-stone">The tape shelf</p>
+          <h2 id="more-h" class="disp m-0 text-[clamp(1.8rem,4.6vw,2.8rem)] leading-[0.95]">More sessions</h2>
+        </div>
+      </Shelf>
+    </div>
+  </section>
+</Base>
