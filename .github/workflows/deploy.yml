@@ -1,13 +1,13 @@
 name: Deploy
 
 # Push to main → live site. Pull requests → a private preview URL posted on the PR.
-# Nightly rebuild keeps the Shows list current from the Music calendar.
+# A rebuild every 2 hours keeps the Shows list current from the Music calendar.
 on:
   push:
     branches: [main]
   pull_request:
   schedule:
-    - cron: "17 11 * * *" # 4:17 AM Pacific
+    - cron: "17 */2 * * *" # every 2 hours, so new calendar entries show up quickly
   workflow_dispatch:
 
 concurrency:
