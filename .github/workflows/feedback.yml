@@ -1,0 +1,32 @@
+name: Feedback notes
+
+# Read-only: lists Scott's beta-site feedback notes (Firestore "feedback" collection, written by
+# the overlay on tritone-site.web.app?feedback=on) and uploads them as the artifact feedback.json.
+# Clients can only create notes (firestore.rules); this job reads them with the service account,
+# which needs Firestore read access (roles/datastore.viewer) on the tritone-site project.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: List feedback notes
+        run: |
+          GOOGLE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node scripts/feedback-export.mjs feedback.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feedback.json
+          path: feedback.json
+          if-no-files-found: error

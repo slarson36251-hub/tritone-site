@@ -11,6 +11,7 @@ import { ClientRouter } from "astro:transitions";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import PlayerDock from "../components/PlayerDock.astro";
+import Feedback from "../components/Feedback.astro";
 import { getCollection } from "astro:content";
 import { PAGE_CARDS, SITE, breadcrumbs as crumbList, canonicalUrl, cardPath, cleanPath, organization, website, type Crumb } from "../lib/seo";
 
@@ -78,5 +79,6 @@ const graph = {
     <main id="main"><slot /></main>
     <Footer />
     <PlayerDock />
+    <Feedback />
   </body>
 </html>
