@@ -6,6 +6,9 @@ poster: ../../assets/posters/franco-nero-rite-spot-june-11-poster.jpg
 posterAlt: "Franco Nero! poster for the Rite Spot, June 11: big lettering in a starburst over orange and red rays, with R&B, Soul, Ska and Reggae around it"
 photo: ../../assets/photos/franco-nero-band-live-hammond.jpg
 photoAlt: Franco Nero playing live in black and white, two guitars, trombone, upright bass, drums and a Hammond organ
+videos:
+  - { id: 8bwQu8yr_Pg, title: Caffeine }
+  - { id: xKQXypv8l-4, title: "All My Lovin'" }
 lineup:
   - { name: Scott Larson, instrument: Trombone }
   - { name: Allegra Bandy, instrument: Vocals }
