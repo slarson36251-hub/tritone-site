@@ -32,7 +32,7 @@ UID:77l8i8dkdkph9qt71u52it0pvb@google.com
 SUMMARY:Angela LaFlamme
 LOCATION:Rite Spot Cafe
 DESCRIPTION:genre: Vintage jazz & blues\nlineup: Angela LaFlamme - vocals\; Scott Larson - trombone\; Nick C
- ulp - piano\; Aaron Cohen - bass\npresented by: Tritone Productions\nnotes: No cover\, two sets
+ ulp - piano\; Aaron Cohen - bass\npresented by: Tritone Productions\nprice: Free\nvenue page: https://www.ritespotcafe.net/calendar\nnotes: No cover\, two sets
 STATUS:CONFIRMED
 END:VEVENT
 BEGIN:VEVENT
@@ -66,10 +66,11 @@ BEGIN:VEVENT
 DTSTART;TZID=America/Los_Angeles:20261108T150000
 DTEND;TZID=America/Los_Angeles:20261108T180000
 UID:0n8nviblvbft6uv6d3pltpg8jq@google.com
+LAST-MODIFIED:20261012T221500Z
 SUMMARY:Scott Larson Quartet @ The Deluxe
 LOCATION:1511 Haight St\, San Francisco\, CA 94117
 DESCRIPTION:lineup: Scott Larson - trombone\; Nick Culp - piano\; Bryan Bowman - drums\; Aaron Cohn - bass\npre
- sented by: Tritone Productions\nnotes: $5 cover\, three sets\, 3–6 PM\ntickets: https://www.eventbrite.com/e/scott-l
+ sented by: Tritone Productions\nprice: $5\nnotes: three sets\, 3–6 PM\ntickets: https://www.eventbrite.com/e/scott-l
  arson-quartet-at-the-deluxe-tickets-1000000000001
 END:VEVENT
 BEGIN:VEVENT
@@ -94,7 +95,7 @@ DTEND;TZID=America/Los_Angeles:20261205T213000
 UID:housecon20261205@google.com
 SUMMARY:Fault Line Trio
 LOCATION:4321 Example Ave\, Oakland\, CA 94610
-DESCRIPTION:lineup: Jay Sanders - piano\; Safa Shokri - bass\; Tim Rowe - drums\nnotes: Listening room\, RSVP for the address\nposter: /sessions/fault-line-trio-jay-sanders-piano-feb-2026-hummingbird-hut-oakland.jpg
+DESCRIPTION:lineup: Jay Sanders - piano\; Safa Shokri - bass\; Tim Rowe - drums\npublic: yes\nnotes: Listening room\, RSVP for the address\nposter: /sessions/fault-line-trio-jay-sanders-piano-feb-2026-hummingbird-hut-oakland.jpg
 END:VEVENT
 BEGIN:VEVENT
 DTSTART;VALUE=DATE:20270117
@@ -188,5 +189,48 @@ DTEND;TZID=America/Los_Angeles:20260721T220000
 UID:0ru8pv544b0lrpp9b395bpbmn9@google.com
 SUMMARY:Hard Bop Quintet
 LOCATION:The DeLuxe
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261104T153000
+DTEND;TZID=America/Los_Angeles:20261104T160000
+UID:pickupmadi20261104@google.com
+SUMMARY:Pick up Madi
+LOCATION:742 Evergreen Ter\, Oakland\, CA 94611
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261109T090000
+DTEND;TZID=America/Los_Angeles:20261109T093000
+UID:antigen20261109@google.com
+SUMMARY:Antigen Test
+LOCATION:Walgreens\, 1 Example Blvd\, Oakland\, CA 94610
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261129T120000
+DTEND;TZID=America/Los_Angeles:20261129T143000
+UID:brunch20261129@google.com
+SUMMARY:Jazz Brunch @ Terry's
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261203T190000
+DTEND;TZID=America/Los_Angeles:20261203T220000
+UID:lowbar20261203@google.com
+SUMMARY:Rescheduled: Nick Culp Quartet
+LOCATION:Low Bar
+DESCRIPTION:moved from: 2026-11-18T19:00:00-08:00\nlineup: Nick Culp - piano\; Scott Larson - trombone\; Aaron Cohen - bass\; Ron Marabuto - drums\nvenue page: https://www.example.com/lowbar/nick-culp-quartet
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20250815T200000
+DTEND;TZID=America/Los_Angeles:20250815T230000
+UID:ivy20250815@google.com
+SUMMARY:Hard Bop Quintet
+LOCATION:Ivy Room
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;TZID=America/Los_Angeles:20261112T200000
+DTEND;TZID=America/Los_Angeles:20261112T220000
+UID:hutshow20261112@google.com
+SUMMARY:Fault Line Trio listening session
+LOCATION:Hummingbird Hut\, 99 Private Way\, Oakland\, CA 94619
+DESCRIPTION:public: yes
 END:VEVENT
 END:VCALENDAR

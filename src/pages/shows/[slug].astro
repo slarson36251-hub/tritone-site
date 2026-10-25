@@ -1,0 +1,182 @@
+---
+// One page per show (/shows/band-venue-city-yyyy-mm-dd), plus legacy band URLs
+// (/shows/nick-culp-quartet) that forward to that band's next show, or to /shows.
+import Base from "../../layouts/Base.astro";
+import Pill from "../../components/Pill.astro";
+import DateBlock from "../../components/shows/DateBlock.astro";
+import Poster from "../../components/shows/Poster.astro";
+import AddToCalendar from "../../components/shows/AddToCalendar.astro";
+import ShowRow from "../../components/shows/ShowRow.astro";
+import { fullDate, timeRange, place } from "../../components/shows/format";
+import {
+  getShows, isUpcoming, bandPage, bandSlug, eventSchema, ogImagePath, showUrl, publicLocation, SITE, TRITONE_BANDS, type Show,
+} from "../../lib/shows";
+
+export async function getStaticPaths() {
+  const shows = await getShows();
+  const now = Date.now();
+  const pages = shows.map((show) => ({ params: { slug: show.slug }, props: { show, redirect: undefined as string | undefined } }));
+  // Old URLs were one page per band. Point each at the band's next show.
+  const legacy = new Set(["nick-culp-quartet", ...Object.keys(TRITONE_BANDS), ...shows.map((s) => bandSlug(s.band))]);
+  const taken = new Set(shows.map((s) => s.slug));
+  for (const slug of legacy) {
+    if (!slug || taken.has(slug)) continue;
+    const next = shows.find((s) => bandSlug(s.band) === slug && isUpcoming(s, now) && !s.cancelled);
+    pages.push({ params: { slug }, props: { show: undefined as unknown as Show, redirect: next ? `/shows/${next.slug}` : "/shows" } });
+  }
+  return pages;
+}
+
+const { show, redirect } = Astro.props as { show: Show; redirect?: string };
+let schema: object[] = [];
+let others: Show[] = [];
+let noindex = false;
+let upcoming = false;
+let band: string | undefined;
+if (!redirect) {
+  const all = await getShows();
+  upcoming = isUpcoming(show);
+  noindex = !upcoming && Date.now() - show.start.getTime() > 365 * 864e5;
+  band = bandPage(show);
+  others = all.filter((s) => s.slug !== show.slug && isUpcoming(s) && !s.cancelled).slice(0, 4);
+  schema = [
+    eventSchema(show),
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Shows", item: `${SITE}/shows` },
+        { "@type": "ListItem", position: 2, name: show.title, item: showUrl(show) },
+      ],
+    },
+  ];
+}
+const image = show ? new URL(show.poster ?? ogImagePath(show), SITE).href : undefined;
+const description = show
+  ? `${show.band} live at ${place(show).replace(" · ", ", ")} on ${fullDate(show)}${show.allDay ? "" : `, ${timeRange(show)}`}.${show.genre ? ` ${show.genre}.` : ""} Tickets, lineup and add-to-calendar.`
+  : "";
+const lastmod = show?.updated?.toISOString() ?? "";
+---
+{redirect ? (
+  <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <title>Shows · Tritone Productions</title>
+      <meta name="robots" content="noindex" />
+      <link rel="canonical" href={new URL(redirect, SITE).href} />
+      <meta http-equiv="refresh" content={`0;url=${redirect}`} />
+    </head>
+    <body><a href={redirect}>Shows</a></body>
+  </html>
+) : (
+<Base title={`${show.band} · ${show.venue} · ${fullDate(show)} · Tritone Productions`} description={description} image={image}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <meta name="twitter:image" content={image} />
+    {lastmod && <meta name="tritone:lastmod" content={lastmod} />}
+    {!show.poster && <meta property="og:image:width" content="1200" />}
+    {!show.poster && <meta property="og:image:height" content="630" />}
+    {noindex && <meta name="robots" content="noindex" />}
+  </Fragment>
+
+  <article class="wrap pb-16 pt-8 md:pb-24 md:pt-12">
+    <nav aria-label="Breadcrumb" class="eyebrow mb-6 flex flex-wrap gap-x-2 text-white/80">
+      <a href="/shows" class="no-underline hover:underline">Shows</a><span aria-hidden="true">/</span><span class="min-w-0 [overflow-wrap:anywhere]">{show.band}</span>
+    </nav>
+
+    <div class="grid gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12 lg:gap-16">
+      <div class="md:sticky md:top-28 md:self-start">
+        <Poster show={show} eager class="rounded-md border border-stone/40" />
+      </div>
+
+      <div class="flex min-w-0 flex-col gap-7">
+        <header class="flex flex-col gap-5">
+          <div class="flex items-center gap-5">
+            <DateBlock date={show.start} size="lg" name={`date-${show.slug}`} />
+            <div class="flex min-w-0 flex-col gap-1">
+              <p class="m-0 text-[17px] font-semibold">{fullDate(show)}</p>
+              <p class="m-0 text-white/80">{timeRange(show)}</p>
+              {!upcoming && <p class="eyebrow m-0 mt-1 text-white/80">Past show</p>}
+              {show.cancelled && <p class="eyebrow m-0 mt-1">Cancelled</p>}
+              {show.rescheduled && !show.cancelled && <p class="eyebrow m-0 mt-1">Rescheduled{show.previousStart && <> from {fullDate({ ...show, start: show.previousStart })}</>}</p>}
+            </div>
+          </div>
+          <h1 class:list={["disp m-0 text-[clamp(2.4rem,7vw,4.5rem)] leading-[.95] [overflow-wrap:anywhere]", show.cancelled && "line-through decoration-4"]}>{show.band}</h1>
+          <p class="m-0 text-[19px]">
+            <strong>{show.venue}</strong>{show.city && show.city !== show.venue && <span class="text-white/80">, {show.city}</span>}
+            {show.genre && <span class="text-white/80"> · {show.genre}</span>}
+          </p>
+        </header>
+
+        {upcoming && !show.cancelled && (
+          <div class="flex flex-col gap-5 border-y border-stone/40 py-6">
+            <div class="flex flex-wrap items-center gap-3">
+              {show.tickets && <Pill href={show.tickets} external>Tickets</Pill>}
+              {show.price && <span class="font-semibold">{show.price}</span>}
+            </div>
+            <AddToCalendar show={show} />
+            {show.venuePage && (
+              <a href={show.venuePage} target="_blank" rel="noopener" class="font-semibold">See it on {show.venue}'s calendar →</a>
+            )}
+          </div>
+        )}
+
+        {show.lineup.length > 0 && (
+          <section aria-labelledby="lineup-h">
+            <h2 id="lineup-h" class="eyebrow m-0 mb-3 text-white/80">Lineup</h2>
+            <ul class="m-0 flex list-none flex-col p-0">
+              {show.lineup.map((m) => (
+                <li class="rule flex justify-between gap-4 border-b py-2.5">
+                  <span class="min-w-0 font-semibold [overflow-wrap:anywhere]">{m.name}</span>
+                  {m.role && <span class="shrink-0 text-white/80">{m.role}</span>}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {(show.notes || show.presenter) && (
+          <section class="flex flex-col gap-2">
+            {show.notes && <p class="m-0">{show.notes}</p>}
+            {show.presenter && <p class="m-0 text-white/80">Presented by {show.presenter}</p>}
+          </section>
+        )}
+
+        <section aria-labelledby="venue-h" class="flex flex-col gap-2 rounded-md border border-stone/40 bg-black/20 p-5 md:p-6">
+          <h2 id="venue-h" class="eyebrow m-0 text-white/80">Venue</h2>
+          <p class="disp m-0 text-[1.6rem] leading-tight">{show.venue}</p>
+          <p class="m-0">{show.place?.street ? publicLocation(show).replace(`${show.venue}, `, "") : show.city ? `${show.city}, CA` : "Bay Area"}</p>
+          {show.place?.url && (
+            <a href={show.place.url} target="_blank" rel="noopener" class="mt-1 font-semibold">{show.venue} website →</a>
+          )}
+          {show.place?.instagram && (
+            <a href={show.place.instagram} target="_blank" rel="noopener" class="font-semibold">Instagram →</a>
+          )}
+        </section>
+
+        {band && (
+          <a href={band} class="group flex items-center justify-between gap-4 rounded-md border border-stone/40 p-5 no-underline hover:border-white md:p-6">
+            <span class="flex flex-col gap-1">
+              <span class="eyebrow text-white/80">The band</span>
+              <span class="disp text-[1.6rem] leading-tight">{show.band}</span>
+            </span>
+            <span class="text-2xl transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+          </a>
+        )}
+      </div>
+    </div>
+
+    {others.length > 0 && (
+      <section aria-labelledby="more-h" class="mt-16 md:mt-24">
+        <div class="rule mb-2 flex items-baseline justify-between gap-4 border-t pt-6">
+          <h2 id="more-h" class="disp m-0 text-[clamp(1.6rem,3.5vw,2.1rem)]">More shows</h2>
+          <a href="/shows" class="font-semibold">All shows →</a>
+        </div>
+        <ul class="m-0 list-none p-0">
+          {others.map((s) => <ShowRow show={s} href={`/shows/${s.slug}`} />)}
+        </ul>
+      </section>
+    )}
+  </article>
+</Base>
+)}

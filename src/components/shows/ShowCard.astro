@@ -2,7 +2,7 @@
 import type { Show } from "../../lib/shows";
 import Pill from "../Pill.astro";
 import DateBlock from "./DateBlock.astro";
-import PosterFallback from "./PosterFallback.astro";
+import Poster from "./Poster.astro";
 import AddToCalendar from "./AddToCalendar.astro";
 import { fullDate, timeRange } from "./format";
 
@@ -10,37 +10,21 @@ interface Props { show: Show; eager?: boolean }
 const { show, eager = false } = Astro.props;
 ---
 <article class="flex min-w-0 flex-col overflow-hidden rounded-md border border-stone/40 bg-white/[.03]" aria-labelledby={`show-${show.id}`}>
-  <div class:list={["relative w-full overflow-hidden bg-black/30", show.poster ? "aspect-[11/17]" : "aspect-[4/3] sm:aspect-[11/17]"]}>
-    {show.poster ? (
-      <img
-        src={show.poster}
-        alt={`Poster: ${show.band}, ${fullDate(show)}`}
-        loading={eager ? "eager" : "lazy"}
-        decoding="async"
-        referrerpolicy="no-referrer"
-        width="1100"
-        height="1700"
-        class="h-full w-full object-cover"
-      />
-    ) : (
-      <PosterFallback show={show} />
-    )}
-    {show.cancelled && (
-      <span class="eyebrow absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-charcoal">Cancelled</span>
-    )}
-  </div>
+  <a href={`/shows/${show.slug}`} class="block" tabindex="-1" aria-hidden="true">
+    <Poster show={show} eager={eager} compactFallback />
+  </a>
 
   <div class="flex flex-1 flex-col gap-5 p-5 md:p-6">
     <div class="flex items-start gap-4">
-      <DateBlock date={show.start} />
+      <DateBlock date={show.start} name={`date-${show.slug}`} />
       <div class="flex min-w-0 flex-col gap-1">
-        <h3 id={`show-${show.id}`} class:list={["disp m-0 text-[1.45rem] leading-[1.05] [overflow-wrap:anywhere]", show.cancelled && "line-through decoration-2"]}>{show.band}</h3>
+        <h3 id={`show-${show.id}`} class:list={["disp m-0 text-[1.45rem] leading-[1.05] [overflow-wrap:anywhere]", show.cancelled && "line-through decoration-2"]}><a href={`/shows/${show.slug}`} class="no-underline hover:underline">{show.band}</a></h3>
         <p class="m-0 font-semibold leading-snug">{show.venue}</p>
-        <p class="m-0 leading-snug text-stone">
+        <p class="m-0 leading-snug text-white/80">
           {show.city && show.city !== show.venue && <span class="whitespace-nowrap">{show.city} · </span>}
           <span class="sr-only">{fullDate(show)}, </span><span class="whitespace-nowrap">{timeRange(show)}</span>
         </p>
-        {show.genre && <p class="eyebrow m-0 mt-1 text-[11px] text-stone">{show.genre}</p>}
+        {show.genre && <p class="eyebrow m-0 mt-1 text-[11px] text-white/80">{show.genre}</p>}
       </div>
     </div>
 
@@ -49,13 +33,13 @@ const { show, eager = false } = Astro.props;
         {show.lineup.map((m) => (
           <li class="flex justify-between gap-4">
             <span class="min-w-0 [overflow-wrap:anywhere]">{m.name}</span>
-            {m.role && <span class="shrink-0 text-stone">{m.role}</span>}
+            {m.role && <span class="shrink-0 text-white/80">{m.role}</span>}
           </li>
         ))}
       </ul>
     )}
 
-    {show.notes && <p class="m-0 text-[15px] text-stone">{show.notes}</p>}
+    {show.notes && <p class="m-0 text-[15px] text-white/80">{show.notes}</p>}
 
     <div class="mt-auto flex flex-col gap-3 border-t border-stone/30 pt-4">
       {show.tickets && !show.cancelled && <div><Pill href={show.tickets} external>Tickets</Pill></div>}
