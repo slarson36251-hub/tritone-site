@@ -12,7 +12,7 @@ service cloud.firestore {
         && request.resource.data.note is string && request.resource.data.note.size() > 0 && request.resource.data.note.size() < 8000
         && request.resource.data.viewport is string && request.resource.data.viewport.size() < 40
         && request.resource.data.ua is string && request.resource.data.ua.size() < 300
-        && request.resource.data.createdAt == request.time;
+        && request.resource.data.createdAt is string && request.resource.data.createdAt.size() < 40;
       allow read, update, delete: if false;
     }
     match /{document=**} {
