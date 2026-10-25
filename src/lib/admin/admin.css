@@ -149,7 +149,7 @@ select.adm-input option { background: #38383b; color: #fff; }
 .adm-dot.is-off { background: transparent; border: 2px solid var(--st); }
 @keyframes adm-ping { 0% { transform: scale(0.5); opacity: 0.9; } 100% { transform: scale(1.6); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .adm-dot.is-on::after, .adm-status .adm-spin { animation: none; } }
-.adm-live-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; flex: 1 1 260px; }
+.adm-live-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; flex: 1 1 260px; min-width: 0; max-width: 100%; }
 .adm-live-list li { font-size: 13px; padding: 6px 10px; border-radius: 999px; background: var(--panel-hi); border: 1px solid var(--line); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .adm-live-meta { font-size: 13px; color: var(--st); }
 
