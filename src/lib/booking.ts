@@ -13,6 +13,8 @@
  * before sending; the server's own honeypot check stays as the second line.
  */
 
+import { track } from "./track";
+
 export const ENDPOINT =
   "https://script.google.com/macros/s/AKfycbwVzX-VCx7_UCAj6rZ_DplyZaNdT4MGNOJXVinDPWn1pTem6T6Pt07gBkeKu8NykfJX/exec";
 
@@ -335,6 +337,8 @@ export function initBooking() {
           return;
         }
         showDone(typeof data.id === "string" ? data.id : "");
+        // Analytics: session length and weekday only, never anything typed into the form.
+        track("book_submit", `${bookedHours}h ${fmtLongDate(bookedDate).slice(0, 3)}`);
       })
       .catch((err) => {
         if (err && err.userMsg) {

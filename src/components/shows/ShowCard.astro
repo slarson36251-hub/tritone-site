@@ -27,7 +27,7 @@ const { show, eager = false } = Astro.props;
 
     <div class="mt-auto flex items-center justify-between gap-3 border-t border-stone/30 pt-3">
       <span class="text-sm font-semibold" aria-hidden="true">{show.cancelled ? "Cancelled" : "Details, lineup, add to calendar"} <span class="inline-block transition-transform group-hover:translate-x-1">→</span></span>
-      {show.tickets && !show.cancelled && <a href={show.tickets} target="_blank" rel="noopener" class="relative z-10 shrink-0 text-sm font-semibold">Tickets ↗</a>}
+      {show.tickets && !show.cancelled && <a href={show.tickets} target="_blank" rel="noopener" data-track="ticket_click" data-track-lbl={show.slug} class="relative z-10 shrink-0 text-sm font-semibold">Tickets ↗</a>}
     </div>
   </div>
 </article>

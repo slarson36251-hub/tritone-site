@@ -1,7 +1,7 @@
 rules_version = '2';
-// Only Scott's beta-site feedback notes live here. Anyone may add a note in the
-// expected shape; nobody can read, change or delete through the client. Claude
-// reads them with a service account (see .github/workflows/feedback.yml).
+// Two collections clients may write to: Scott's beta-site feedback notes and the visitor
+// analytics hits (below). Anyone may add a document in the expected shape; nobody can change or
+// delete through the client. Claude reads feedback with a service account (.github/workflows/feedback.yml).
 service cloud.firestore {
   match /databases/{db}/documents {
     match /feedback/{id} {
@@ -14,6 +14,42 @@ service cloud.firestore {
         && request.resource.data.ua is string && request.resource.data.ua.size() < 300
         && request.resource.data.createdAt is string && request.resource.data.createdAt.size() < 40;
       allow read, update, delete: if false;
+    }
+    // First-party visitor analytics (src/lib/track.ts, contract src/lib/analytics-schema.ts).
+    // Visitors may only create a hit in the exact shape, stamped with the server time; only
+    // Scott (a verified admin email via Firebase Auth) may read. Nobody can change or delete.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['slarson36251@gmail.com', 'scott@tritone-productions.com'];
+    }
+    function str(v, max) {
+      return v is string && v.size() <= max;
+    }
+    function validHit(d) {
+      return d.keys().hasAll(['k', 't', 'sid', 'path', 'first', 'src', 'ref', 'us', 'um', 'uc', 'ux', 'land', 'dev', 'tz', 'lang', 'ev', 'lbl'])
+        && d.keys().hasOnly(['k', 't', 'sid', 'path', 'first', 'src', 'ref', 'us', 'um', 'uc', 'ux', 'land', 'dev', 'tz', 'lang', 'ev', 'lbl'])
+        && d.k in ['pv', 'ev']
+        && d.t is timestamp && d.t == request.time
+        && str(d.sid, 16) && d.sid.size() > 0
+        && str(d.path, 200) && d.path.matches('^/.*')
+        && d.first is bool
+        && d.src in ['ai', 'search', 'social', 'email', 'campaign', 'referral', 'direct']
+        && str(d.ref, 100)
+        && str(d.us, 80) && str(d.um, 80) && str(d.uc, 80) && str(d.ux, 80)
+        && str(d.land, 200)
+        && d.dev in ['m', 't', 'd']
+        && str(d.tz, 40)
+        && str(d.lang, 12)
+        && str(d.lbl, 120)
+        && ((d.k == 'pv' && d.ev == '' && d.lbl == '')
+          || (d.k == 'ev' && d.ev in ['book_submit', 'book_earlier', 'show_click', 'ticket_click', 'calendar_add',
+                                      'poster_click', 'play', 'free_track', 'contact_click', 'outbound']));
+    }
+    match /hits/{id} {
+      allow create: if id.size() <= 40 && validHit(request.resource.data);
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
     match /{document=**} {
       allow read, write: if false;
