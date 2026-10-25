@@ -20,6 +20,11 @@ notes:
       - { label: Clarinet, value: "Coles 4038 on AEA TRP, house ribbon on WA-2MPX" }
       - { label: Strings, value: "KM 184 on mandolin, AEA KU5A on viola" }
       - { label: Tapan, value: "TLM 103 low, KM 184 high, Daking II" }
+links:
+  - { label: Website, url: "https://www.solomonalber.com/" }
+  - { label: Instagram, url: "https://www.instagram.com/solomonalber" }
+  - { label: Facebook, url: "https://www.facebook.com/solomonalberband/" }
+  - { label: Bandcamp, url: "https://solomonalber.bandcamp.com/" }
 albums:
   - bandcampId: "533735333"
     title: Jokes and Games

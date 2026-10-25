@@ -93,6 +93,8 @@ const sessions = defineCollection({
         .array(z.object({ youtubeId: z.string().regex(/^[\w-]{11}$/), title: z.string(), alt: z.string(), note: z.string().optional() }))
         .default([]),
       videosHeading: z.string().default("Watch · videos from these sessions"),
+      // Where to follow the artist now: [{ label: "Instagram", url }].
+      links: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
       // A released album from the session: Bandcamp's player (album id from the page's bc-page-properties item_id).
       albums: z
         .array(z.object({ bandcampId: z.string().regex(/^\d+$/), title: z.string(), artist: z.string(), url: z.string().url(), tracks: z.number().int().positive(), note: z.string().optional() }))

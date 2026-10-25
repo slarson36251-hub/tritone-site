@@ -5,21 +5,19 @@ import "../styles/forms.css";
 <Base title="Book the Hut · Recording Studio Sessions in Oakland" description="Request a recording day at the Hummingbird Hut, a private recording studio in Oakland, CA. Pick a date and start time; Scott confirms every session himself." breadcrumbs={[{ name: "Hummingbird Hut", path: "/hummingbird-hut" }, { name: "Book the Hut", path: "/book-the-hut" }]}>
   <section class="wrap grid gap-10 pb-20 pt-10 md:pt-16 lg:grid-cols-12 lg:gap-14 lg:pb-28">
 
-    <!-- Intro -->
-    <div class="flex flex-col gap-6 lg:sticky lg:top-28 lg:col-span-5 lg:self-start">
+    <!-- Intro (on phones the form comes right after this, the how-it-works list after the form) -->
+    <div class="flex flex-col gap-5 lg:col-span-5 lg:col-start-1 lg:row-start-1">
       <p class="eyebrow m-0 text-stone">Hummingbird Hut · Music production · Oakland, CA</p>
       <h1 class="disp m-0 text-[clamp(3rem,9vw,6.2rem)] leading-[0.88]">Book the Hut</h1>
       <p class="m-0 max-w-[44ch] text-[19px]">Pick an open day, choose how long you need, and tell Scott what you're recording. Requests hold the date while he takes a look.</p>
-      <ol class="m-0 flex list-none flex-col p-0">
-        <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">01</span><span><strong>Request a date.</strong> Open days come straight from the studio calendar.</span></li>
-        <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">02</span><span><strong>Scott confirms by email,</strong> usually within a day. Every session is confirmed personally.</span></li>
-        <li class="rule flex gap-4 border-y py-4"><span class="disp text-stone">03</span><span><strong>Your confirmation</strong> carries the address and a link for sending files ahead.</span></li>
-      </ol>
-      <p class="m-0 text-[15px] text-stone">Need something the calendar doesn't show? Write to <a href="mailto:scott@tritone-productions.com" class="font-semibold text-white">scott@tritone-productions.com</a>.</p>
+      <ul class="m-0 flex list-none flex-wrap gap-2 p-0 text-[14px] font-semibold" aria-label="Studio hours">
+        <li class="rounded-full border border-stone/45 px-3.5 py-1.5">Weekends 10 am to 10 pm</li>
+        <li class="rounded-full border border-stone/45 px-3.5 py-1.5">Weekday evenings 6 to 10 pm</li>
+      </ul>
     </div>
 
     <!-- Booking form -->
-    <div class="lg:col-span-7" id="hbh-booking">
+    <div class="lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1" id="hbh-booking">
       <div class="tf-card">
         <section id="hbh-picker" class="tf-group" aria-labelledby="hbh-when">
           <div class="tf-step"><span class="tf-step-n">01</span><h2 class="tf-step-t" id="hbh-when">When</h2></div>
@@ -124,6 +122,16 @@ import "../styles/forms.css";
         </div>
       </div>
     </div>
+    <!-- How it works -->
+    <div class="flex flex-col gap-6 lg:col-span-5 lg:col-start-1 lg:row-start-2 lg:self-start">
+      <ol class="m-0 flex list-none flex-col p-0">
+        <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">01</span><span><strong>Request a date.</strong> Open days come straight from the studio calendar.</span></li>
+        <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">02</span><span><strong>Scott confirms by email,</strong> usually within a day. Every session is confirmed personally.</span></li>
+        <li class="rule flex gap-4 border-y py-4"><span class="disp text-stone">03</span><span><strong>Your confirmation</strong> carries the address and a link for sending files ahead.</span></li>
+      </ol>
+      <p class="m-0 text-[15px] text-stone">Need a weekday daytime slot or something the calendar doesn't show? Special arrangements are possible: write to <a href="mailto:scott@tritone-productions.com" class="font-semibold text-white">scott@tritone-productions.com</a>.</p>
+    </div>
+
   </section>
 </Base>
 

@@ -1,5 +1,6 @@
 ---
-// A Bandcamp album player (bandcamp.com/EmbeddedPlayer), sized to its track list, with a link to the album page.
+// A Bandcamp album player (bandcamp.com/EmbeddedPlayer), sized to its track list, beside a
+// "buy it from the band" card that links to the album page.
 interface Props {
   bandcampId: string;
   title: string;
@@ -13,7 +14,7 @@ const src = `https://bandcamp.com/EmbeddedPlayer/album=${bandcampId}/size=large/
 // Header with small artwork, then one row per track, then the footer.
 const height = 120 + tracks * 33 + 30;
 ---
-<figure class="m-0 flex flex-col gap-2.5">
+<div class="grid items-start gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
   <iframe
     src={src}
     title={`${title} by ${artist} on Bandcamp`}
@@ -22,7 +23,11 @@ const height = 120 + tracks * 33 + 30;
     class="block w-full rounded-xl border border-stone/25 bg-charcoal"
     style={`height:${height}px`}
   ></iframe>
-  <figcaption class="text-[14px] leading-snug text-stone">
-    <b class="font-semibold text-white">{title}</b>{` by ${artist}`}{note ? `. ${note}` : ""}{" · "}<a href={url} target="_blank" rel="noopener" class="text-stone hover:text-white">Bandcamp ↗</a>
-  </figcaption>
-</figure>
+  <div class="tile flex flex-col gap-4 p-6 md:p-8">
+    <p class="eyebrow m-0 text-stone">Support the band</p>
+    <h3 class="disp m-0 text-[clamp(1.8rem,3.4vw,2.6rem)] leading-[0.95]">{title}</h3>
+    <p class="m-0 text-white/85">by {artist}{note ? `. ${note}.` : "."}</p>
+    <p class="m-0 text-[15px] text-stone">Like what you hear? Buy the album straight from the band on Bandcamp. Most of every sale goes to the musicians.</p>
+    <a href={url} target="_blank" rel="noopener" class="mt-1 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-white px-7 text-sm font-semibold uppercase tracking-[.04em] text-black no-underline transition-transform hover:scale-[1.03]">Buy on Bandcamp <span aria-hidden="true">↗</span></a>
+  </div>
+</div>

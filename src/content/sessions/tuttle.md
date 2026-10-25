@@ -4,6 +4,7 @@ project: Country · 8 players
 date: 2025-11-23
 when: November 2025
 sessions:
+  - { date: "After", what: Mixing and mastering, gear: "Myles Boisen at Guerrilla Recording, Oakland" }
   - { date: "Nov 23, 2025", what: Country recording, hours: "10:00 AM to 6:00 PM · 8 hrs" }
 people:
   - { name: John Tuttle, role: Acoustic guitar }
@@ -25,4 +26,4 @@ videos:
   - { youtubeId: Cr-uZX6VBSE, title: "Ridin' High", alt: "Title card reading Ridin' High over painted clouds", note: "One Horse Stampede, Jan 2026." }
   - { youtubeId: Aay93v0W3ac, title: Cowboy Christmas, alt: Title card reading Cowboy Christmas over gold stars, note: "One Horse Stampede, Dec 2025." }
 ---
-One Horse Stampede and the Clockwork singers, produced by John Tuttle and Myles Boisen. Engineered by Myles Boisen and Scott Larson in one eight-hour day, and three songs are out as videos.
+One Horse Stampede and the Clockwork singers, produced by John Tuttle and Myles Boisen. Engineered by Myles Boisen and Scott Larson in one eight-hour day, then mixed and mastered by Myles at his Guerrilla Recording studio in Oakland. Three songs are out as videos.

@@ -15,7 +15,7 @@ export async function getStaticPaths() {
 }
 interface Props { band: CollectionEntry<"bands">; next: CollectionEntry<"bands">; index: number }
 const { band, next, index } = Astro.props;
-const { name, tagline, lineup, tracks, videos, spotify, photo, photoAlt, poster, seoTitle, seoDescription } = band.data;
+const { name, tagline, lineup, tracks, videos, spotify, photo, photoAlt, poster, posterAlt, seoTitle, seoDescription } = band.data;
 const { Content } = await render(band);
 const hasBio = Boolean(band.body?.trim());
 // Posters featuring this band, minus the one already in the hero.
@@ -106,7 +106,7 @@ const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}
           </div>
           <p class="m-0 text-sm text-stone">{tracks.length} tracks</p>
         </div>
-        <TrackList tracks={tracks} artist={name} />
+        <TrackList tracks={tracks} artist={name} cover={photo ?? poster} coverAlt={photo ? photoAlt : posterAlt} />
       </div>
     </section>
   )}

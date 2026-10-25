@@ -174,7 +174,12 @@ export function initBooking() {
         b.addEventListener("click", () => {
           selDate = dstr; selHour = null;
           renderCal(); renderTimes(); hideMsg(formMsg);
-          root!.querySelector<HTMLButtonElement>(`.bk-cell[data-date="${dstr}"]`)?.focus();
+          root!.querySelector<HTMLButtonElement>(`.bk-cell[data-date="${dstr}"]`)?.focus({ preventScroll: true });
+          // On a phone the start times sit below the fold: bring them up.
+          if (matchMedia("(max-width: 760px)").matches) {
+            const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+            timesEl.closest(".tf-field")?.previousElementSibling?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+          }
         });
         frag.appendChild(b);
       } else {
@@ -212,6 +217,7 @@ export function initBooking() {
       return;
     }
     if (selHour !== null && !starts.includes(selHour)) selHour = null;
+    if (selHour === null && starts.length === 1) selHour = starts[0]; // one choice: take it
     starts.forEach((h) => {
       const b = document.createElement("button");
       b.type = "button";
