@@ -53,6 +53,23 @@ and speak (or type), then **Send**. `?feedback=off` hides it again. It never loa
 - Code: `src/components/Feedback.astro` (gate), `src/lib/feedback-overlay.ts` (overlay, loaded on demand).
   Browser check: `PUBLIC_FEEDBACK_API_KEY=test-key npm run build && node scripts/check-feedback.mjs`.
 
+## Analytics (first-party, no cookies)
+Every page of tritone-productions.com counts visits itself: no Google Analytics, no cookies, no consent banner.
+- `src/lib/track.ts` (loaded from `Base.astro`) sends one Firestore document per page view and per interest event
+  (booking request, earlier-time request, show / ticket / calendar / poster clicks, plays, free track, contact clicks,
+  outbound links) to the `hits` collection. A visit lives in memory only (one page load plus its in-site navigation).
+  It records where the visit came from (AI assistant, search, social, email, outreach link with its `utm_*` tags,
+  another site, or direct; referrer **hostname** only), page path, phone / tablet / desktop, time zone and language.
+  Never IPs, names, emails, phone numbers or anything typed into a form. Shape: `src/lib/analytics-schema.ts`;
+  `firestore.rules` accepts only that shape, stamped with the server time, and lets only Scott's verified emails read.
+- It only runs on tritone-productions.com, with the `FEEDBACK_API_KEY` variable built in, and skips bots and any
+  browser where `localStorage["tritone:no-track"] = "1"` (set by opening `/admin`). In `astro dev`, add `?track=debug`.
+- Tag outreach links so they show up by name: `https://tritone-productions.com/book-the-hut?utm_source=instagram&utm_medium=social&utm_campaign=fall-show`.
+  `utm_medium=email` counts as Email. Extra click tracking: add `data-track="<event>" data-track-lbl="<detail>"` to any link or button.
+- **Weekly digest:** every Monday the **Weekly analytics digest** workflow posts last week vs the week before on the pinned
+  issue "Weekly site analytics" (subscribe to it for the email) and keeps it as an artifact. Locally:
+  `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) node scripts/analytics-digest.mjs`. Aggregation: `scripts/lib/analytics-agg.mjs`.
+
 ## Privacy (hard rule)
 The studio's street address must never be published or inferable. Only "Oakland, CA".
 No maps, no geo in schema, no photo metadata, and never read the Hummingbird Hut calendar.

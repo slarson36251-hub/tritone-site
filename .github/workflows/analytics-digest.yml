@@ -1,0 +1,57 @@
+name: Weekly analytics digest
+
+# Every Monday: summarise the last 7 days of visitor analytics (Firestore "hits", written by
+# src/lib/track.ts) against the 7 before, post it as a comment on the pinned issue
+# "Weekly site analytics" (GitHub emails it to everyone watching that issue), and keep the
+# Markdown as an artifact. Read-only on Firestore: the service account needs roles/datastore.viewer.
+on:
+  schedule:
+    - cron: "0 15 * * 1" # Monday 15:00 UTC (8 am Pacific in summer, 7 am in winter)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: analytics-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build the digest
+        run: |
+          GOOGLE_ACCESS_TOKEN="$(gcloud auth print-access-token)" node scripts/analytics-digest.mjs analytics-digest.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: analytics-digest
+          path: analytics-digest.md
+          if-no-files-found: error
+      - name: Post on the "Weekly site analytics" issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          TITLE="Weekly site analytics"
+          num="$(gh issue list --state open --limit 200 --json number,title \
+            --jq "[.[] | select(.title == \"$TITLE\")][0].number // empty")"
+          if [ -z "$num" ]; then
+            body="Every Monday the **Weekly analytics digest** workflow adds a comment here with last week's visitors, where they came from (AI assistants, search, social, email, outreach links), top pages, booking requests and other interest. @$OWNER: keep this issue subscribed to get it by email. The live numbers are on /admin."
+            url="$(gh issue create --title "$TITLE" --body "$body")"
+            num="${url##*/}"
+            gh issue pin "$num" || echo "Could not pin issue #$num (pin it by hand once)."
+          fi
+          gh issue comment "$num" --body-file analytics-digest.md
+          echo "Posted on issue #$num" >> "$GITHUB_STEP_SUMMARY"
+          cat analytics-digest.md >> "$GITHUB_STEP_SUMMARY"
