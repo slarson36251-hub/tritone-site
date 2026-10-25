@@ -79,7 +79,7 @@ test("generated share cards are 1200x630 PNGs", () => {
 });
 
 // TODO: drop once the /sessions rebuild lands (the current page has one <h1> per session).
-const H1_PENDING = new Set(["sessions.html"]);
+const H1_PENDING = new Set([]);
 
 test("every page has exactly one h1 and no skipped heading levels", () => {
   for (const { f, html } of pages) {
