@@ -79,9 +79,28 @@ import { featuredPlaylist } from "../lib/player";
       btn.setAttribute("aria-expanded", String(yes));
     };
 
+    // One player at a time: opening the dock pauses any on-page track list...
+    const pausePage = () => document.querySelectorAll<HTMLAudioElement>("[data-tracklist] audio").forEach((a) => a.pause());
+    // ...and a track list starting drops the Spotify embed (its iframe cannot be paused from here).
+    document.addEventListener("play", (e) => {
+      if (!(e.target as Element).closest?.("[data-tracklist]") || !slot.firstChild) return;
+      slot.replaceChildren();
+      dock.classList.remove("started");
+      open(false);
+    }, true);
+
     btn.addEventListener("click", () => {
       if (!slot.firstChild) load(btn.dataset.embed!);
-      open(!dock.classList.contains("open"));
+      const opening = !dock.classList.contains("open");
+      if (opening) pausePage();
+      open(opening);
+    });
+
+    // Escape closes the open dock when focus is inside it.
+    dock.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape" || !dock.classList.contains("open")) return;
+      open(false);
+      btn.focus();
     });
 
     // Any element with data-play="<spotify embed url>" (and optional data-play-title) plays in the dock.
@@ -89,6 +108,7 @@ import { featuredPlaylist } from "../lib/player";
       const el = (e.target as HTMLElement).closest<HTMLElement>("[data-play]");
       if (!el) return;
       e.preventDefault();
+      pausePage();
       load(el.dataset.play!);
       if (el.dataset.playTitle) document.getElementById("dock-title")!.textContent = el.dataset.playTitle;
       open(true);

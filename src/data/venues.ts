@@ -79,7 +79,7 @@ export const VENUES: Venue[] = [
   },
   {
     name: "Dawn Club",
-    aliases: ["The Dawn Club"],
+    aliases: ["The Dawn Club", "Swan Club"],
     city: "San Francisco",
     street: "10 Annie St",
     postalCode: "94103",
@@ -183,7 +183,7 @@ export const VENUES: Venue[] = [
     postalCode: "94133",
   },
   { name: "Cat's Corner", aliases: ["Cats Corner"], city: "San Francisco" },
-  // Not listed on purpose: Stanford (private events), Swan Club and Crescent Hotel (unconfirmed).
+  // Not listed on purpose: Stanford (private events) and Crescent Hotel (unconfirmed).
 ];
 
 const key = (v: string) =>
@@ -196,3 +196,7 @@ for (const v of VENUES) for (const n of [v.name, ...(v.aliases ?? [])]) INDEX.se
 export function findVenue(name: string | undefined): Venue | undefined {
   return name ? INDEX.get(key(name)) : undefined;
 }
+
+/** Full profile URL for a stored Instagram handle (or pass a full URL through). */
+export const instagramUrl = (handle: string) =>
+  /^https?:\/\//.test(handle) ? handle : `https://www.instagram.com/${handle.replace(/^@/, "").replace(/\/+$/, "")}/`;

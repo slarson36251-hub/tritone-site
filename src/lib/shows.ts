@@ -12,7 +12,9 @@
 // Any failure logs a warning and yields no shows, so a build never breaks.
 
 import { readFile } from "node:fs/promises";
-import { findVenue, VENUES, type Venue } from "../data/venues";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { findVenue, instagramUrl, VENUES, type Venue } from "../data/venues";
 
 export interface LineupMember {
   name: string;
@@ -582,8 +584,17 @@ export function placeOf(title: string, location: string): { venue: string; city?
   return { venue, city };
 }
 
-const FIELD = /^\s*(genre|style|lineup|line-up|band|personnel|presented by|presenter|notes?|tickets?|poster|flyer|image|venue page|venue link|venue listing|venue|city|cover|price|rescheduled|moved from)\s*:\s*(.*)$/i;
+const FIELD = /^\s*(genre|style|lineup|line-up|band|personnel|presented by|presenter|notes?|tickets?|poster|flyer|image|venue page|venue link|venue listing|venue|city|cover|price|rescheduled|moved from|public|private)\s*:\s*(.*)$/i;
 const URL_RE = /^(https?:\/\/\S+|\/[^\s]*)$/;
+
+/** True when a site-local path ("/x/y.jpg") is served by the build: a file in public/ or a route in src/pages. */
+export function localFileExists(path: string): boolean {
+  const clean = decodeURIComponent(path.split(/[?#]/)[0]).replace(/^\/+/, "");
+  if (!clean || clean.split("/").includes("..")) return false;
+  const root = process.cwd();
+  if (existsSync(join(root, "public", clean))) return true;
+  return [".ts", ".js", ".mjs"].some((ext) => existsSync(join(root, "src", "pages", clean + ext)));
+}
 
 /** Parse the free-form description: "key: value" fields plus bare "Name - instrument" lineup lines. */
 export function parseDescription(desc: string) {
@@ -606,6 +617,8 @@ export function parseDescription(desc: string) {
         .replace(/^(flyer|image)$/, "poster");
       const val = f[2].trim();
       if (!val) continue;
+      // "public: yes" / "private: …" only decide whether a show is listed; never show them.
+      if (key === "public" || key === "private") continue;
       if (key === "lineup") addLineup(val);
       else if (/^venue (page|link|listing)$/.test(key)) fields["venue page"] = val;
       else if (key === "moved from") fields.rescheduled = val;
@@ -623,7 +636,10 @@ export function parseDescription(desc: string) {
   const image = (v?: string) => {
     const u = url(v);
     const drive = u?.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=)([\w-]{20,})/);
-    return drive ? `https://lh3.googleusercontent.com/d/${drive[1]}=w1100` : u;
+    if (drive) return `https://lh3.googleusercontent.com/d/${drive[1]}=w1100`;
+    // A site-local poster that is not in public/ (or a page route) would be a broken image:
+    // drop it so the typographic fallback renders instead.
+    return u?.startsWith("/") && !localFileExists(u) ? undefined : u;
   };
   const notes = [fields.notes, ...extra].filter(Boolean).join(" · ") || undefined;
   return {
@@ -884,7 +900,7 @@ export function eventSchema(s: Show) {
       name: s.venue,
       address,
       ...(p?.url ? { url: p.url } : {}),
-      ...(p?.url || p?.instagram ? { sameAs: [p.url, p.instagram].filter(Boolean) } : {}),
+      ...(p?.url || p?.instagram ? { sameAs: [p.url, p.instagram && instagramUrl(p.instagram)].filter(Boolean) } : {}),
     },
     image: [new URL(s.poster ?? ogImagePath(s), SITE).href],
     performer: {

@@ -43,11 +43,12 @@ const { tracks, artist } = Astro.props;
   /* Thin progress line on every row; becomes a draggable seek bar on the active one. */
   .tl-seek {
     --p: 0%;
-    position: absolute; inset-inline: 0; bottom: -1px;
-    width: 100%; height: 3px; margin: 0;
+    /* A 3px bar drawn in a 24px-tall hit area (centered on the row's bottom edge) so it is tappable. */
+    position: absolute; inset-inline: 0; bottom: -12px; z-index: 1;
+    width: 100%; height: 24px; margin: 0;
     appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer;
   }
-  .tl-seek:disabled { cursor: default; }
+  .tl-seek:disabled { cursor: default; pointer-events: none; }
   .tl-seek::-webkit-slider-runnable-track { height: 3px; background: linear-gradient(to right, var(--color-white) var(--p), transparent var(--p)); border-radius: 2px; }
   .tl-seek::-moz-range-track { height: 3px; background: linear-gradient(to right, var(--color-white) var(--p), transparent var(--p)); border-radius: 2px; }
   .tl-seek::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4.5px; border-radius: 50%; background: var(--color-white); opacity: 0; transition: opacity .2s; }

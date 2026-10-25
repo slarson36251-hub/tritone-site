@@ -106,7 +106,7 @@ const venueList = [...venues.values()].sort((a, b) => b.count - a.count || a.ven
               <span class="text-[19px] font-semibold">{venue.name}</span>
             )}
             <span class="text-white/80">{venue.city}</span>
-            {next && <a href={`/shows/${next.slug}`} class="mt-1 text-sm font-semibold">Next: {next.band}, {pastDate(next)} →</a>}
+            {next && <a href={`/shows/${next.slug}`} class="inline-flex min-h-11 items-center self-start text-sm font-semibold">Next: {next.band}, {pastDate(next)} →</a>}
           </li>
         ))}
       </ul>

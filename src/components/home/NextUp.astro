@@ -9,7 +9,7 @@ const shows = await getUpcomingShows(3);
   <div class="pt-18">
   <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
     <h2 class="disp m-0 text-[clamp(2rem,4.5vw,2.5rem)]">Next up</h2>
-    <a href="/shows" class="font-semibold">All shows →</a>
+    <a href="/shows" class="inline-flex min-h-11 items-center font-semibold">All shows →</a>
   </div>
   {shows.length ? (
     <ul class="rule m-0 list-none border-t p-0">

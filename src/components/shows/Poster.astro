@@ -18,6 +18,7 @@ const { show, eager = false, compactFallback = false, class: cls } = Astro.props
 >
   {show.poster ? (
     <img
+      data-poster
       src={show.poster}
       alt={`Poster: ${show.band}, ${fullDate(show)}`}
       loading={eager ? "eager" : "lazy"}
@@ -31,7 +32,30 @@ const { show, eager = false, compactFallback = false, class: cls } = Astro.props
   ) : (
     <PosterFallback show={show} />
   )}
+  {show.poster && /^https?:/.test(show.poster) && (
+    <div data-poster-fallback hidden class="absolute inset-0"><PosterFallback show={show} /></div>
+  )}
   {(show.cancelled || show.rescheduled) && (
     <span class="eyebrow absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-charcoal">{show.cancelled ? "Cancelled" : "Rescheduled"}</span>
   )}
 </div>
+
+<script>
+  // A remote poster that fails to load (moved, unshared) falls back to the typographic poster.
+  const swap = (img: HTMLImageElement) => {
+    const fb = img.parentElement?.querySelector<HTMLElement>("[data-poster-fallback]");
+    if (!fb) return;
+    img.remove();
+    fb.hidden = false;
+  };
+  document.addEventListener("error", (e) => {
+    const t = e.target as HTMLElement;
+    if (t instanceof HTMLImageElement && t.matches("img[data-poster]")) swap(t);
+  }, true);
+  const sweep = () =>
+    document.querySelectorAll<HTMLImageElement>("img[data-poster]").forEach((img) => {
+      if (img.complete && img.naturalWidth === 0 && img.currentSrc) swap(img);
+    });
+  sweep();
+  document.addEventListener("astro:page-load", sweep);
+</script>

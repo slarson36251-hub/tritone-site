@@ -18,7 +18,7 @@ const path = Astro.url.pathname;
           href={item.href}
           data-nav={item.href}
           class:list={[
-            "whitespace-nowrap rounded-full px-3.5 py-2 font-semibold no-underline transition-colors hover:bg-stone/15",
+            "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-3.5 py-2 font-semibold no-underline transition-colors hover:bg-stone/15",
             path.startsWith(item.href) && "bg-stone/20",
           ]}
         >{item.label}</a>
@@ -43,11 +43,54 @@ const path = Astro.url.pathname;
 
 <script>
   // The header persists across page swaps, so update the active link and close the menu ourselves.
+  // The mobile menu (<details id="mnav">) acts as a modal while open: Escape closes it and returns
+  // focus to its button, everything outside the header is inert, and the page behind cannot scroll.
+  const menu = () => document.getElementById("mnav") as HTMLDetailsElement | null;
+
+  function syncMenu() {
+    const m = menu();
+    const open = !!m?.open;
+    document.documentElement.classList.toggle("menu-open", open);
+    const header = m?.closest("header");
+    for (const el of document.body.children) {
+      if (el === header) continue;
+      if (open) el.setAttribute("inert", "");
+      else el.removeAttribute("inert");
+    }
+  }
+
+  function initMenu() {
+    const m = menu();
+    if (!m || m.dataset.ready) return; // persisted element: wire up once
+    m.dataset.ready = "1";
+    m.addEventListener("toggle", syncMenu);
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape" || !m.open) return;
+      e.preventDefault();
+      m.open = false;
+      syncMenu();
+      m.querySelector("summary")?.focus();
+    });
+    // The menu is hidden from xl up; never leave the page inert behind an invisible menu.
+    matchMedia("(min-width: 80rem)").addEventListener("change", (e) => {
+      if (e.matches && m.open) { m.open = false; syncMenu(); }
+    });
+  }
+
   document.addEventListener("astro:after-swap", () => {
     const path = location.pathname;
     document.querySelectorAll<HTMLAnchorElement>("[data-nav]").forEach((a) => {
       a.classList.toggle("bg-stone/20", path.startsWith(a.dataset.nav!));
     });
-    document.getElementById("mnav")?.removeAttribute("open");
+    menu()?.removeAttribute("open");
+    syncMenu();
   });
+  initMenu();
+  document.addEventListener("astro:page-load", initMenu);
 </script>
+
+<style is:global>
+  html.menu-open { overflow: hidden; }
+  /* The open menu covers the page; keep the player dock from sitting over its last links. */
+  html.menu-open #dock { visibility: hidden; }
+</style>

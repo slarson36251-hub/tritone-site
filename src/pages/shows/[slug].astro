@@ -11,6 +11,7 @@ import { fullDate, timeRange, place } from "../../components/shows/format";
 import {
   getShows, isUpcoming, bandPage, bandSlug, eventSchema, ogImagePath, showUrl, publicLocation, SITE, TRITONE_BANDS, type Show,
 } from "../../lib/shows";
+import { instagramUrl } from "../../data/venues";
 
 export async function getStaticPaths() {
   const shows = await getShows();
@@ -147,10 +148,10 @@ const lastmod = show?.updated?.toISOString() ?? "";
           <p class="disp m-0 text-[1.6rem] leading-tight">{show.venue}</p>
           <p class="m-0">{show.place?.street ? publicLocation(show).replace(`${show.venue}, `, "") : show.city ? `${show.city}, CA` : "Bay Area"}</p>
           {show.place?.url && (
-            <a href={show.place.url} target="_blank" rel="noopener" class="mt-1 font-semibold">{show.venue} website →</a>
+            <a href={show.place.url} target="_blank" rel="noopener" class="inline-flex min-h-11 items-center self-start font-semibold">{show.venue} website →</a>
           )}
           {show.place?.instagram && (
-            <a href={show.place.instagram} target="_blank" rel="noopener" class="font-semibold">Instagram →</a>
+            <a href={instagramUrl(show.place.instagram)} target="_blank" rel="noopener" class="inline-flex min-h-11 items-center self-start font-semibold">Instagram →</a>
           )}
         </section>
 
@@ -170,7 +171,7 @@ const lastmod = show?.updated?.toISOString() ?? "";
       <section aria-labelledby="more-h" class="mt-16 md:mt-24">
         <div class="rule mb-2 flex items-baseline justify-between gap-4 border-t pt-6">
           <h2 id="more-h" class="disp m-0 text-[clamp(1.6rem,3.5vw,2.1rem)]">More shows</h2>
-          <a href="/shows" class="font-semibold">All shows →</a>
+          <a href="/shows" class="inline-flex min-h-11 items-center font-semibold">All shows →</a>
         </div>
         <ul class="m-0 list-none p-0">
           {others.map((s) => <ShowRow show={s} href={`/shows/${s.slug}`} />)}
