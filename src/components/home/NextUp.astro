@@ -13,7 +13,7 @@ const shows = await getUpcomingShows(3);
   </div>
   {shows.length ? (
     <ul class="rule m-0 list-none border-t p-0">
-      {shows.map((s) => <ShowRow show={s} href="/shows" />)}
+      {shows.map((s) => <ShowRow show={s} href={`/shows/${s.slug}`} />)}
     </ul>
   ) : (
     <p class="m-0">Dates, venues and add-to-calendar links are on the <a href="/shows">Shows page</a>.</p>

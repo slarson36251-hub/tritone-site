@@ -10,13 +10,13 @@ const Tag = href ? "a" : "div";
 <li class="rule border-b">
   <Tag href={href} class:list={["grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-0.5 py-3 no-underline md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] md:gap-x-6", href && "group"]}>
     {past ? (
-      <time datetime={show.start.toISOString()} class="row-span-2 w-[6.5rem] text-sm font-semibold uppercase tracking-[.04em] text-stone md:row-span-1">{pastDate(show)}</time>
+      <time datetime={show.start.toISOString()} class="row-span-2 w-[6.5rem] text-sm font-semibold uppercase tracking-[.04em] text-white/80 md:row-span-1">{pastDate(show)}</time>
     ) : (
       <span class="row-span-2 md:row-span-1"><DateBlock date={show.start} size="sm" /></span>
     )}
     <strong class:list={["min-w-0 self-end md:self-center text-[17px] leading-tight [overflow-wrap:anywhere] md:text-[19px]", href && "group-hover:underline", show.cancelled && "line-through"]}>{show.band}</strong>
-    <span class="min-w-0 self-start text-[15px] text-stone md:self-center md:text-base md:text-white">
-      {show.venue}{show.city && show.city !== show.venue && <span class="text-stone">, {show.city}</span>}
+    <span class="min-w-0 self-start text-[15px] text-white/80 md:self-center md:text-base md:text-white">
+      {show.venue}{show.city && show.city !== show.venue && <span class="text-white/80">, {show.city}</span>}
       {!past && <span class="whitespace-nowrap md:hidden"> · {startTime(show)}</span>}
     </span>
     {!past && <span class="hidden text-right font-semibold uppercase tracking-[.04em] md:block">{startTime(show)}</span>}

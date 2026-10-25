@@ -4,52 +4,62 @@ import PageHead from "../components/PageHead.astro";
 import Pill from "../components/Pill.astro";
 import ShowCard from "../components/shows/ShowCard.astro";
 import ShowRow from "../components/shows/ShowRow.astro";
-import { getUpcomingShows, getPastShows, SITE, type Show } from "../lib/shows";
+import { getShows, getUpcomingShows, getPastShows, isUpcoming, showUrl, SITE } from "../lib/shows";
+import { pastDate } from "../components/shows/format";
+import type { Venue } from "../data/venues";
 
 const CARDS = 12;
-const upcoming = await getUpcomingShows(CARDS + 30);
+const upcoming = await getUpcomingShows(CARDS + 12);
 const featured = upcoming.slice(0, CARDS);
-const later = upcoming.slice(CARDS, CARDS + 12);
+const later = upcoming.slice(CARDS);
 const past = await getPastShows(20);
 
-// schema.org MusicEvent list. Venue name and city only: never a street address or geo.
-const absolute = (u: string) => new URL(u, SITE).href;
-const event = (s: Show) => ({
+// Summary page: an ItemList pointing at each show's own page (which carries the full Event).
+const schema = {
   "@context": "https://schema.org",
-  "@type": "MusicEvent",
-  name: s.title,
-  startDate: s.allDay ? s.start.toISOString().slice(0, 10) : s.start.toISOString(),
-  endDate: s.allDay ? s.end.toISOString().slice(0, 10) : s.end.toISOString(),
-  eventStatus: s.cancelled ? "https://schema.org/EventCancelled" : "https://schema.org/EventScheduled",
-  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-  location: {
-    "@type": "Place",
-    name: s.venue,
-    ...(s.city ? { address: { "@type": "PostalAddress", addressLocality: s.city } } : {}),
-  },
-  performer: { "@type": "MusicGroup", name: s.band },
-  organizer: { "@type": "Organization", name: "Tritone Productions", url: SITE },
-  url: `${SITE}/shows`,
-  ...(s.poster ? { image: absolute(s.poster) } : {}),
-  ...(s.tickets ? { offers: { "@type": "Offer", url: s.tickets } } : {}),
-  ...(s.genre ? { description: s.genre } : {}),
-});
-const schema = upcoming.map(event);
+  "@type": "ItemList",
+  name: "Upcoming shows",
+  itemListElement: upcoming.map((s, i) => ({ "@type": "ListItem", position: i + 1, url: showUrl(s) })),
+};
+
+// Subscribe to the site's own filtered feed (public shows only), never the raw calendar.
+const feed = "webcal://tritone-productions.com/shows.ics";
+const googleSubscribe = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(feed)}`;
+
+// Where we play: listed public venues seen in the calendar window, busiest first.
+const all = await getShows();
+const venues = new Map<string, { venue: Venue; count: number; next?: (typeof all)[number] }>();
+for (const s of all) {
+  if (!s.place) continue;
+  const v = venues.get(s.place.name) ?? { venue: s.place, count: 0 };
+  v.count++;
+  if (!v.next && isUpcoming(s) && !s.cancelled) v.next = s;
+  venues.set(s.place.name, v);
+}
+const venueList = [...venues.values()].sort((a, b) => b.count - a.count || a.venue.name.localeCompare(b.venue.name));
 ---
-<Base title="Shows · Tritone Productions · Bay Area" description="Upcoming shows by Tritone Productions bands around the Bay Area: dates, venues, lineups, tickets and add-to-calendar links.">
-  <script type="application/ld+json" slot="head" set:html={JSON.stringify(schema)} />
-  <link slot="head" rel="alternate" type="text/calendar" title="Tritone Productions shows" href="/shows.ics" />
+<Base title="Shows · Tritone Productions · Bay Area" description="Upcoming shows by Tritone Productions bands around the Bay Area: dates, venues, lineups, tickets and add-to-calendar links." image={`${SITE}/og/default.png`}>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <link rel="alternate" type="text/calendar" title="Tritone Productions shows" href="/shows.ics" />
+  </Fragment>
 
   <PageHead eyebrow="Live · Bay Area" title="Shows">
-    <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-8">
+    <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-8">
       <p class="m-0 max-w-[56ch] text-[19px]">
         Hard Bop Quintet, Franco Nero, Lucky 7, the Scott Larson Quartet and friends, on stages around the Bay.
       </p>
       {upcoming.length > 0 && (
-        <a href="/shows.ics" class="eyebrow inline-flex min-h-11 shrink-0 items-center gap-2 no-underline hover:underline" download="tritone-shows.ics">
-          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.5h13M5 1v3M11 1v3" stroke="currentColor" stroke-width="1.5"/></svg>
-          All dates (.ics)
-        </a>
+        <div class="flex shrink-0 flex-col gap-2">
+          <span class="eyebrow text-[11px] text-white/80">Subscribe to every date</span>
+          <div class="flex flex-wrap gap-2">
+            <a href={googleSubscribe} target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone/60 px-4 text-sm font-semibold no-underline hover:border-white" aria-label="Google Calendar: subscribe to Tritone shows">
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 6.5h13M5 1v3M11 1v3" stroke="currentColor" stroke-width="1.5"/></svg>
+              Google Calendar
+            </a>
+            <a href={feed} class="inline-flex min-h-11 items-center rounded-full border border-stone/60 px-4 text-sm font-semibold no-underline hover:border-white" aria-label="Apple / Outlook: subscribe to Tritone shows">Apple / Outlook</a>
+          </div>
+        </div>
       )}
     </div>
   </PageHead>
@@ -57,7 +67,7 @@ const schema = upcoming.map(event);
   <section class="wrap pb-16 md:pb-20" aria-labelledby="upcoming-h">
     <div class="rule mb-8 flex items-baseline justify-between gap-4 border-t pt-6">
       <h2 id="upcoming-h" class="disp m-0 text-[clamp(1.6rem,3.5vw,2.1rem)]">Upcoming</h2>
-      {upcoming.length > 0 && <span class="eyebrow text-stone">{upcoming.length} {upcoming.length === 1 ? "date" : "dates"}</span>}
+      {upcoming.length > 0 && <span class="eyebrow text-white/80">{upcoming.length} {upcoming.length === 1 ? "date" : "dates"}</span>}
     </div>
 
     {featured.length ? (
@@ -67,21 +77,41 @@ const schema = upcoming.map(event);
     ) : (
       <div class="flex flex-col items-start gap-5 rounded-md border border-stone/40 bg-black/25 p-6 md:p-10">
         <p class="disp m-0 text-[clamp(2rem,6vw,3.25rem)] leading-none">New dates<br />coming soon</p>
-        <p class="m-0 max-w-[48ch] text-stone">The bands are between runs. Follow along on Instagram for announcements, or book a band for your own event.</p>
+        <p class="m-0 max-w-[48ch] text-white/80">The bands are between runs. Follow along on Instagram for announcements, or book a band for your own event.</p>
         <Pill href="/contact">Book a band</Pill>
       </div>
     )}
 
     {later.length > 0 && (
       <div class="mt-14">
-        <h3 class="eyebrow m-0 mb-3 text-stone">Further ahead</h3>
+        <h3 class="eyebrow m-0 mb-3 text-white/80">Further ahead</h3>
         <ul class="rule m-0 list-none border-t p-0">
-          {later.map((s) => <ShowRow show={s} href={`/shows/${s.id}.ics`} />)}
+          {later.map((s) => <ShowRow show={s} href={`/shows/${s.slug}`} />)}
         </ul>
-        <p class="m-0 mt-3 text-sm text-stone">Tap a date to add it to your calendar.</p>
       </div>
     )}
   </section>
+
+  {venueList.length > 0 && (
+    <section class="wrap pb-16 md:pb-20" aria-labelledby="venues-h">
+      <div class="rule mb-6 border-t pt-6">
+        <h2 id="venues-h" class="disp m-0 text-[clamp(1.6rem,3.5vw,2.1rem)]">Where we play</h2>
+      </div>
+      <ul class="m-0 grid list-none grid-cols-1 gap-x-8 p-0 sm:grid-cols-2 lg:grid-cols-3">
+        {venueList.map(({ venue, next }) => (
+          <li class="rule flex flex-col gap-0.5 border-b py-4">
+            {venue.url ? (
+              <a href={venue.url} target="_blank" rel="noopener" class="text-[19px] font-semibold">{venue.name}<span class="sr-only"> (venue website)</span></a>
+            ) : (
+              <span class="text-[19px] font-semibold">{venue.name}</span>
+            )}
+            <span class="text-white/80">{venue.city}</span>
+            {next && <a href={`/shows/${next.slug}`} class="mt-1 text-sm font-semibold">Next: {next.band}, {pastDate(next)} →</a>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
 
   {past.length > 0 && (
     <section class="wrap pb-20" aria-labelledby="past-h">
@@ -89,7 +119,7 @@ const schema = upcoming.map(event);
         <h2 id="past-h" class="disp m-0 text-[clamp(1.6rem,3.5vw,2.1rem)]">Past shows</h2>
       </div>
       <ul class="m-0 list-none p-0">
-        {past.map((s) => <ShowRow show={s} past />)}
+        {past.map((s) => <ShowRow show={s} past href={`/shows/${s.slug}`} />)}
       </ul>
     </section>
   )}

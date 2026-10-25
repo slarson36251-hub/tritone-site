@@ -12,6 +12,7 @@
 // Any failure logs a warning and yields no shows, so a build never breaks.
 
 import { readFile } from "node:fs/promises";
+import { findVenue, VENUES, type Venue } from "../data/venues";
 
 export interface LineupMember {
   name: string;
@@ -35,7 +36,20 @@ export interface Show {
   notes?: string;
   tickets?: string;
   poster?: string;
+  /** The venue's own listing for this show ("venue page:" line). */
+  venuePage?: string;
+  /** "price:" line, as written ("$15", "Free", "$10–20"). */
+  price?: string;
   cancelled: boolean;
+  /** Original start when the event was moved ("rescheduled:" line or title prefix). */
+  rescheduled: boolean;
+  previousStart?: Date;
+  /** Public venue record (street address, website) when the venue is in src/data/venues.ts. */
+  place?: Venue;
+  /** URL slug: band-venue-city-yyyy-mm-dd. */
+  slug: string;
+  /** Last time the calendar entry changed. */
+  updated?: Date;
 }
 
 export const TZ = "America/Los_Angeles";
@@ -45,6 +59,33 @@ const DEFAULT_ID = "226gr9pmhmg1mcrfmm1fre0nf4@group.calendar.google.com";
 // Calendar entries that are not public shows.
 const SKIP_TITLE = /^\s*\[template\]|\b(rehearsal|practice|private|wedding|corporate|holiday party|hold|tentative)\b/i;
 const SKIP_DESC = /^\s*(private|public:\s*no)\s*$/im;
+const PUBLIC_YES = /^\s*public:\s*(yes|y|true)\s*$/im;
+
+/**
+ * OPT-IN publishing. The Music calendar also holds personal entries (errands,
+ * appointments, house addresses), so an event is public only when:
+ *   - its location names a public venue in src/data/venues.ts (by name, alias or street address), or
+ *   - its description has a "venue:" line naming such a venue, or
+ *   - its description has a "public: yes" line.
+ * Everything else is dropped before it can reach a page, a feed or JSON-LD.
+ * The template and rehearsals are dropped even at a listed venue.
+ */
+export function isPublic(e: { summary: string; description: string; location: string }): boolean {
+  if (SKIP_TITLE.test(e.summary) || SKIP_DESC.test(e.description)) return false;
+  if (PUBLIC_YES.test(e.description)) return true;
+  const venueLine = e.description.match(/^\s*venue\s*:\s*(.+)$/im)?.[1]?.trim();
+  if (findVenue(venueLine)) return true;
+  const loc = e.location.trim();
+  if (!loc) return false;
+  if (findVenue(loc.split(/\s*,\s*|\n/)[0])) return true;
+  return !!venueByAddress(loc);
+}
+
+/** The listed venue whose street address and ZIP both appear in a location string. */
+function venueByAddress(location: string): Venue | undefined {
+  const flat = location.toLowerCase().replace(/[.,]/g, " ").replace(/\s+/g, " ");
+  return VENUES.find((v) => v.street && v.postalCode && flat.includes(v.street.toLowerCase().replace(/[.,]/g, " ")) && flat.includes(v.postalCode));
+}
 
 const env = (k: string): string | undefined =>
   (typeof process !== "undefined" ? process.env[k] : undefined) || (import.meta as any).env?.[k] || undefined;
@@ -61,10 +102,13 @@ interface RawEvent {
   end: Date;
   allDay: boolean;
   cancelled: boolean;
+  updated?: Date;
+  recurring?: boolean;
 }
 
-const WINDOW_BACK_DAYS = 550;
-const WINDOW_AHEAD_DAYS = 550;
+const WINDOW_BACK_DAYS = 550; // past shows (pages older than a year are noindex)
+const WINDOW_AHEAD_DAYS = 365; // one-off shows
+export const RECURRING_AHEAD_DAYS = 90; // repeating series (monthly residencies) stop here
 
 let cache: Promise<Show[]> | undefined;
 
@@ -114,11 +158,13 @@ async function load(): Promise<Show[]> {
   }
 
   const seen = new Set<string>();
-  return raw
-    .filter((e) => !SKIP_TITLE.test(e.summary) && !SKIP_DESC.test(e.description))
+  const shows = raw
+    .filter((e) => !(e.recurring && e.start.getTime() > now + RECURRING_AHEAD_DAYS * 864e5))
+    .filter(isPublic)
     .map(toShow)
     .filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)))
     .sort((a, b) => a.start.getTime() - b.start.getTime());
+  return assignSlugs(shows);
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit = {}): Promise<Response> {
@@ -182,6 +228,8 @@ async function fromApi(calendarId: string, auth: { key?: string; token?: string 
         end: end.getTime() > start.getTime() ? end : new Date(start.getTime() + (allDay ? 864e5 : 2 * 36e5)),
         allDay,
         cancelled: e.status === "cancelled",
+        updated: e.updated ? new Date(e.updated) : undefined,
+        recurring: !!e.recurringEventId,
       });
     }
     pageToken = data.nextPageToken;
@@ -417,6 +465,11 @@ export function parseIcs(text: string, from: Date, to: Date): RawEvent[] {
       end: new Date(start.getTime() + durMs),
       allDay,
       cancelled: /^cancelled$/i.test(get("STATUS")),
+      updated: (() => {
+        const lm = ev.find((p) => p.name === "LAST-MODIFIED");
+        const t = lm && parseIcsTime(lm, "UTC");
+        return t ? toInstant(t) : undefined;
+      })(),
     };
   };
   const inWindow = (e: RawEvent) => e.end.getTime() >= from.getTime() && e.start.getTime() <= to.getTime();
@@ -456,7 +509,8 @@ export function parseIcs(text: string, from: Date, to: Date): RawEvent[] {
         if (t) exdates.add(toInstant(t).getTime());
       }
     }
-    for (const [y, m, d] of expandRule(rule, tm.t, to)) {
+    const recurTo = new Date(Math.min(to.getTime(), Date.now() + RECURRING_AHEAD_DAYS * 864e5));
+    for (const [y, m, d] of expandRule(rule, tm.t, recurTo)) {
       const inst = tm.t.allDay ? wallToUtc(y, m, d, 0, 0, 0, TZ) : wallToUtc(y, m, d, tm.t.h, tm.t.mi, tm.t.s, tm.t.tz);
       const ms = inst.getTime();
       if (exdates.has(ms)) continue;
@@ -469,7 +523,8 @@ export function parseIcs(text: string, from: Date, to: Date): RawEvent[] {
         if (!ot) continue;
         e = build(ov, id, ot.start, ot.t.allDay, ot.dur);
       } else e = build(ev, id, inst, tm.t.allDay, tm.dur);
-      if (inWindow(e)) out.push(e);
+      e.recurring = true;
+      if (inWindow(e) && e.start.getTime() <= recurTo.getTime()) out.push(e);
     }
   }
   // Overrides whose original slot fell outside the expansion (moved instances, detached exceptions).
@@ -486,28 +541,6 @@ export function parseIcs(text: string, from: Date, to: Date): RawEvent[] {
 
 // ---------------------------------------------------------------- shaping
 
-// Public venues whose calendar entries carry only a name. City for display and schema.
-const VENUE_CITY: Record<string, string> = {
-  "rite spot cafe": "San Francisco",
-  "sound room": "Oakland",
-  "salesforce park": "San Francisco",
-  "verdi club": "San Francisco",
-  "stanford university": "Stanford",
-  "deluxe": "San Francisco",
-  "broadway studios": "San Francisco",
-  "ivy room": "Albany",
-  "low bar": "Oakland",
-  "dawn club": "San Francisco",
-  "toots tavern": "Crockett",
-  "cigar bar grill": "San Francisco",
-  "cats corner": "San Francisco",
-  "yoshis": "Oakland",
-  "black cat": "San Francisco",
-  "keys jazz bistro": "San Francisco",
-  "sfjazz center": "San Francisco",
-};
-const venueKey = (v: string) =>
-  v.toLowerCase().replace(/^the\s+/, "").replace(/['’.]/g, "").replace(/&|\band\b/g, " ").replace(/[^a-z0-9]+/g, " ").trim();
 
 const STREET = /\b(st|street|ave|avenue|blvd|boulevard|rd|road|way|dr|drive|ln|lane|ct|court|pl|place|hwy|highway|pkwy|parkway|ter|terrace|cir|circle|sq|square|suite|ste|apt|unit)\b\.?/i;
 const STATE = /^(ca|california)(\s+\d{5}(-\d{4})?)?$/i;
@@ -544,12 +577,12 @@ export function placeOf(title: string, location: string): { venue: string; city?
   const first = segs[0];
   const fromLocation = first && !looksLikeAddress(first) && first !== city && !STATE.test(first) ? first : undefined;
   let venue = [fromTitle, fromLocation].find((v) => v && !looksLikeAddress(v)) ?? "";
-  if (venue && !city) city = VENUE_CITY[venueKey(venue)];
+  if (venue && !city) city = findVenue(venue)?.city;
   if (!venue) venue = city ?? "Bay Area";
   return { venue, city };
 }
 
-const FIELD = /^\s*(genre|style|lineup|line-up|band|personnel|presented by|presenter|notes?|tickets?|poster|flyer|image|venue|city|cover)\s*:\s*(.*)$/i;
+const FIELD = /^\s*(genre|style|lineup|line-up|band|personnel|presented by|presenter|notes?|tickets?|poster|flyer|image|venue page|venue link|venue listing|venue|city|cover|price|rescheduled|moved from)\s*:\s*(.*)$/i;
 const URL_RE = /^(https?:\/\/\S+|\/[^\s]*)$/;
 
 /** Parse the free-form description: "key: value" fields plus bare "Name - instrument" lineup lines. */
@@ -574,7 +607,12 @@ export function parseDescription(desc: string) {
       const val = f[2].trim();
       if (!val) continue;
       if (key === "lineup") addLineup(val);
-      else if (key === "cover") fields.notes = [fields.notes, `${val} cover`].filter(Boolean).join(" · ");
+      else if (/^venue (page|link|listing)$/.test(key)) fields["venue page"] = val;
+      else if (key === "moved from") fields.rescheduled = val;
+      else if (key === "cover") {
+        fields.notes = [fields.notes, `${val} cover`].filter(Boolean).join(" · ");
+        fields.price ??= val;
+      }
       else fields[key] = fields[key] ? `${fields[key]} · ${val}` : val;
     } else if (/^[A-Z][\w.'’ -]{1,40}?\s*[-–—]\s*[a-z][\w /&.,-]{1,40}$/i.test(line) && !/https?:/.test(line)) {
       addLineup(line);
@@ -596,17 +634,28 @@ export function parseDescription(desc: string) {
     tickets: url(fields.tickets),
     poster: image(fields.poster),
     venue: fields.venue,
+    venuePage: url(fields["venue page"]),
+    price: fields.price,
+    rescheduled: fields.rescheduled,
     city: fields.city,
   };
 }
 
 function toShow(e: RawEvent): Show {
   const d = parseDescription(e.description);
-  const band = e.summary.replace(/\s@\s*.+$/, "").replace(/\s+/g, " ").trim() || "Live music";
+  const movedTitle = /^\s*(rescheduled|moved)\s*[:\-–—]?\s*/i;
+  const band = e.summary.replace(/\s@\s*.+$/, "").replace(/^\s*cancel+ed\s*[:\-–—]?\s*/i, "").replace(movedTitle, "").replace(/\s+/g, " ").trim() || "Live music";
   let { venue, city } = placeOf(e.summary, e.location);
   if (d.venue && !looksLikeAddress(d.venue)) venue = d.venue;
   if (d.city && !looksLikeAddress(d.city)) city = d.city;
   if (city && venue === city && d.venue) venue = d.venue;
+  // A listed public venue: use its own name and city (and, on show pages, its address).
+  const place = (venue !== city ? findVenue(venue) : undefined) ?? venueByAddress(e.location);
+  if (place) {
+    venue = place.name;
+    city = place.city;
+  }
+  const prev = d.rescheduled ? new Date(d.rescheduled) : undefined;
   return {
     id: e.id.replace(/[^A-Za-z0-9_-]/g, ""),
     title: venue && venue !== city ? `${band} at ${venue}` : band,
@@ -622,16 +671,62 @@ function toShow(e: RawEvent): Show {
     notes: d.notes,
     tickets: d.tickets,
     poster: d.poster,
+    venuePage: d.venuePage,
+    price: d.price,
     cancelled: e.cancelled || /^\s*cancel+ed\b/i.test(e.summary),
+    rescheduled: !!d.rescheduled || movedTitle.test(e.summary),
+    previousStart: prev && !isNaN(prev.getTime()) ? prev : undefined,
+    place,
+    slug: "",
+    updated: e.updated,
   };
+}
+
+export const kebab = (s: string) =>
+  s.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/['’]/g, "").replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+/** yyyy-mm-dd in the site's time zone. */
+export const localDate = (d: Date) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+
+/** Assign unique slugs: band-venue-city-yyyy-mm-dd (venue dropped when it is just the city). */
+function assignSlugs(shows: Show[]): Show[] {
+  const used = new Map<string, number>();
+  for (const s of shows) {
+    const parts = [s.band, s.venue !== s.city ? s.venue : "", s.city ?? "", localDate(s.start)];
+    const base = kebab(parts.filter(Boolean).join(" "));
+    const n = (used.get(base) ?? 0) + 1;
+    used.set(base, n);
+    s.slug = n === 1 ? base : `${base}-${n}`;
+  }
+  return shows;
+}
+
+/** ISO 8601 with the Bay Area's UTC offset, e.g. 2026-11-13T20:00:00-08:00 (Google prefers this to Z). */
+export function isoLocal(d: Date): string {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: "longOffset",
+    }).formatToParts(d).map((x) => [x.type, x.value]),
+  );
+  const off = parts.timeZoneName === "GMT" ? "+00:00" : parts.timeZoneName.replace("GMT", "");
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}${off}`;
 }
 
 // ---------------------------------------------------------------- calendar links
 
 export const SITE = "https://tritone-productions.com";
 
-/** "Venue, City, CA": the only location ever given to a calendar app. */
+export const showUrl = (s: Show) => `${SITE}/shows/${s.slug}`;
+
+/**
+ * Location for calendar apps: a listed public venue gets its street address
+ * (from src/data/venues.ts only); anything else is "Venue, City, CA".
+ */
 export function publicLocation(s: Show): string {
+  const p = s.place;
+  if (p?.street && p.postalCode) return `${p.name}, ${p.street}, ${p.city}, ${p.region ?? "CA"} ${p.postalCode}`;
   if (!s.city) return s.venue;
   return s.venue === s.city ? `${s.city}, CA` : `${s.venue}, ${s.city}, CA`;
 }
@@ -641,7 +736,7 @@ function calendarDetails(s: Show): string {
     s.lineup.length ? s.lineup.map((m) => (m.role ? `${m.name} (${m.role})` : m.name)).join(", ") : "",
     s.notes ?? "",
     s.tickets ? `Tickets: ${s.tickets}` : "",
-    `${SITE}/shows`,
+    showUrl(s),
   ].filter(Boolean).join("\n");
 }
 
@@ -701,11 +796,113 @@ export function showsToIcs(shows: Show[], name = "Tritone Productions shows"): s
       `SUMMARY:${icsText(s.title)}`,
       `LOCATION:${icsText(publicLocation(s))}`,
       `DESCRIPTION:${icsText(calendarDetails(s))}`,
-      `URL:${SITE}/shows`,
+      `URL:${showUrl(s)}`,
       `STATUS:${s.cancelled ? "CANCELLED" : "CONFIRMED"}`,
       "END:VEVENT",
     );
   }
   lines.push("END:VCALENDAR");
   return lines.map(fold).join("\r\n") + "\r\n";
+}
+
+// ---------------------------------------------------------------- show pages and schema
+
+/** Tritone's own bands and their pages. */
+export const TRITONE_BANDS: Record<string, string> = {
+  "hard-bop-quintet": "Hard Bop Quintet",
+  "franco-nero": "Franco Nero",
+  "lucky-7": "Lucky 7",
+  "scott-larson-quartet": "Scott Larson Quartet",
+  "fault-line-trio": "Fault Line Trio",
+};
+export const bandSlug = (band: string) => kebab(band);
+/** /bands/<slug> when the band is a Tritone band. */
+export function bandPage(s: Show): string | undefined {
+  const slug = bandSlug(s.band);
+  return slug in TRITONE_BANDS ? `/bands/${slug}` : undefined;
+}
+
+export const ogImagePath = (s: Show) => `/og/shows/${s.slug}.png`;
+
+/** Upcoming means it has not ended yet. */
+export const isUpcoming = (s: Show, now = Date.now()) => s.end.getTime() > now;
+
+/** "Free"/"no cover" -> 0, "$15" -> 15, "$10-20" -> 10. */
+function priceValue(p?: string): number | undefined {
+  if (!p) return undefined;
+  if (/\b(free|no cover)\b/i.test(p)) return 0;
+  const n = p.match(/\d+(?:\.\d{1,2})?/);
+  return n ? Number(n[0]) : undefined;
+}
+
+/** One schema.org MusicEvent for a show page, shaped for Google's Event rich results. */
+export function eventSchema(s: Show) {
+  const p = s.place;
+  const band = bandPage(s);
+  const address = p?.street && p.postalCode
+    ? {
+        "@type": "PostalAddress",
+        streetAddress: p.street,
+        addressLocality: p.city,
+        addressRegion: p.region ?? "CA",
+        postalCode: p.postalCode,
+        addressCountry: "US",
+      }
+    : {
+        "@type": "PostalAddress",
+        addressLocality: s.city ?? "San Francisco Bay Area",
+        addressRegion: "CA",
+        addressCountry: "US",
+      };
+  const offerUrl = s.tickets ?? s.venuePage;
+  const price = priceValue(s.price);
+  const lineup = s.lineup.map((m) => (m.role ? `${m.name} (${m.role})` : m.name)).join(", ");
+  const description = [
+    `${s.band} live at ${s.venue}${s.city && s.city !== s.venue ? `, ${s.city}` : ""}.`,
+    s.genre ? `${s.genre}.` : "",
+    lineup ? `With ${lineup}.` : "",
+    s.notes ?? "",
+  ].filter(Boolean).join(" ");
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    name: s.title,
+    description,
+    url: showUrl(s),
+    startDate: s.allDay ? localDate(s.start) : isoLocal(s.start),
+    endDate: s.allDay ? localDate(new Date(s.end.getTime() - 1)) : isoLocal(s.end),
+    eventStatus: s.cancelled
+      ? "https://schema.org/EventCancelled"
+      : s.rescheduled
+        ? "https://schema.org/EventRescheduled"
+        : "https://schema.org/EventScheduled",
+    ...(s.rescheduled && s.previousStart ? { previousStartDate: isoLocal(s.previousStart) } : {}),
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: {
+      "@type": "Place",
+      name: s.venue,
+      address,
+      ...(p?.url ? { url: p.url } : {}),
+      ...(p?.url || p?.instagram ? { sameAs: [p.url, p.instagram].filter(Boolean) } : {}),
+    },
+    image: [new URL(s.poster ?? ogImagePath(s), SITE).href],
+    performer: {
+      "@type": "MusicGroup",
+      name: s.band,
+      ...(band ? { url: new URL(band, SITE).href } : {}),
+    },
+    organizer: { "@type": "Organization", name: "Tritone Productions", url: SITE },
+    ...(s.venuePage ? { sameAs: s.venuePage } : {}),
+    ...(offerUrl && !s.cancelled
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: offerUrl,
+            availability: "https://schema.org/InStock",
+            ...(price !== undefined ? { price: price.toFixed(2), priceCurrency: "USD" } : {}),
+          },
+        }
+      : {}),
+  };
 }

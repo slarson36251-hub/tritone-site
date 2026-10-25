@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tritone-productions.com/sitemap-index.xml
