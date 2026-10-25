@@ -1,0 +1,18 @@
+---
+interface Props {
+  href: string;
+  ghost?: boolean;
+  external?: boolean;
+}
+const { href, ghost = false, external = false } = Astro.props;
+---
+<a
+  href={href}
+  class:list={[
+    "inline-flex min-h-12 items-center justify-center rounded-full border-2 px-7 text-sm font-semibold uppercase tracking-[.04em] no-underline transition-opacity hover:opacity-85",
+    ghost ? "border-white bg-transparent" : "border-stone bg-stone text-white",
+  ]}
+  {...(external ? { target: "_blank", rel: "noopener" } : {})}
+>
+  <slot />
+</a>

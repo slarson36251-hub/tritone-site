@@ -1,0 +1,9 @@
+---
+interface Props { eyebrow?: string; title: string }
+const { eyebrow, title } = Astro.props;
+---
+<section class="wrap flex flex-col gap-4 pb-10 pt-12 md:pt-18">
+  {eyebrow && <p class="eyebrow m-0">{eyebrow}</p>}
+  <h1 class="disp m-0 text-[clamp(2.4rem,6vw,4rem)] leading-none">{title}</h1>
+  <slot />
+</section>

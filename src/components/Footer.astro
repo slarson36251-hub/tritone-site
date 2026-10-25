@@ -1,0 +1,21 @@
+---
+import { Image } from "astro:assets";
+import logo from "../assets/logo/tritone-wordmark-white.png";
+import { nav, bookHref } from "../lib/nav";
+---
+<footer class="border-t border-stone/60">
+  <div class="wrap flex flex-col gap-8 py-14 md:flex-row md:items-end md:justify-between">
+    <div class="flex flex-col gap-4">
+      <Image src={logo} alt="Tritone Productions" class="h-14 w-auto self-start" widths={[240, 480]} sizes="140px" />
+      <p class="m-0 text-white">Oakland, CA</p>
+      <p class="m-0">
+        <a href="mailto:scott@tritone-productions.com">scott@tritone-productions.com</a>
+      </p>
+    </div>
+    <nav class="flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">
+      {nav.map((item) => <a href={item.href} class="font-semibold no-underline hover:underline">{item.label}</a>)}
+      <a href={bookHref} class="font-semibold no-underline hover:underline">Book the Hut</a>
+    </nav>
+  </div>
+  <div class="wrap pb-10 text-sm text-stone">© {new Date().getFullYear()} Tritone Productions</div>
+</footer>

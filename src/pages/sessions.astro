@@ -1,0 +1,9 @@
+---
+import Base from "../layouts/Base.astro";
+// The session gallery, ported as-is from the live Squarespace /sessions code block.
+// Photos are served from public/sessions/ (metadata already stripped).
+import gallery from "../gallery.html?raw";
+---
+<Base title="Sessions · Hummingbird Hut · Tritone Productions · Oakland, CA" description="Recent sessions recorded at the Hummingbird Hut, a private studio in Oakland, CA.">
+  <Fragment set:html={gallery} />
+</Base>

@@ -1,0 +1,31 @@
+---
+import Base from "../layouts/Base.astro";
+import PageHead from "../components/PageHead.astro";
+import { getUpcomingShows } from "../lib/shows";
+
+const shows = await getUpcomingShows(20);
+const fmt = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" });
+const events = shows.map((s) => ({
+  "@context": "https://schema.org", "@type": "MusicEvent", name: s.title, startDate: s.start.toISOString(),
+  location: { "@type": "Place", name: s.venue }, ...(s.poster ? { image: s.poster } : {}),
+}));
+---
+<Base title="Shows · Tritone Productions · Bay Area jazz" description="Upcoming shows by Tritone Productions bands around the Bay Area.">
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(events)} />
+  <PageHead eyebrow="Live" title="Shows" />
+  <section class="wrap pb-20">
+    {shows.length ? (
+      <ul class="rule m-0 grid list-none gap-8 border-t p-0 pt-8 md:grid-cols-2">
+        {shows.map((s) => (
+          <li class="flex flex-col gap-3">
+            {s.poster && <img src={s.poster} alt={`${s.title} poster`} loading="lazy" class="h-auto w-full rounded-md" />}
+            <span class="font-semibold uppercase tracking-[.04em]">{fmt.format(s.start)}</span>
+            <strong class="disp text-2xl">{s.title}</strong>
+            <span>{s.venue}</span>
+            {s.url && <a href={s.url} class="font-semibold">Tickets →</a>}
+          </li>
+        ))}
+      </ul>
+    ) : <p>New dates coming soon. Follow along on Instagram for announcements.</p>}
+  </section>
+</Base>

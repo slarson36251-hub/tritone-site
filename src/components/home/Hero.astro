@@ -1,0 +1,27 @@
+---
+import { Image } from "astro:assets";
+import Pill from "../Pill.astro";
+import photo from "../../assets/photos/fault-line-trio-drums-tracking-oct-2024-hummingbird-hut-oakland.jpg";
+---
+<section class="wrap grid items-center gap-8 pb-14 pt-10 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] md:gap-14 md:pb-22 md:pt-18">
+  <div class="flex flex-col gap-6">
+    <p class="eyebrow m-0">Recording studio · Jazz production · Oakland, CA</p>
+    <h1 class="disp m-0 text-[clamp(2.5rem,6vw,4.75rem)] leading-none">Oakland music, recorded right and played live.</h1>
+    <p class="m-0 max-w-[560px] text-[19px]">
+      Tritone Productions is the Hummingbird Hut, a private recording studio, and a family of Bay Area jazz groups, run by trombonist Scott Larson.
+    </p>
+    <div class="flex flex-wrap gap-3.5">
+      <Pill href="/hummingbird-hut">Hear the work</Pill>
+      <Pill href="/shows" ghost>Upcoming shows</Pill>
+    </div>
+  </div>
+  <Image
+    src={photo}
+    alt="Fault Line Trio drums set up for tracking at the Hummingbird Hut, Oakland, CA"
+    widths={[480, 720, 960]}
+    sizes="(min-width: 761px) 45vw, 100vw"
+    loading="eager"
+    fetchpriority="high"
+    class="aspect-4/3 h-auto w-full rounded-md bg-stone/20 object-cover md:aspect-4/5"
+  />
+</section>

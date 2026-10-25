@@ -1,0 +1,28 @@
+---
+import Base from "../layouts/Base.astro";
+import Hero from "../components/home/Hero.astro";
+import FeaturedRelease from "../components/home/FeaturedRelease.astro";
+import PathCards from "../components/home/PathCards.astro";
+import NextUp from "../components/home/NextUp.astro";
+
+// Organization schema: city and region only. Never a street address or geo coordinates.
+const org = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Tritone Productions",
+  url: "https://tritone-productions.com",
+  email: "scott@tritone-productions.com",
+  founder: { "@type": "Person", name: "Scott Larson" },
+  address: { "@type": "PostalAddress", addressLocality: "Oakland", addressRegion: "CA", addressCountry: "US" },
+};
+---
+<Base
+  title="Tritone Productions · Hummingbird Hut recording studio and Bay Area jazz · Oakland, CA"
+  description="Tritone Productions is the Hummingbird Hut, a private recording studio in Oakland, CA, and a family of Bay Area jazz groups run by trombonist Scott Larson."
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(org)} />
+  <Hero />
+  <FeaturedRelease />
+  <PathCards />
+  <NextUp />
+</Base>

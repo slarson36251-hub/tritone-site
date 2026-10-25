@@ -1,0 +1,26 @@
+---
+import { getUpcomingShows } from "../../lib/shows";
+
+const shows = await getUpcomingShows(3);
+const day = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/Los_Angeles" });
+const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" });
+---
+<section class="wrap rule border-t py-18">
+  <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <h2 class="disp m-0 text-[clamp(2rem,4.5vw,2.5rem)]">Next up</h2>
+    <a href="/shows" class="font-semibold">All shows →</a>
+  </div>
+  {shows.length ? (
+    <ul class="rule m-0 list-none border-t p-0">
+      {shows.map((s) => (
+        <li class="rule grid gap-1 border-b px-1 py-4 md:grid-cols-[12rem_minmax(0,1fr)_auto] md:items-baseline md:gap-6">
+          <span class="font-semibold uppercase tracking-[.04em]">{day.format(s.start)} · {time.format(s.start)}</span>
+          <strong class="text-[19px]">{s.title}</strong>
+          <span>{s.venue}</span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p class="m-0">Dates, venues and add-to-calendar links are on the <a href="/shows">Shows page</a>.</p>
+  )}
+</section>
