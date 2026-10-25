@@ -1,0 +1,162 @@
+---
+// Minimal audio track list. One <audio> element per list, one track at a time across the page.
+// Durations appear once a track's metadata has loaded (preload="none" keeps the page light).
+interface Props {
+  tracks: { title: string; src: string; credit?: string }[];
+  artist: string;
+}
+const { tracks, artist } = Astro.props;
+---
+<div class="tracklist" data-tracklist data-artist={artist}>
+  <audio preload="none"></audio>
+  <ol class="m-0 list-none p-0">
+    {tracks.map((t, i) => (
+      <li class="tl-row rule relative border-t" data-src={t.src} data-title={t.title}>
+        <div class="flex items-center gap-3 py-3 md:gap-4">
+          <button type="button" class="tl-btn grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-stone/50 text-white transition-colors hover:border-white hover:bg-white hover:text-black" aria-label={`Play ${t.title}`}>
+            <svg class="tl-play ml-0.5" width="12" height="14" viewBox="0 0 16 18" aria-hidden="true"><path d="M0 0l16 9-16 9z" fill="currentColor"/></svg>
+            <svg class="tl-pause" width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0h4v14H0zM8 0h4v14H8z" fill="currentColor"/></svg>
+          </button>
+          <span class="w-6 shrink-0 text-sm tabular-nums text-stone">{String(i + 1).padStart(2, "0")}</span>
+          <span class="min-w-0 flex-1 leading-tight">
+            <strong class="block truncate text-[17px] md:text-[19px]">{t.title}</strong>
+            {t.credit && <span class="block truncate text-sm text-stone">{t.credit}</span>}
+          </span>
+          <span class="tl-time shrink-0 text-sm tabular-nums text-stone" aria-hidden="true">--:--</span>
+        </div>
+        <input type="range" class="tl-seek" min="0" max="1000" step="1" value="0" disabled aria-label={`Seek in ${t.title}`} />
+      </li>
+    ))}
+  </ol>
+  <p class="tl-error m-0 hidden pt-3 text-sm text-stone" role="status"></p>
+</div>
+
+<style>
+  .tl-pause { display: none; }
+  .tl-row.playing .tl-play { display: none; }
+  .tl-row.playing .tl-pause { display: block; }
+  .tl-row.active .tl-btn { background: var(--color-white); color: var(--color-black); border-color: var(--color-white); }
+  .tl-row.active .tl-time { color: var(--color-white); }
+  .tl-row.loading .tl-btn { animation: tl-pulse 1s ease-in-out infinite; }
+  @keyframes tl-pulse { 50% { opacity: 0.5; } }
+
+  /* Thin progress line on every row; becomes a draggable seek bar on the active one. */
+  .tl-seek {
+    --p: 0%;
+    position: absolute; inset-inline: 0; bottom: -1px;
+    width: 100%; height: 3px; margin: 0;
+    appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer;
+  }
+  .tl-seek:disabled { cursor: default; }
+  .tl-seek::-webkit-slider-runnable-track { height: 3px; background: linear-gradient(to right, var(--color-white) var(--p), transparent var(--p)); border-radius: 2px; }
+  .tl-seek::-moz-range-track { height: 3px; background: linear-gradient(to right, var(--color-white) var(--p), transparent var(--p)); border-radius: 2px; }
+  .tl-seek::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4.5px; border-radius: 50%; background: var(--color-white); opacity: 0; transition: opacity .2s; }
+  .tl-seek::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 50%; background: var(--color-white); opacity: 0; }
+  .tl-row.active .tl-seek::-webkit-slider-thumb { opacity: 1; }
+  .tl-row.active .tl-seek::-moz-range-thumb { opacity: 1; }
+  .tl-seek:focus-visible { outline: 2px solid var(--color-white); outline-offset: 4px; }
+  @media (prefers-reduced-motion: reduce) { .tl-row.loading .tl-btn { animation: none; } }
+</style>
+
+<script>
+  const fmt = (s: number) => (isFinite(s) && s >= 0 ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "--:--");
+
+  function init() {
+    document.querySelectorAll<HTMLElement>("[data-tracklist]").forEach((list) => {
+      if (list.dataset.ready) return;
+      list.dataset.ready = "1";
+      const audio = list.querySelector("audio")!;
+      const rows = [...list.querySelectorAll<HTMLLIElement>(".tl-row")];
+      const err = list.querySelector<HTMLElement>(".tl-error")!;
+      let current: HTMLLIElement | null = null;
+
+      const seekOf = (r: HTMLLIElement) => r.querySelector<HTMLInputElement>(".tl-seek")!;
+      const timeOf = (r: HTMLLIElement) => r.querySelector<HTMLElement>(".tl-time")!;
+      const btnOf = (r: HTMLLIElement) => r.querySelector<HTMLButtonElement>(".tl-btn")!;
+      const title = (r: HTMLLIElement) => r.dataset.title!;
+
+      const paint = () => {
+        if (!current) return;
+        const d = audio.duration, t = audio.currentTime;
+        const p = d ? (t / d) * 100 : 0;
+        const seek = seekOf(current);
+        seek.style.setProperty("--p", `${p}%`);
+        if (document.activeElement !== seek) seek.value = String(Math.round(p * 10));
+        seek.setAttribute("aria-valuetext", `${fmt(t)} of ${fmt(d)}`);
+        timeOf(current).textContent = d ? `${fmt(t)} / ${fmt(d)}` : fmt(t);
+      };
+      const setState = () => {
+        rows.forEach((r) => {
+          const on = r === current;
+          const playing = on && !audio.paused;
+          r.classList.toggle("active", on);
+          r.classList.toggle("playing", playing);
+          if (audio.paused) r.classList.remove("loading");
+          btnOf(r).setAttribute("aria-label", `${playing ? "Pause" : "Play"} ${title(r)}`);
+          seekOf(r).disabled = !on;
+        });
+      };
+
+      const select = (r: HTMLLIElement) => {
+        if (current && current !== r) {
+          const old = current;
+          seekOf(old).value = "0";
+          seekOf(old).style.setProperty("--p", "0%");
+          if (audio.duration) timeOf(old).textContent = fmt(audio.duration);
+        }
+        current = r;
+        err.classList.add("hidden");
+        audio.src = r.dataset.src!;
+      };
+
+      const play = () => {
+        // One at a time, page-wide.
+        document.querySelectorAll("audio").forEach((a) => a !== audio && a.pause());
+        current?.classList.add("loading");
+        audio.play().catch(() => {});
+      };
+
+      rows.forEach((r, i) => {
+        btnOf(r).addEventListener("click", () => {
+          if (r !== current) { select(r); play(); }
+          else if (audio.paused) play();
+          else audio.pause();
+        });
+        const seek = seekOf(r);
+        seek.addEventListener("input", () => {
+          if (r !== current || !audio.duration) return;
+          audio.currentTime = (Number(seek.value) / 1000) * audio.duration;
+          seek.style.setProperty("--p", `${Number(seek.value) / 10}%`);
+        });
+        // Keyboard: arrow up/down on a play button moves between tracks.
+        btnOf(r).addEventListener("keydown", (e) => {
+          const k = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
+          if (!k) return;
+          e.preventDefault();
+          btnOf(rows[(i + k + rows.length) % rows.length]).focus();
+        });
+      });
+
+      audio.addEventListener("play", setState);
+      audio.addEventListener("pause", setState);
+      audio.addEventListener("playing", () => current?.classList.remove("loading"));
+      audio.addEventListener("timeupdate", paint);
+      audio.addEventListener("loadedmetadata", paint);
+      audio.addEventListener("ended", () => {
+        const next = current ? rows[rows.indexOf(current) + 1] : undefined;
+        if (next) { select(next); play(); } else { current && (seekOf(current).value = "0"); setState(); }
+      });
+      audio.addEventListener("error", () => {
+        current?.classList.remove("loading");
+        err.textContent = current ? `Couldn't load “${title(current)}”. Try again in a moment.` : "";
+        err.classList.remove("hidden");
+        setState();
+      });
+    });
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
+  // Stop playback before the page swaps, or the detached <audio> keeps playing.
+  document.addEventListener("astro:before-swap", () => document.querySelectorAll<HTMLAudioElement>("[data-tracklist] audio").forEach((a) => a.pause()));
+</script>

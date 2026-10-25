@@ -1,0 +1,42 @@
+---
+// A band's hero art: its poster (or photo), or a typographic card when there is none.
+// Fills its (relatively positioned) parent.
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  band: CollectionEntry<"bands">;
+  sizes: string;
+  widths: number[];
+  eager?: boolean;
+  fit?: "cover" | "contain";
+  class?: string;
+  // Vertical placement of the typographic card's words.
+  align?: "start" | "center";
+}
+const { band, sizes, widths, eager = false, fit = "cover", class: cls = "", align = "start" } = Astro.props;
+const { poster, posterAlt, name } = band.data;
+const words = name.split(" ");
+---
+{poster ? (
+  <Image
+    style={fit === "contain" ? "padding:4%" : undefined}
+    src={poster}
+    alt={posterAlt ?? `${name} poster`}
+    widths={widths}
+    sizes={sizes}
+    loading={eager ? "eager" : "lazy"}
+    fetchpriority={eager ? "high" : "auto"}
+    class:list={["tile-img absolute inset-0 h-full w-full", fit === "cover" ? "object-cover object-top" : "object-contain", cls]}
+  />
+) : (
+  <div class:list={["band-type absolute inset-0 flex flex-col overflow-hidden", align === "center" ? "justify-center" : "justify-start", "bg-black p-[6%]", cls]} aria-hidden="true">
+    {words.map((w, i) => (
+      <span class:list={["disp block text-[19cqw] leading-[0.88]", i % 2 ? "text-white" : "outline-type"]}>{w}</span>
+    ))}
+  </div>
+)}
+
+<style>
+  .band-type { container-type: inline-size; }
+</style>

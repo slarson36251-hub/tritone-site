@@ -27,6 +27,58 @@
           }
         ]
       }
+    ],
+    "redirects": [
+      {
+        "source": "/hard-bop-quintet",
+        "destination": "/bands/hard-bop-quintet",
+        "type": 301
+      },
+      {
+        "source": "/franco-nero",
+        "destination": "/bands/franco-nero",
+        "type": 301
+      },
+      {
+        "source": "/lucky-7",
+        "destination": "/bands/lucky-7",
+        "type": 301
+      },
+      {
+        "source": "/about",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/home",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/new-album",
+        "destination": "/bands",
+        "type": 301
+      },
+      {
+        "source": "/that-was-then-v1",
+        "destination": "/bands",
+        "type": 301
+      },
+      {
+        "source": "/turquoise-moon",
+        "destination": "/bands",
+        "type": 301
+      },
+      {
+        "source": "/the-distance-between-us",
+        "destination": "/bands",
+        "type": 301
+      },
+      {
+        "source": "/s/**",
+        "destination": "/gallery",
+        "type": 301
+      }
     ]
   }
 }

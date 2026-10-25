@@ -3,6 +3,7 @@ export const nav = [
   { label: "Hummingbird Hut", href: "/hummingbird-hut" },
   { label: "Portfolio", href: "/sessions" },
   { label: "Bands", href: "/bands" },
+  { label: "Gallery", href: "/gallery" },
   { label: "Shows", href: "/shows" },
   { label: "Contact", href: "/contact" },
 ];
