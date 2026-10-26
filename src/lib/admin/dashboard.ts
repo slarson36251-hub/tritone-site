@@ -5,7 +5,9 @@ import type { Hit, Source } from "../analytics-schema.ts";
 import * as A from "./aggregate.ts";
 import { createAuth, type Auth } from "./auth.ts";
 import { fetchHits, FirestoreError } from "./firestore.ts";
-import { generateDemo } from "./demo.ts";
+import { demoDigests, generateDemo } from "./demo.ts";
+import { fetchDigests, weekLabel, type Digest } from "./digests.ts";
+import { renderMarkdown } from "./markdown.ts";
 import { buildLink, CHANNELS, slugify } from "./links.ts";
 import { encodeQr, qrSvg } from "./qr.ts";
 import { bar, donut, esc, heatmap, SOURCE_FILL, sparkline, stackedBars, STACK_ORDER } from "./charts.ts";
@@ -45,6 +47,9 @@ let pollTimer: number | undefined;
 let resizeTimer: number | undefined;
 let abort: AbortController | null = null;
 let view: ReturnType<typeof compute> | null = null;
+let digests: Digest[] = [];
+let digestsLoaded = false;
+let digestId = "";
 let tipIndex = -1;
 
 // ------------------------------------------------------------------ formatting
@@ -106,7 +111,9 @@ function rangeFor(key: RangeKey, now = Date.now()) {
 // ------------------------------------------------------------------ compute everything for the current range
 function compute() {
   const r = rangeFor(rangeKey);
-  const visits = A.buildVisits(hits);
+  const split = A.splitVisits(hits);
+  const visits = split.counted;
+  const continued = split.continued.filter((v) => A.inRange(v, r.from, r.to)).length;
   const cur = visits.filter((v) => A.inRange(v, r.from, r.to));
   const prev = compare ? visits.filter((v) => A.inRange(v, r.prevFrom, r.prevTo)) : [];
   const bins = A.makeBins(r.from, r.to, rangeKey === "today" ? "hour" : undefined);
@@ -114,7 +121,7 @@ function compute() {
   const offset = r.from - r.prevFrom;
   const prevSeries = compare ? A.kpiSeries(prev.map((v) => ({ ...v, start: v.start + offset })), bins.starts).visits : undefined;
   return {
-    r, cur, prev, bins, series, prevSeries,
+    r, cur, prev, bins, series, prevSeries, continued,
     sum: A.summarize(cur), psum: A.summarize(prev),
     kseries: A.kpiSeries(cur, bins.starts),
     sources: A.sourceBreakdown(cur, prev),
@@ -126,6 +133,7 @@ function renderAll() {
   view = compute();
   const v = view;
   $("adm-traffic-sub").textContent = `${v.r.label}${compare ? ` · compared with ${v.r.prevLabel}` : ""}`;
+  $("adm-continued").textContent = v.continued ? `Plus ${fmtN(v.continued)} continued visit${v.continued === 1 ? "" : "s"} (reloads and new tabs of visits already counted) kept out of the totals.` : "";
   renderKpis();
   renderInsights();
   renderLegend();
@@ -366,6 +374,42 @@ function renderFeed() {
   $("adm-more").hidden = cur.length <= feedLimit;
 }
 
+// ------------------------------------------------------------------ weekly report
+function renderDigest() {
+  const box = $("adm-digest");
+  const pick = $<HTMLSelectElement>("adm-digest-pick");
+  if (!digestsLoaded) { box.innerHTML = `<p class="adm-empty">Loading the latest report…</p>`; pick.hidden = true; return; }
+  if (!digests.length) {
+    pick.hidden = true;
+    box.innerHTML = `<div class="adm-digest-empty"><p class="adm-digest-empty-h">Your first weekly report arrives Monday.</p><p class="adm-muted">Every Monday a summary of the week (visits, sources, AI assistants, outreach links, bookings) lands here and on the “Weekly site analytics” issue.</p></div>`;
+    return;
+  }
+  const d = digests.find((x) => x.id === digestId) ?? digests[0];
+  digestId = d.id;
+  pick.hidden = digests.length < 2;
+  pick.innerHTML = digests.map((x) => `<option value="${esc(x.id)}"${x.id === d.id ? " selected" : ""}>${x === digests[0] ? "Latest: " : ""}${esc(weekLabel(x.id))}</option>`).join("");
+  // The headline (title + numbers) shows; the full report folds under it.
+  const cut = d.md.search(/^#{3,}\s/m);
+  const lead = cut > 0 ? d.md.slice(0, cut) : d.md;
+  const rest = cut > 0 ? d.md.slice(cut) : "";
+  box.innerHTML = `<div class="adm-md adm-md-lead">${renderMarkdown(lead)}</div>${rest ? `<details class="adm-digest-more"><summary>Read the full report</summary><div class="adm-md">${renderMarkdown(rest)}</div></details>` : ""}${d.createdAt ? `<p class="adm-sub adm-digest-foot">Written ${esc(new Date(d.createdAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }))}.</p>` : ""}`;
+}
+
+async function loadDigests() {
+  if (demo) { digests = demoDigests(Date.now()); digestsLoaded = true; renderDigest(); return; }
+  try {
+    const token = await auth.getIdToken();
+    digests = await fetchDigests(token);
+    digestsLoaded = true;
+    renderDigest();
+  } catch (e: any) {
+    digestsLoaded = true;
+    digests = [];
+    renderDigest();
+    if (e?.message) $("adm-digest").innerHTML = `<p class="adm-empty">Couldn't load the weekly reports: ${esc(e.message)}</p>`;
+  }
+}
+
 function renderLive(now = Date.now()) {
   const live = A.liveNow(liveHits, now);
   const n = live.length;
@@ -568,6 +612,7 @@ function showApp() {
   $("adm-who").textContent = demo ? "Previewing with generated sample data" : `Signed in as ${auth.email}`;
   syncRangeButtons();
   load();
+  loadDigests();
   pollLive();
   startPolling();
 }
@@ -625,6 +670,8 @@ function wireAuth() {
   $("adm-signout").addEventListener("click", () => {
     auth.signOut();
     hits = [];
+    digests = [];
+    digestsLoaded = false;
     loadedSpan = { from: 0, to: 0 };
     showAuth("Signed out.");
   });
@@ -681,6 +728,7 @@ function wireControls() {
     renderTraffic();
   });
   $("adm-more").addEventListener("click", () => { feedLimit += 20; renderFeed(); });
+  $("adm-digest-pick").addEventListener("change", (e) => { digestId = (e.target as HTMLSelectElement).value; renderDigest(); });
   $("adm-app").addEventListener("click", (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-more]");
     if (b) b.previousElementSibling?.classList.add("is-open");

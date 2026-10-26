@@ -49,6 +49,87 @@ const TZ: [string, number][] = [
   ["Europe/London", 3], ["Europe/Berlin", 2], ["America/Toronto", 2], ["Asia/Tokyo", 1], ["Australia/Sydney", 1], ["America/Mexico_City", 1], ["Pacific/Honolulu", 1],
 ];
 
+/** Sample weekly digests for ?demo=1, in the shape scripts/analytics-digest.mjs writes. */
+export function demoDigests(now: number): { id: string; week: string; md: string; createdAt: string; summary: Record<string, unknown>; visits: number; pageViews: number; bookings: number }[] {
+  const out = [];
+  const monday = new Date(now);
+  monday.setHours(0, 0, 0, 0);
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  const r = rng(11);
+  for (let w = 1; w <= 5; w++) {
+    const start = new Date(monday.getTime() - w * 7 * DAY);
+    const end = new Date(start.getTime() + 6 * DAY);
+    const id = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+    const f = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const visits = Math.round(190 + (5 - w) * 22 + r() * 30), prev = Math.round(visits * (0.78 + r() * 0.3));
+    const pv = Math.round(visits * 2.1), books = Math.round(2 + r() * 4), ai = Math.round(visits * (0.11 + w * 0.004));
+    const pct = (a: number, b: number) => `${a >= b ? "+" : "-"}${Math.round((Math.abs(a - b) / Math.max(1, b)) * 100)}%`;
+    const md = `## Site analytics: ${f(start)} to ${f(end)}
+
+**${visits} visits** (${pct(visits, prev)}) · **${pv} page views** (${pct(pv, Math.round(prev * 2.1))}) · **${books} booking requests**
+
+### What changed
+
+- Visits were ${visits >= prev ? "up" : "down"} ${pct(visits, prev).slice(1)} at ${visits} (from ${prev}), with ${pv} page views.
+- Search brought ${Math.round(visits * 0.24)} visits, ${visits >= prev ? "up" : "down"} from ${Math.round(prev * 0.22)}.
+- AI assistants accounted for ${Math.round((ai / visits) * 100)}% of visits (${ai}), mostly from chatgpt.com.
+- ${books} Book the Hut requests came in (${Math.ceil(books / 2)} from AI assistants, ${Math.floor(books / 2)} from Outreach links), against ${Math.max(0, books - 1)} the week before.
+- /hummingbird-hut got ${Math.round(visits * 0.3)} views, up from ${Math.round(prev * 0.26)}, the biggest jump of any page.
+
+### Where visits came from
+
+| Source | Visits | Last week | Change | Share |
+| --- | ---: | ---: | ---: | ---: |
+| Search | ${Math.round(visits * 0.24)} | ${Math.round(prev * 0.22)} | ${pct(visits * 0.24, prev * 0.22)} | 24% |
+| Direct / typed | ${Math.round(visits * 0.2)} | ${Math.round(prev * 0.21)} | ${pct(visits * 0.2, prev * 0.21)} | 20% |
+| Outreach links | ${Math.round(visits * 0.18)} | ${Math.round(prev * 0.15)} | ${pct(visits * 0.18, prev * 0.15)} | 18% |
+| Social | ${Math.round(visits * 0.15)} | ${Math.round(prev * 0.16)} | ${pct(visits * 0.15, prev * 0.16)} | 15% |
+| AI assistants | ${ai} | ${Math.round(prev * 0.1)} | ${pct(ai, prev * 0.1)} | ${Math.round((ai / visits) * 100)}% |
+| Other sites | ${Math.round(visits * 0.08)} | ${Math.round(prev * 0.1)} | ${pct(visits * 0.08, prev * 0.1)} | 8% |
+| Email | ${Math.round(visits * 0.03)} | ${Math.round(prev * 0.04)} | ${pct(visits * 0.03, prev * 0.04)} | 3% |
+
+### AI assistants
+
+| Assistant | Visits | Last week |
+| --- | ---: | ---: |
+| chatgpt.com | ${Math.round(ai * 0.5)} | ${Math.round(prev * 0.05)} |
+| perplexity.ai | ${Math.round(ai * 0.2)} | ${Math.round(prev * 0.02)} |
+| claude.ai | ${Math.round(ai * 0.15)} | ${Math.round(prev * 0.015)} |
+| gemini.google.com | ${Math.round(ai * 0.1)} | ${Math.round(prev * 0.01)} |
+
+### Top pages
+
+| Page | Views | Last week | Change |
+| --- | ---: | ---: | ---: |
+| / | ${Math.round(pv * 0.22)} | ${Math.round(prev * 0.45)} | ${pct(pv * 0.22, prev * 0.45)} |
+| /hummingbird-hut | ${Math.round(visits * 0.3)} | ${Math.round(prev * 0.26)} | ${pct(visits * 0.3, prev * 0.26)} |
+| /book-the-hut | ${Math.round(pv * 0.12)} | ${Math.round(prev * 0.24)} | ${pct(pv * 0.12, prev * 0.24)} |
+| /shows | ${Math.round(pv * 0.11)} | ${Math.round(prev * 0.25)} | ${pct(pv * 0.11, prev * 0.25)} |
+| /listen | ${Math.round(pv * 0.08)} | ${Math.round(prev * 0.17)} | ${pct(pv * 0.08, prev * 0.17)} |
+
+### Interest
+
+| Action | This week | Last week | Change |
+| --- | ---: | ---: | ---: |
+| Booking requests | ${books} | ${Math.max(0, books - 1)} | ${books - 1 > 0 ? pct(books, books - 1) : "new"} |
+| Show clicks | ${Math.round(visits * 0.13)} | ${Math.round(prev * 0.11)} | ${pct(visits * 0.13, prev * 0.11)} |
+| Ticket / venue clicks | ${Math.round(visits * 0.09)} | ${Math.round(prev * 0.08)} | ${pct(visits * 0.09, prev * 0.08)} |
+| Listening plays | ${Math.round(visits * 0.1)} | ${Math.round(prev * 0.1)} | ${pct(visits * 0.1, prev * 0.1)} |
+| Poster views | ${Math.round(visits * 0.12)} | ${Math.round(prev * 0.1)} | ${pct(visits * 0.12, prev * 0.1)} |
+
+### Details
+
+**Most played:** Caffeine (${Math.round(8 + r() * 6)}), Pacifica (${Math.round(4 + r() * 5)}), Garden of Love (${Math.round(2 + r() * 4)})
+
+**Top outbound sites:** bandcamp.com (${Math.round(3 + r() * 4)}), www.instagram.com (${Math.round(1 + r() * 3)})
+
+_Devices: phone ${60 + Math.round(r() * 8)}% · tablet 5% · desktop ${30 + Math.round(r() * 5)}%. Visits are counted without cookies: one visit per page load and its in-site navigation. Scott's own devices are excluded once he has opened /admin._
+`;
+    out.push({ id, week: id, md, createdAt: new Date(start.getTime() + 7 * DAY + 6 * 3600e3).toISOString(), summary: { visits, pageViews: pv, bookings: books }, visits, pageViews: pv, bookings: books });
+  }
+  return out;
+}
+
 export function generateDemo(input: DemoInput): { hits: Hit[]; shows: DemoShow[] } {
   const r = rng(input.seed ?? 7);
   const now = input.now;
@@ -196,6 +277,14 @@ export function generateDemo(input: DemoInput): { hits: Hit[]; shows: DemoShow[]
       }
     }
   }
+  // Reloads and new tabs: the tracker gives them a fresh sid with first=false, so they must not count.
+  for (let i = 0; i < Math.round(hits.length * 0.012); i++) {
+    const src = hits[Math.floor(r() * hits.length)];
+    if (src.k !== "pv") continue;
+    hits.push({ ...src, sid: sid(), first: false, t: new Date(Date.parse(src.t) + 30e3 + r() * 600e3).toISOString() });
+  }
+  // One stray hit with a referrer the dashboard must never print (it shows "hidden").
+  hits.push({ ...hits[0], sid: sid(), first: true, src: "referral", ref: "studio-nas.quickconnect.to", t: new Date(now - 3 * DAY).toISOString() });
   // A few people on the site right now, so "Live now" has something to show.
   for (let i = 0; i < 4; i++) {
     const t = now - (30 + i * 55) * 1e3;

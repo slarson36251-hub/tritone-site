@@ -91,10 +91,20 @@ const ranges = [
       <p class="adm-status" id="adm-status" role="status" aria-live="polite"></p>
 
       <nav class="adm-jump" aria-label="Dashboard sections">
-        <a href="#s-overview">Overview</a><a href="#s-sources">Sources</a><a href="#s-outreach">Outreach</a><a href="#s-interest">Interest</a><a href="#s-pages">Pages</a><a href="#s-audience">Audience</a><a href="#s-activity">Activity</a>
+        <a href="#s-report">Report</a><a href="#s-overview">Overview</a><a href="#s-sources">Sources</a><a href="#s-outreach">Outreach</a><a href="#s-interest">Interest</a><a href="#s-pages">Pages</a><a href="#s-audience">Audience</a><a href="#s-activity">Activity</a>
       </nav>
 
       <section class="adm-live adm-card" id="adm-live" aria-label="Live now"></section>
+
+      <section id="s-report" class="adm-section adm-section-first" aria-labelledby="h-report">
+        <article class="adm-card adm-report">
+          <div class="adm-card-head">
+            <h2 class="adm-h" id="h-report">Weekly report</h2>
+            <select class="adm-input adm-digest-pick" id="adm-digest-pick" aria-label="Which week" hidden></select>
+          </div>
+          <div id="adm-digest"></div>
+        </article>
+      </section>
 
       <section id="s-overview" class="adm-section" aria-label="Overview">
         <div class="adm-kpis" id="adm-kpis"></div>
@@ -112,6 +122,7 @@ const ranges = [
             <div class="adm-chart" id="adm-traffic" tabindex="0" aria-describedby="adm-traffic-help">
               <div class="adm-tip" id="adm-tip" hidden></div>
             </div>
+            <p class="adm-sub" id="adm-continued"></p>
             <p class="adm-sub" id="adm-traffic-help">Bars are visits, stacked by where they came from. Dashed line: previous period. <span class="adm-note-icon">♪</span> marks show dates (filled = upcoming). Tap or use ← → for details.</p>
             <details class="adm-table-view"><summary>Show as a table</summary><div id="adm-traffic-table"></div></details>
           </article>

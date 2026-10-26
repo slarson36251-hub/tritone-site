@@ -101,7 +101,7 @@ test("sources, referrers, AI card, outreach campaigns", () => {
   assert.equal(c[0].tickets, 1);
   assert.deepEqual(c[0].sources, [{ source: "instagram", medium: "social", visits: 1 }]);
   // ChatGPT's own utm_source=chatgpt.com is not an outreach link
-  const gpt = A.buildVisits([hit({ sid: "z", src: "ai", us: "chatgpt.com" })]);
+  const gpt = A.buildVisits([hit({ sid: "z", first: true, src: "ai", us: "chatgpt.com" })]);
   assert.equal(A.campaigns(gpt).length, 0);
   assert.equal(A.aiAssistants(gpt)[0].label, "ChatGPT");
 });
@@ -290,4 +290,95 @@ test("/admin is noindex, unlinked, and kept out of the sitemap and llms files", 
   // The embedded build data carries show names and dates only, never a venue street address.
   const data = html.match(/<script type="application\/json" id="adm-data">([\s\S]*?)<\/script>/)[1];
   assert.ok(!/street|postalCode|\b9\d{4}\b/.test(data));
+});
+
+// ---- follow-up: private hosts, continued visits, the weekly report ----
+const MD = await import("../src/lib/admin/markdown.ts");
+const DG = await import("../src/lib/admin/digests.ts");
+const { demoDigests } = await import("../src/lib/admin/demo.ts");
+
+test("hosts that could point at the studio's own network are never shown", () => {
+  for (const h of ["hummingbird-nas.synology.me", "HummingbirdHut.local", "studio.quickconnect.to", "nas.myds.me", "scott.ddns.net", "something-ddns.example.com",
+    "192.168.1.20", "10.0.0.5:5000", "localhost", "localhost:4321", "[::1]", "fe80::1", "router.lan", "nas.home"]) {
+    assert.equal(A.isPrivateHost(h), true, h);
+    assert.equal(A.hostLabel(h), "hidden", h);
+  }
+  for (const h of ["www.google.com", "thedeluxesf.com", "do510.com", "chatgpt.com", "l.instagram.com", "", "bandcamp.com"]) assert.equal(A.isPrivateHost(h), false, h);
+  const v = A.buildVisits([hit({ sid: "p", first: true, src: "referral", ref: "hummingbird-nas.synology.me" }), hit({ sid: "p", at: 1, ev: "outbound", lbl: "192.168.1.9" })]);
+  assert.equal(A.visitOrigin(v[0]), "hidden");
+  assert.deepEqual(A.referrers(v).map((r) => r.label), ["hidden"]);
+  assert.deepEqual(A.attention(v).outbound.map((r) => r.label), ["hidden"]);
+  assert.equal(A.journeys(v)[0].steps[1].text, "Outbound link: hidden");
+  assert.equal(A.prettySource("nas.myds.me"), "hidden");
+});
+
+test("a visit counts only when its sid has a first:true page view; reloads are continued visits", () => {
+  const hits = [
+    ...HITS,
+    hit({ sid: "reload1", at: 3, path: "/book-the-hut", first: false, src: "ai", ref: "chatgpt.com", land: "/hummingbird-hut" }),
+    hit({ sid: "reload1", at: 4, path: "/book-the-hut", first: false, src: "ai", ev: "play", lbl: "x" }),
+    hit({ sid: "tab2", at: 70, path: "/shows", first: false, src: "campaign", us: "instagram", uc: "the-deluxe" }),
+  ];
+  const s = A.splitVisits(hits);
+  assert.deepEqual(s.counted.map((v) => v.sid), ["a", "b", "c", "d"]);
+  assert.deepEqual(s.continued.map((v) => v.sid), ["reload1", "tab2"]);
+  assert.equal(A.buildVisits(hits).length, 4, "buildVisits returns counted visits only");
+  assert.equal(A.summarize(A.buildVisits(hits)).visits, 4);
+  assert.equal(A.summarize(A.buildVisits(hits)).interest, 2, "events on a continued sid don't inflate interest");
+  // but someone reloading is still on the site right now
+  assert.ok(A.liveNow(hits, T0 + 71 * min).some((l) => l.sid === "tab2"));
+  // a hit with no usable first flag is not counted either
+  assert.equal(A.buildVisits([{ ...hit({ sid: "q" }), first: "yes" }]).length, 0);
+});
+
+test("Markdown digest renders safely: headings, tables, lists, bold; HTML escaped; only http(s) links", () => {
+  const html = MD.renderMarkdown([
+    "## Site analytics: Oct 18 to Oct 25", "", "**233 visits** (+88%) · _quiet_", "", "### What changed", "", "- Visits were up 88%.", "- <script>alert(1)</script> stays text.", "",
+    "| Source | Visits | Change |", "| --- | ---: | :---: |", "| Search | 54 | +74% |", "| AI & friends | 30 | +150% |", "",
+    "1. first", "2. second", "", "[good](https://example.com/x?a=1) [bad](javascript:alert(1)) <a href=\"x\">raw</a>", "", "---", "", "> quoted",
+  ].join("\n"));
+  assert.match(html, /<h3>Site analytics: Oct 18 to Oct 25<\/h3>/);
+  assert.match(html, /<h4>What changed<\/h4>/);
+  assert.match(html, /<strong>233 visits<\/strong> \(\+88%\) · <em>quiet<\/em>/);
+  assert.match(html, /<ul><li>Visits were up 88%\.<\/li><li>&lt;script&gt;alert\(1\)&lt;\/script&gt; stays text\.<\/li><\/ul>/);
+  assert.match(html, /<th>Source<\/th><th style="text-align:right">Visits<\/th><th style="text-align:center">Change<\/th>/);
+  assert.match(html, /<td>AI &amp; friends<\/td><td style="text-align:right">30<\/td>/);
+  assert.match(html, /<ol><li>first<\/li><li>second<\/li><\/ol>/);
+  assert.match(html, /<a href="https:\/\/example.com\/x\?a=1" rel="noopener" target="_blank">good<\/a>/);
+  assert.ok(html.includes("[bad](javascript:alert(1))"), "javascript: link stays plain text");
+  assert.ok(html.includes("&lt;a href=&quot;x&quot;&gt;raw&lt;/a&gt;"), "raw HTML is escaped");
+  assert.ok(!/<script|onerror|javascript:/.test(html.replace(/\[bad\]\(javascript:alert\(1\)\)/, "")));
+  assert.match(html, /<hr>/);
+  assert.match(html, /<blockquote><p>quoted<\/p><\/blockquote>/);
+  assert.equal(MD.renderMarkdown(""), "");
+  // visitor strings arrive in code spans: nothing inside them is formatted or linked
+  assert.equal(MD.inline("Played `**Blue_Monk** [x](https://e.com) <b>`"), "Played <code>**Blue_Monk** [x](https://e.com) &lt;b&gt;</code>");
+  assert.match(MD.renderMarkdown("| Track | Plays |\n| --- | ---: |\n| `a|b` | 3 |"), /<td>/);
+  // the sample digests (same shape as scripts/analytics-digest.mjs writes) render without leftovers
+  const sample = demoDigests(Date.parse("2026-10-25T20:00:00Z"));
+  assert.equal(sample.length, 5);
+  assert.match(sample[0].id, /^\d{4}-\d{2}-\d{2}$/);
+  assert.ok(sample[0].id > sample[1].id, "newest first");
+  const out = MD.renderMarkdown(sample[0].md);
+  assert.ok(!/\|\s*---|\*\*|^#/m.test(out), "no raw Markdown left");
+  assert.ok((out.match(/<table>/g) ?? []).length >= 4);
+});
+
+test("digests: query, parsing, week labels", () => {
+  const q = DG.digestsQuery(10).structuredQuery;
+  assert.deepEqual(q.from, [{ collectionId: "digests" }]);
+  assert.deepEqual(q.orderBy, [{ field: { fieldPath: "week" }, direction: "DESCENDING" }]);
+  assert.equal(DG.digestsQuery().structuredQuery.limit, 12);
+  // the shape scripts/analytics-digest.mjs writes
+  const doc = (id, md = "## Week\n\ntext", summary = '{"visits":12}') => ({ document: { name: `projects/p/databases/(default)/documents/digests/${id}`, fields: {
+    week: { stringValue: id }, from: { timestampValue: `${id}T07:00:00Z` }, to: { timestampValue: "2026-10-20T07:00:00Z" }, generatedAt: { timestampValue: "2026-10-20T06:00:00Z" },
+    visits: { integerValue: "12" }, pageViews: { integerValue: "30" }, bookings: { integerValue: "1" }, md: { stringValue: md }, summary: { stringValue: summary } } } });
+  const list = DG.parseDigests([doc("2026-10-06", undefined, "not json"), doc("2026-10-13"), doc("2026-09-29", "   "), { readTime: "x" }]);
+  assert.deepEqual(list.map((d) => d.id), ["2026-10-13", "2026-10-06"]);
+  assert.deepEqual(list[0].summary, { visits: 12 });
+  assert.deepEqual(list[1].summary, {}, "bad JSON summary is ignored");
+  assert.equal(list[0].createdAt, "2026-10-20T06:00:00Z");
+  assert.deepEqual([list[0].visits, list[0].pageViews, list[0].bookings], [12, 30, 1]);
+  assert.equal(DG.weekLabel("2026-10-19"), "Oct 19 – Oct 25, 2026");
+  assert.equal(DG.weekLabel("latest"), "latest");
 });

@@ -26,16 +26,34 @@ export interface Visit {
 
 export const ms = (iso: string): number => Date.parse(iso);
 
-/** Group hits into visits (one per sid), oldest first. Visit attributes come from its landing hit. */
+/**
+ * Group hits into visits (one per sid), oldest first. Visit attributes come from its landing hit.
+ * A visit counts only when its sid has a first:true page view; a sid without one is a reload or a
+ * new tab of a visit already counted (the tracker marks those first:false), so its pages and
+ * events fold into the "continued" set that splitVisits() reports instead of inflating the totals.
+ */
 export function buildVisits(hits: Hit[]): Visit[] {
+  return splitVisits(hits).counted;
+}
+
+/** Every sid grouped, split into counted visits and continued ones (no landing page view). */
+export function splitVisits(hits: Hit[]): { counted: Visit[]; continued: Visit[] } {
+  const all = groupVisits(hits);
+  const counted: Visit[] = [], continued: Visit[] = [];
+  for (const v of all) (v.landed ? counted : continued).push(v);
+  return { counted, continued };
+}
+
+function groupVisits(hits: Hit[]): (Visit & { landed: boolean })[] {
   const sorted = [...hits].sort((a, b) => ms(a.t) - ms(b.t));
-  const bySid = new Map<string, Visit>();
+  const bySid = new Map<string, Visit & { landed: boolean }>();
   for (const h of sorted) {
     const t = ms(h.t);
     if (!Number.isFinite(t) || !h.sid) continue;
     let v = bySid.get(h.sid);
     if (!v) {
       v = {
+        landed: false,
         sid: h.sid, start: t, end: t, src: (SOURCES as string[]).includes(h.src) ? h.src : "direct",
         ref: h.ref || "", us: h.us || "", um: h.um || "", uc: h.uc || "", ux: h.ux || "",
         land: h.land || h.path || "/", dev: h.dev || "d", tz: h.tz || "", lang: h.lang || "", pages: [], events: [],
@@ -43,6 +61,7 @@ export function buildVisits(hits: Hit[]): Visit[] {
       bySid.set(h.sid, v);
     }
     v.end = Math.max(v.end, t);
+    if (h.k === "pv" && h.first === true) v.landed = true;
     if (h.k === "pv") v.pages.push({ path: h.path, t });
     else if (h.k === "ev" && h.ev) v.events.push({ ev: h.ev, lbl: h.lbl || "", path: h.path, t });
   }
@@ -202,10 +221,30 @@ export function cleanHost(h: string): string {
   return (h || "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^(www\.|m\.|l\.|lm\.)/, "");
 }
 
-/** A readable name for a referrer host ("l.instagram.com" -> "Instagram"). Unknown hosts stay as hosts. */
+export const HIDDEN_HOST = "hidden";
+
+/**
+ * Hosts the dashboard must never print: anything that could point at the studio's own network
+ * (the Hut's NAS, DDNS names, IPs, localhost). Mirrors isPrivateHost in the tracker, applied here
+ * as well so an old or hand-written hit can't leak one. Returns true for "hide this".
+ */
+export function isPrivateHost(host: string): boolean {
+  const h = cleanHost(host).replace(/:\d+$/, "");
+  if (!h) return false;
+  if (/hummingbird/.test(h)) return true;
+  if (/(^|\.)(synology\.me|quickconnect\.to|myds\.me|direct\.quickconnect\.to)$/.test(h)) return true;
+  if (/ddns/.test(h)) return true;
+  if (/^local(host)?$|(^|\.)(local(host)?|lan|home|internal)$/.test(h)) return true; // never the literal word: tests/feedback.test.mjs forbids it in bundles
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) return true; // IPv4
+  if (/^\[?[0-9a-f:]*:[0-9a-f:]*\]?$/.test(h)) return true; // IPv6
+  return false;
+}
+
+/** A readable name for a referrer host ("l.instagram.com" -> "Instagram"). Unknown hosts stay as hosts; private ones are hidden. */
 export function hostLabel(host: string): string {
   const h = cleanHost(host);
   if (!h) return "No referrer";
+  if (isPrivateHost(h)) return HIDDEN_HOST;
   const ai = aiName(h);
   if (ai) return ai;
   for (const [re, name] of FRIENDLY) if (re.test(h)) return name;
@@ -537,7 +576,7 @@ export const LIVE_WINDOW = 5 * 60e3;
 /** Visits with any hit in the last five minutes, newest activity first. */
 export function liveNow(hits: Hit[], now: number) {
   const recent = hits.filter((h) => now - ms(h.t) <= LIVE_WINDOW && ms(h.t) <= now + 60e3);
-  const visits = buildVisits(recent);
+  const visits = groupVisits(recent);
   return visits
     .map((v) => ({ sid: v.sid, origin: visitOrigin(v), src: v.src, dev: v.dev, page: v.pages.at(-1)?.path ?? v.land, last: v.end, region: regionForTz(v.tz), actions: v.events.length }))
     .sort((a, b) => b.last - a.last);
