@@ -8,7 +8,29 @@ import clint from "../../assets/photos/clint-baker-band-session-may-2026-humming
 import jay from "../../assets/photos/fault-line-trio-jay-sanders-piano-feb-2026-hummingbird-hut-oakland.jpg";
 import { bookHref } from "../../lib/nav";
 
-const [release] = await getCollection("releases", ({ data }) => data.featured);
+
+// Featured artist this month, from the Hut Vault.
+const ICON = {
+  instagram: "M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1 0 8.3 0 8.7 0 12s0 3.7.1 4.9c.2 4.4 2.6 6.8 7 7 1.2.1 1.6.1 4.9.1s3.7 0 4.9-.1c4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9s0-3.7-.1-4.9c-.2-4.4-2.6-6.8-7-7C15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 100 12.4 6.2 6.2 0 000-12.4zM12 16a4 4 0 110-8 4 4 0 010 8zm6.4-11.8a1.4 1.4 0 100 2.9 1.4 1.4 0 000-2.9z",
+  youtube: "M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 002.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z",
+  // A globe, drawn as a stroke (see the link loop).
+  web: "M12 2a10 10 0 100 20 10 10 0 000-20zM2 12h20M12 2c2.8 3 4 6.4 4 10s-1.2 7-4 10c-2.8-3-4-6.4-4-10s1.2-7 4-10z",
+};
+const featured = {
+  name: "Fault Line Trio",
+  lineup: "Jay Sanders, keys and trumpet · Lukas Vesely, bass · Brian Fishler, drums",
+  spotifyEmbed: "https://open.spotify.com/embed/artist/6totQHGBvwYsowo9jUIndk?utm_source=generator&theme=0",
+  story: [
+    { when: "Oct 2024", what: "Tracked at the Hut", note: "four days of album tracking" },
+    { when: "Dec 2025", what: "“Waterfall” single", note: "mastered by Michael Romanowski, Coast Mastering" },
+    { when: "Feb 2026", what: "“Smooth Landing”", note: "piano overdubs at the Hut" },
+  ],
+  links: [
+    { label: "Instagram", href: "https://www.instagram.com/fault_line_trio/", icon: ICON.instagram },
+    { label: "YouTube", href: "https://www.youtube.com/@faultlinetrio", icon: ICON.youtube },
+    { label: "faultlinetrio.com", href: "https://faultlinetrio.com", icon: ICON.web },
+  ],
+};
 const bands = (await getCollection("bands")).sort((a, b) => a.data.order - b.data.order);
 const recent = [
   { img: levis, name: "Jason Levis", what: "Joseph's Bones", when: "Aug 2026", id: "levis" },
@@ -19,31 +41,47 @@ const recent = [
 <section class="wrap py-12 md:py-20">
   <div class="grid auto-rows-[minmax(150px,auto)] grid-cols-1 gap-4 md:grid-cols-6 md:gap-5">
 
-    {release && (
-      <article class="tile reveal flex flex-col justify-between gap-8 p-6 md:col-span-4 md:row-span-2 md:p-9">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p class="eyebrow m-0 text-stone">Fresh from the Hut</p>
-            <h2 class="disp mb-0 mt-2 text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]">{release.data.artist}</h2>
-          </div>
-          <button type="button" data-play={`https://open.spotify.com/embed/artist/6totQHGBvwYsowo9jUIndk?utm_source=generator&theme=0`} data-play-title={`${release.data.artist} · Spotify`}
-            class="flex min-h-12 cursor-pointer items-center gap-3 rounded-full bg-white px-6 font-semibold uppercase tracking-[.04em] text-black transition-transform hover:scale-[1.03]">
-            <svg width="12" height="14" viewBox="0 0 16 18" aria-hidden="true"><path d="M0 0l16 9-16 9z" fill="currentColor"/></svg>
-            Play
-          </button>
+    {/* Featured artist this month, from the Hut Vault. To change it, edit `featured` above. */}
+    <article class="tile reveal flex flex-col justify-between gap-7 p-6 md:col-span-4 md:row-span-2 md:p-9" aria-labelledby="featured-h">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <p class="eyebrow m-0 text-stone">Featured artist this month · From the Hut Vault</p>
+          <h2 id="featured-h" class="disp mb-0 mt-2 text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]">{featured.name}</h2>
+          <p class="mb-0 mt-2 text-[15px] text-white/80">{featured.lineup}</p>
         </div>
-        <ol class="m-0 list-none p-0">
-          {release.data.tracks.map((t, i) => (
-            <li class="rule flex items-baseline gap-4 border-t py-3.5">
-              <span class="w-6 text-sm tabular-nums text-stone">{String(i + 1).padStart(2, "0")}</span>
-              <strong class="flex-1 text-[19px]">{t.title}</strong>
-              <span class="text-sm text-stone">{t.note}</span>
+        <button type="button" data-play={featured.spotifyEmbed} data-play-title={`${featured.name} · Spotify`}
+          class="flex min-h-12 cursor-pointer items-center gap-3 rounded-full bg-white px-6 font-semibold uppercase tracking-[.04em] text-black transition-transform hover:scale-[1.03]">
+          <svg width="12" height="14" viewBox="0 0 16 18" aria-hidden="true"><path d="M0 0l16 9-16 9z" fill="currentColor"/></svg>
+          Play
+        </button>
+      </div>
+      <ol class="m-0 list-none p-0">
+        {featured.story.map((t) => (
+          <li class="rule flex flex-col gap-0.5 border-t py-3 sm:flex-row sm:items-baseline sm:gap-4">
+            <span class="w-24 shrink-0 text-sm tabular-nums text-stone">{t.when}</span>
+            <span class="text-[17px]"><strong>{t.what}</strong>{t.note && <span class="text-white/75"> · {t.note}</span>}</span>
+          </li>
+        ))}
+      </ol>
+      <div class="flex flex-col gap-4">
+        <ul class="m-0 flex list-none flex-wrap gap-2.5 p-0" aria-label={`${featured.name} online`}>
+          {featured.links.map((l) => (
+            <li>
+              <a href={l.href} target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone/60 px-4 text-[15px] font-semibold no-underline transition-colors hover:bg-white hover:text-black">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  {l.icon === ICON.web ? <path d={l.icon} fill="none" stroke="currentColor" stroke-width="2" /> : <path d={l.icon} fill="currentColor" />}
+                </svg>
+                {l.label}
+              </a>
             </li>
           ))}
-        </ol>
-        <p class="m-0 max-w-[62ch] text-[15px] text-white/80">{release.data.credits}</p>
-      </article>
-    )}
+        </ul>
+        <p class="m-0 flex flex-wrap gap-x-6 gap-y-1">
+          <a href="/bands/fault-line-trio" class="inline-flex min-h-11 items-center font-semibold">Meet the band →</a>
+          <a href="/sessions/faultline" class="inline-flex min-h-11 items-center font-semibold">Their sessions at the Hut →</a>
+        </p>
+      </div>
+    </article>
 
     <a href="/hummingbird-hut" class="tile reveal group min-h-[320px] md:col-span-2 md:row-span-2">
       <Picture formats={["avif"]} fallbackFormat="webp" src={studioPhoto} alt="Grand piano with condenser mics at the Hummingbird Hut, Oakland, CA" widths={[480, 720]} sizes="(min-width: 761px) 30vw, 100vw" class="tile-img absolute inset-0 h-full w-full object-cover" />
