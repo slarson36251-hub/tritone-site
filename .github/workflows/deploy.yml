@@ -39,7 +39,7 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.CALENDAR_SERVICE_ACCOUNT }}
           PUBLIC_FEEDBACK_API_KEY: ${{ vars.FEEDBACK_API_KEY }}
       - name: Deploy Firestore rules (main)
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         # Before hosting goes live, so new pages never ship ahead of the rules they rely on.
         # Needs the Firebase Rules Admin role on the deploy service account; a failure is a warning, not a stop.
         continue-on-error: true
