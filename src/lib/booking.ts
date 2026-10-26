@@ -26,6 +26,11 @@ const MAX_HOURS = 12;
 const DEFAULT_HOURS = 4;
 const MAX_DAYS = 21;
 const MIN_FILL_MS = 3000; // faster than this from page open = a bot // same as the Squarespace block: the next 21 open days
+// Weekday sessions can start from 4 pm (Scott, Oct 2026). The calendar web app still opens weekday
+// evenings at 6 pm, so a weekday whose first window opens exactly at 6 pm is offered from 4 pm too.
+// Once the web app itself opens at 4 pm this is a no-op. Earlier than 4 pm: ask in the notes.
+export const WEEKDAY_OPEN_MIN = 16 * 60;
+const OLD_WEEKDAY_OPEN_MIN = 18 * 60;
 
 type Window = { startMin: number; endMin: number };
 type Day = { date: string; windows: Window[] };
@@ -47,6 +52,16 @@ export function fmtLongDate(dstr: string) {
   const wd = new Date(y, m - 1, d).getDay();
   return DOW[wd] + ", " + MON[m - 1] + " " + d + ", " + y;
 }
+/** Mon–Fri days: a first window that opens at the old 6 pm start opens at 4 pm instead. */
+export function withWeekdayHours(day: Day): Day {
+  const y = +day.date.slice(0, 4), m = +day.date.slice(5, 7), d = +day.date.slice(8, 10);
+  const dow = new Date(y, m - 1, d).getDay();
+  if (dow === 0 || dow === 6 || !day.windows.length) return day;
+  const [first, ...rest] = [...day.windows].sort((a, b) => a.startMin - b.startMin);
+  if (first.startMin !== OLD_WEEKDAY_OPEN_MIN) return day;
+  return { ...day, windows: [{ ...first, startMin: WEEKDAY_OPEN_MIN }, ...rest] };
+}
+
 export function startHoursFor(day: Day, reqHours: number) {
   const out: number[] = [];
   day.windows.forEach((w) => {
@@ -121,7 +136,7 @@ export function initBooking() {
         days = (data.days || []).slice(0, MAX_DAYS).map((d: any) => ({
           date: String(d.date),
           windows: (d.windows || []).map((w: any) => ({ startMin: minutesOf(w.start), endMin: minutesOf(w.end) })),
-        })).filter((d: Day) => d.windows.length);
+        })).filter((d: Day) => d.windows.length).map(withWeekdayHours);
 
         if (!days.length) {
           daysEl.innerHTML = "";

@@ -15,7 +15,7 @@ const spans = ["md:col-span-2 md:row-span-2", "md:col-span-2 md:min-h-[520px]", 
   <PageHead eyebrow="Tritone Productions" title="The Bands">
     <p class="m-0 max-w-[60ch] text-[19px]">Hard bop, boogaloo, afro-cuban, ska, rocksteady and down-home blues, booked for clubs, parties and festivals.</p>
     <div class="flex flex-wrap gap-3 pt-2">
-      <Pill href="/contact">Book a band</Pill>
+      <Pill href="/book-a-band">Book a band</Pill>
       <Pill href="/gallery" ghost>Poster gallery</Pill>
     </div>
   </PageHead>
@@ -66,10 +66,13 @@ const spans = ["md:col-span-2 md:row-span-2", "md:col-span-2 md:min-h-[520px]", 
       ))}
 
       <li class="md:col-span-6">
-        <a href="/contact" class="tile reveal group flex min-h-[200px] flex-col justify-between gap-6 !border-stone !bg-stone p-6 text-black no-underline md:p-8">
-          <p class="eyebrow m-0">Clubs · parties · festivals</p>
+        <a href="/book-a-band" class="tile reveal group flex min-h-[200px] flex-col justify-between gap-6 !border-stone !bg-stone p-6 text-black no-underline md:p-8">
+          <p class="eyebrow m-0">All occasions</p>
           <div class="flex flex-wrap items-end justify-between gap-4">
-            <h2 class="disp m-0 text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]">Book a band</h2>
+            <div class="flex flex-col gap-3">
+              <h2 class="disp m-0 text-[clamp(2.2rem,5vw,4rem)] leading-[0.95]">Book a band</h2>
+              <p class="m-0 max-w-[52ch] text-[16px]">Weddings, birthdays, parties, personal and dream projects. Our bands, or the right players from the Bay Area scene for whatever you're planning.</p>
+            </div>
             <span class="grid size-14 place-items-center rounded-full bg-black text-2xl text-white transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
           </div>
         </a>

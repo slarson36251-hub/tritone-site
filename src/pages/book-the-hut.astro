@@ -3,25 +3,33 @@ import Base from "../layouts/Base.astro";
 import "../styles/forms.css";
 ---
 <Base title="Book the Hut · Recording Studio Sessions in Oakland" description="Request a recording day at the Hummingbird Hut, a private recording studio in Oakland, CA. Pick a date and start time; Scott confirms every session himself." breadcrumbs={[{ name: "Hummingbird Hut", path: "/hummingbird-hut" }, { name: "Book the Hut", path: "/book-the-hut" }]}>
-  <section class="wrap grid gap-10 pb-20 pt-10 md:pt-16 lg:grid-cols-12 lg:gap-14 lg:pb-28">
+  <section class="wrap grid gap-8 pb-20 pt-10 md:pt-16 lg:grid-cols-12 lg:gap-14 lg:pb-28">
 
-    <!-- Intro (on phones the form comes right after this, the how-it-works list after the form) -->
-    <div class="flex flex-col gap-5 lg:col-span-5 lg:col-start-1 lg:row-start-1">
+    <!-- Intro + how it works: one column, ahead of the form on phones, to its left (sticky) on desktop -->
+    <div class="flex flex-col gap-5 lg:sticky lg:top-24 lg:col-span-4 lg:self-start">
       <p class="eyebrow m-0 text-stone">Hummingbird Hut · Music production · Oakland, CA</p>
-      <h1 class="disp m-0 text-[clamp(3rem,9vw,6.2rem)] leading-[0.88]">Book the Hut</h1>
-      <p class="m-0 max-w-[44ch] text-[19px]">Pick an open day, choose how long you need, and tell Scott what you're recording. Requests hold the date while he takes a look.</p>
+      <h1 class="disp m-0 text-[clamp(3rem,9vw,5.4rem)] leading-[0.88]">Book the Hut</h1>
+      <p class="m-0 max-w-[44ch] text-[18px]">Pick an open day, choose how long you need, and tell Scott what you're recording. Requests hold the date while he takes a look.</p>
       <ul class="m-0 flex list-none flex-wrap gap-2 p-0 text-[14px] font-semibold" aria-label="Studio hours">
+        <li class="rounded-full border border-stone/45 px-3.5 py-1.5">Weekdays 4 to 10 pm</li>
         <li class="rounded-full border border-stone/45 px-3.5 py-1.5">Weekends 10 am to 10 pm</li>
-        <li class="rounded-full border border-stone/45 px-3.5 py-1.5">Weekday evenings 6 to 10 pm</li>
       </ul>
+      <p class="m-0 rounded-2xl border border-stone/45 bg-stone/10 px-4 py-3 text-[15px]" id="hbh-earlier"><strong>Need to start before 4 pm?</strong> Pick 4 pm and ask for an earlier start in your notes, or <a href="mailto:scott@tritone-productions.com?subject=Earlier%20start%20at%20the%20Hut" class="font-semibold text-white">email Scott</a>. Earlier times are case by case.</p>
+      <ol class="m-0 flex list-none flex-col p-0 text-[15px]" aria-label="How booking works">
+        <li class="rule flex gap-3 border-t py-3"><span class="disp text-stone">01</span><span><strong>Request a date.</strong> Open days come straight from the studio calendar.</span></li>
+        <li class="rule flex gap-3 border-t py-3"><span class="disp text-stone">02</span><span><strong>Scott confirms by email,</strong> usually within a day.</span></li>
+        <li class="rule flex gap-3 border-y py-3"><span class="disp text-stone">03</span><span><strong>Your confirmation</strong> carries the address and a link for sending files ahead.</span></li>
+      </ol>
     </div>
 
     <!-- Booking form -->
-    <div class="lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1" id="hbh-booking">
+    <div class="lg:col-span-8" id="hbh-booking">
       <div class="tf-card">
         <section id="hbh-picker" class="tf-group" aria-labelledby="hbh-when">
           <div class="tf-step"><span class="tf-step-n">01</span><h2 class="tf-step-t" id="hbh-when">When</h2></div>
 
+          <div class="bk-when">
+          <div>
           <p class="tf-label" id="hbh-date-label">Pick a day</p>
           <div class="bk-cal">
             <div class="bk-cal-head">
@@ -33,8 +41,10 @@ import "../styles/forms.css";
             <div class="bk-days" id="hbh-days" role="group" aria-labelledby="hbh-date-label"><div class="bk-skel"></div></div>
           </div>
           <div class="tf-notice" id="hbh-avail-msg" role="status" hidden></div>
+          </div>
 
-          <div class="tf-field mt-6">
+          <div class="bk-when-side">
+          <div class="tf-field">
             <p class="tf-label" id="hbh-hours-label">Session length</p>
             <div class="bk-stepper" role="group" aria-labelledby="hbh-hours-label">
               <button type="button" class="bk-step-btn" id="hbh-hours-dec" aria-label="Shorter session">−</button>
@@ -43,23 +53,26 @@ import "../styles/forms.css";
             </div>
           </div>
 
-          <div class="tf-field mt-6">
+          <div class="tf-field">
             <p class="tf-label" id="hbh-time-label">Start time</p>
-            <div class="bk-times" id="hbh-times" role="group" aria-labelledby="hbh-time-label">
+            <div class="bk-times" id="hbh-times" role="group" aria-labelledby="hbh-time-label" aria-describedby="hbh-time-hint">
               <p class="bk-times-empty">Loading open times…</p>
             </div>
+            <p class="tf-hint" id="hbh-time-hint">Weekdays start from 4 pm. Need earlier? Pick 4 pm and say so in your notes.</p>
+          </div>
+          </div>
           </div>
         </section>
 
         <form id="hbh-form" novalidate>
           <section class="tf-group" aria-labelledby="hbh-you">
             <div class="tf-step"><span class="tf-step-n">02</span><h2 class="tf-step-t" id="hbh-you">You</h2></div>
+            <div class="tf-row tf-row-3">
             <div class="tf-field">
               <label class="tf-label" for="hbh-name">Your name</label>
               <input class="tf-input" id="hbh-name" name="name" type="text" autocomplete="name" maxlength="100" required aria-describedby="hbh-name-err" />
               <p class="tf-err" id="hbh-name-err">Your name, please.</p>
             </div>
-            <div class="tf-row">
               <div class="tf-field">
                 <label class="tf-label" for="hbh-email">Email</label>
                 <input class="tf-input" id="hbh-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required aria-describedby="hbh-email-err" />
@@ -76,18 +89,20 @@ import "../styles/forms.css";
           <section class="tf-group" aria-labelledby="hbh-session">
             <div class="tf-step"><span class="tf-step-n">03</span><h2 class="tf-step-t" id="hbh-session">The session</h2></div>
             <div class="tf-field">
-              <label class="tf-label" for="hbh-project">What are we recording?</label>
-              <textarea class="tf-input" id="hbh-project" name="project" rows="3" maxlength="2000" required aria-describedby="hbh-project-err" placeholder="The band, the tunes, what you're after."></textarea>
+              <label class="tf-label" for="hbh-project">What are we recording? <span class="tf-opt">(and any notes, like an earlier start)</span></label>
+              <textarea class="tf-input" id="hbh-project" name="project" rows="2" maxlength="2000" required aria-describedby="hbh-project-err" placeholder="The band, the tunes, what you're after."></textarea>
               <p class="tf-err" id="hbh-project-err">A few words about the project.</p>
             </div>
+            <div class="tf-row tf-row-num">
             <div class="tf-field">
-              <label class="tf-label" for="hbh-num">Total number of musicians in session</label>
-              <input class="tf-input max-w-[10rem]" id="hbh-num" name="numMusicians" type="number" min="1" max="30" inputmode="numeric" required aria-describedby="hbh-num-err" />
+              <label class="tf-label" for="hbh-num">Musicians in session</label>
+              <input class="tf-input" id="hbh-num" name="numMusicians" type="number" min="1" max="30" inputmode="numeric" required aria-describedby="hbh-num-err" />
               <p class="tf-err" id="hbh-num-err">How many players, counting everyone.</p>
             </div>
             <div class="tf-field">
               <label class="tf-label" for="hbh-musicians">Musician name and instrument <span class="tf-opt">(optional)</span></label>
-              <textarea class="tf-input" id="hbh-musicians" name="musicians" rows="3" maxlength="500" placeholder="One per line, e.g. Nick Culp, tenor sax"></textarea>
+              <textarea class="tf-input" id="hbh-musicians" name="musicians" rows="2" maxlength="500" placeholder="One per line, e.g. Nick Culp, tenor sax"></textarea>
+            </div>
             </div>
 
             <!-- honeypot: humans never see this -->
@@ -121,15 +136,6 @@ import "../styles/forms.css";
           </div>
         </div>
       </div>
-    </div>
-    <!-- How it works -->
-    <div class="flex flex-col gap-6 lg:col-span-5 lg:col-start-1 lg:row-start-2 lg:self-start">
-      <ol class="m-0 flex list-none flex-col p-0">
-        <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">01</span><span><strong>Request a date.</strong> Open days come straight from the studio calendar.</span></li>
-        <li class="rule flex gap-4 border-t py-4"><span class="disp text-stone">02</span><span><strong>Scott confirms by email,</strong> usually within a day. Every session is confirmed personally.</span></li>
-        <li class="rule flex gap-4 border-y py-4"><span class="disp text-stone">03</span><span><strong>Your confirmation</strong> carries the address and a link for sending files ahead.</span></li>
-      </ol>
-      <p class="m-0 text-[15px] text-stone">Need a weekday daytime slot or something the calendar doesn't show? Special arrangements are possible: write to <a href="mailto:scott@tritone-productions.com" class="font-semibold text-white">scott@tritone-productions.com</a>.</p>
     </div>
 
   </section>

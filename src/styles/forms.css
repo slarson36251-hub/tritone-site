@@ -133,4 +133,53 @@ button.bk-cell[aria-pressed="true"] { background: #fff; border-color: #fff; colo
 .tf-done[hidden], form[hidden], .tf-screen[hidden] { display: none; }
 .tf-check { width: 64px; height: 64px; border-radius: 50%; background: #fff; color: #000; display: grid; place-items: center; margin-bottom: 22px; }
 
+/* ---- booking: compact layout (/book-the-hut) ---- */
+.tf-hint { margin: 10px 0 0; font-size: 14px; color: #a8a6a1; }
+.bk-when { display: grid; gap: 22px; }
+.bk-when-side { display: flex; flex-direction: column; gap: 22px; }
+.bk-when-side .tf-field { margin: 0; }
+#hbh-booking textarea.tf-input { min-height: 88px; }
+@media (min-width: 560px) {
+  .tf-row-num { grid-template-columns: 9rem minmax(0, 1fr); }
+}
+@media (min-width: 1024px) {
+  #hbh-booking .tf-card { padding: 28px 30px 24px; }
+  #hbh-booking .tf-input { min-height: 50px; }
+  #hbh-booking textarea.tf-input { min-height: 76px; padding-block: 12px; }
+  #hbh-booking .tf-group + .tf-group, #hbh-form > .tf-group:first-child { margin-top: 24px; padding-top: 20px; }
+  #hbh-booking .tf-field { margin-bottom: 14px; }
+  #hbh-booking .tf-row .tf-field, #hbh-booking .tf-field:last-child { margin-bottom: 0; }
+  #hbh-booking .tf-row { gap: 14px; }
+  #hbh-booking .tf-row + .tf-field, #hbh-booking .tf-field + .tf-row { margin-top: 14px; }
+  .tf-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #hbh-booking .bk-summary { margin-top: 20px; padding: 13px 16px; }
+  #hbh-booking .tf-btn { margin-top: 18px; min-height: 54px; }
+}
+@media (min-width: 1280px) {
+  .bk-when { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+  .bk-when .bk-cell { min-height: 36px; max-width: 44px; font-size: 15px; }
+  .bk-when-side .bk-times { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ---- band request (/book-a-band): occasion chips + select ---- */
+.bb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bb-chip { position: relative; display: inline-flex; cursor: pointer; }
+.bb-chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.bb-chip span {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid rgb(168 166 161 / 0.45); font-size: 15px; font-weight: 600; transition: border-color 0.15s, background-color 0.15s;
+}
+.bb-chip:hover span { border-color: #fff; }
+.bb-chip input:checked + span { background: #fff; color: #000; border-color: #fff; }
+.bb-chip input:focus-visible + span { outline: 2px solid #fff; outline-offset: 2px; }
+.tf-select { position: relative; }
+.tf-select::after {
+  content: ""; position: absolute; right: 20px; top: 50%; width: 9px; height: 9px; margin-top: -7px;
+  border-right: 2px solid #a8a6a1; border-bottom: 2px solid #a8a6a1; transform: rotate(45deg); pointer-events: none;
+}
+.tf-select select { padding-right: 48px; cursor: pointer; }
+.tf-select option { background: #38383b; color: #fff; }
+#bb-form fieldset + .tf-row { margin-top: 18px; }
+#bb-form .tf-row:not(:last-child) > .tf-field:last-child { margin-bottom: 18px; }
+
 }

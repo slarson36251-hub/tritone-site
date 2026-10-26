@@ -1,0 +1,119 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import "../styles/forms.css";
+
+const bands = (await getCollection("bands")).sort((a, b) => a.data.order - b.data.order);
+
+// Occasions Scott called out (on-site notes, Oct 2026). The ideas column and the form chips share this list.
+const occasions = [
+  { label: "Wedding", idea: "Ceremony, cocktail hour, a reception that fills the floor." },
+  { label: "Birthday", idea: "A milestone birthday, an anniversary, a surprise." },
+  { label: "Party", idea: "House parties, backyard shows, office and holiday parties." },
+  { label: "Club or festival", idea: "Club nights, restaurants, block parties and festival stages." },
+  { label: "Personal project", idea: "A song recorded for someone, a tribute, a family session." },
+  { label: "Dream project", idea: "The album, the big-band night, the show you've always pictured." },
+];
+---
+<Base title="Book a Band · Bay Area Bands for Any Occasion · Tritone" description="Book a Bay Area band through Tritone Productions in Oakland, CA: weddings, birthdays, parties, festivals, personal and dream projects. We'll match the band to the night." breadcrumbs={[{ name: "Bands", path: "/bands" }, { name: "Book a band", path: "/book-a-band" }]}>
+  <section class="wrap grid gap-8 pb-20 pt-10 md:pt-16 lg:grid-cols-12 lg:gap-x-14 lg:gap-y-8 lg:pb-28">
+
+    <!-- Intro, then the form (phones go straight to it), then occasion ideas; on desktop intro + ideas sit left of the form -->
+    <div class="flex flex-col gap-5 lg:col-span-5 lg:row-start-1">
+      <p class="eyebrow m-0 text-stone">Tritone Productions · Bay Area bands</p>
+      <h1 class="disp m-0 text-[clamp(3rem,9vw,5.4rem)] leading-[0.88]">Book a band</h1>
+      <p class="m-0 max-w-[46ch] text-[18px]">We do all occasions: weddings, birthdays, parties, personal projects, dream projects. Book one of Tritone's own bands, or tell us the night you have in mind and Scott will find the right players in the Bay Area scene to match it.</p>
+    </div>
+
+    <div class="lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1" id="bb-root">
+      <div class="tf-card">
+        <form id="bb-form" novalidate>
+          <section class="tf-group" aria-labelledby="bb-event">
+            <div class="tf-step"><span class="tf-step-n">01</span><h2 class="tf-step-t" id="bb-event">The event</h2></div>
+            <fieldset class="tf-field m-0 border-0 p-0">
+              <legend class="tf-label">What's the occasion?</legend>
+              <div class="bb-chips">
+                {[...occasions.map((o) => o.label), "Something else"].map((label, i) => (
+                  <label class="bb-chip"><input type="radio" name="occasion" value={label} checked={i === 0} /><span>{label}</span></label>
+                ))}
+              </div>
+            </fieldset>
+            <div class="tf-row">
+              <div class="tf-field">
+                <label class="tf-label" for="bb-date">Date <span class="tf-opt">(or rough timing)</span></label>
+                <input class="tf-input" id="bb-date" name="date" type="text" maxlength="80" placeholder="e.g. June 14, or spring 2027" />
+              </div>
+              <div class="tf-field">
+                <label class="tf-label" for="bb-where">Where</label>
+                <input class="tf-input" id="bb-where" name="where" type="text" maxlength="120" placeholder="City or venue" />
+              </div>
+            </div>
+            <div class="tf-field">
+              <label class="tf-label" for="bb-band">Band</label>
+              <div class="tf-select">
+                <select class="tf-input" id="bb-band" name="band">
+                  <option value="Help me pick">Help me pick</option>
+                  {bands.map((b) => <option value={b.data.name}>{b.data.name}</option>)}
+                  <option value="Find players for something else">Find players for something else</option>
+                </select>
+              </div>
+            </div>
+            <div class="tf-field">
+              <label class="tf-label" for="bb-notes">Tell us about it</label>
+              <textarea class="tf-input" id="bb-notes" name="notes" rows="3" maxlength="2000" required aria-describedby="bb-notes-err" placeholder="The music you love, how long, how many guests, anything you're dreaming of."></textarea>
+              <p class="tf-err" id="bb-notes-err">A few words about the event.</p>
+            </div>
+          </section>
+
+          <section class="tf-group" aria-labelledby="bb-you">
+            <div class="tf-step"><span class="tf-step-n">02</span><h2 class="tf-step-t" id="bb-you">You</h2></div>
+            <div class="tf-row">
+              <div class="tf-field">
+                <label class="tf-label" for="bb-name">Your name</label>
+                <input class="tf-input" id="bb-name" name="name" type="text" autocomplete="name" maxlength="100" required aria-describedby="bb-name-err" />
+                <p class="tf-err" id="bb-name-err">Your name, please.</p>
+              </div>
+              <div class="tf-field">
+                <label class="tf-label" for="bb-email">Email</label>
+                <input class="tf-input" id="bb-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" required aria-describedby="bb-email-err" />
+                <p class="tf-err" id="bb-email-err">That email doesn't look right.</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="tf-notice" id="bb-msg" role="alert" hidden></div>
+          <button type="submit" class="tf-btn" id="bb-submit">Send the request</button>
+          <p class="tf-foot">Opens your email with everything filled in, addressed to scott@tritone-productions.com.</p>
+        </form>
+
+        <div class="tf-done" id="bb-done" role="status" tabindex="-1" hidden>
+          <div class="tf-check" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <p class="eyebrow m-0 text-stone">Almost there</p>
+          <h2 class="disp mb-3 mt-2 text-[clamp(2.2rem,6vw,3.4rem)] leading-[0.95]">Hit send in your email</h2>
+          <p class="m-0 max-w-[46ch] text-white/85">Your request is written up in a new email to Scott. Send it and he'll get back to you, usually within a day.</p>
+          <p class="mb-0 mt-4 max-w-[46ch] text-[15px] text-stone">Email didn't open? <a id="bb-again" href="mailto:scott@tritone-productions.com?subject=Band%20booking" class="font-semibold text-white">Try again</a> or write to scott@tritone-productions.com.</p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <a href="/bands" class="inline-flex min-h-12 items-center rounded-full border-2 border-white px-6 text-sm font-semibold uppercase tracking-[.04em] no-underline">The bands</a>
+            <a href="/shows" class="inline-flex min-h-12 items-center rounded-full border-2 border-stone/60 px-6 text-sm font-semibold uppercase tracking-[.04em] no-underline">Upcoming shows</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-5 lg:col-span-5 lg:col-start-1 lg:row-start-2 lg:self-start">
+      <p class="eyebrow m-0 text-stone lg:hidden">A few ideas</p>
+      <ul class="m-0 grid list-none gap-0 p-0 text-[15px] sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-1" aria-label="Occasions we play">
+        {occasions.map((o) => (
+          <li class="rule border-t py-3"><strong class="block">{o.label}</strong><span class="text-white/80">{o.idea}</span></li>
+        ))}
+      </ul>
+      <p class="m-0 text-[15px] text-stone">Jazz, hard bop, boogaloo, afro-cuban, ska, rocksteady and blues from our own bands, and players for most anything else. <a href="/bands" class="font-semibold text-white">Meet the bands</a>.</p>
+    </div>
+
+  </section>
+</Base>
+
+<script>
+  import { initBandBooking } from "../lib/bandbooking";
+  document.addEventListener("astro:page-load", initBandBooking);
+</script>

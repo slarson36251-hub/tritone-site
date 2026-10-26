@@ -33,6 +33,7 @@ export const PAGE_CARDS: Record<string, OgCard> = {
   "/book-the-hut": { kicker: "Hummingbird Hut · Oakland, CA", headline: "Book the Hut", sub: "Request a recording day" },
   "/sessions": { kicker: "Hummingbird Hut · Oakland, CA", headline: "Sessions", sub: "Recorded at the Hut" },
   "/bands": { kicker: "Live · Bay Area", headline: "The Bands", sub: "Clubs · parties · festivals" },
+  "/book-a-band": { kicker: "Tritone Productions · Bay Area", headline: "Book a band", sub: "Weddings · parties · any occasion" },
   "/gallery": { kicker: "From the wall", headline: "Gig Poster Gallery", sub: "Tritone Productions bands" },
   "/contact": { kicker: "Tritone Productions · Oakland, CA", headline: "Say hello", sub: "Book a session or a band" },
   "/free-track": { kicker: "Tritone Productions", headline: "Free track", sub: "Straight to your inbox" },
