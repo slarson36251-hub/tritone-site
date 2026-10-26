@@ -1,38 +1,172 @@
 ---
+// Home hero: the pitch on the left, a slow crossfade through studio photos on the right.
+// Only the first photo is in the served page's load path (eager, high priority: the LCP image).
+// The rest start `hidden`, so the browser fetches nothing for them; the script below unhides
+// one slide at a time a few seconds ahead of its turn. With prefers-reduced-motion, or without
+// JS, the first photo simply stays. Interior session photos only (src/assets/sessions).
 import { Picture } from "astro:assets";
 import Pill from "../Pill.astro";
-import photo from "../../assets/photos/fault-line-trio-drums-tracking-oct-2024-hummingbird-hut-oakland.jpg";
+import drums from "../../assets/sessions/fault-line-trio-drums-tracking-oct-2024-hummingbird-hut-oakland.webp";
+import clint from "../../assets/sessions/clint-baker-band-session-may-2026-hummingbird-hut-oakland.webp";
+import piano from "../../assets/sessions/fault-line-trio-piano-mics-feb-2026-hummingbird-hut-oakland.webp";
+import solomon from "../../assets/sessions/solomon-alber-ensemble-oct-2025-hummingbird-hut-oakland.webp";
+import tim from "../../assets/sessions/tim-rowe-trio-drums-bass-mar-2024-hummingbird-hut-oakland.webp";
+import levis from "../../assets/sessions/jason-levis-josephs-bones-overdubs-may-2026-hummingbird-hut-oakland.webp";
+import guitar from "../../assets/sessions/tim-rowe-trio-guitar-mar-2024-hummingbird-hut-oakland.webp";
+import rack from "../../assets/sessions/fault-line-trio-mix-maag-trident-hummingbird-hut-oakland.webp";
+
+const slides = [
+  { img: drums, label: "In the live room · Fault Line Trio", alt: "Fault Line Trio drums set up for tracking at the Hummingbird Hut, Oakland, CA" },
+  { img: clint, label: "Live room · Clint Baker", alt: "Drummer reading a chart behind a vintage kit, upright bass player beside him, at the Hummingbird Hut" },
+  { img: piano, label: "The grand · Ribbon and condenser pairs", alt: "Grand piano with ribbon and condenser mic pairs at the Hummingbird Hut" },
+  { img: solomon, label: "Dobry Dobry · Solomon Alber", alt: "Five musicians with violin, viola, clarinet, accordion and tapan drum on a rug in the live room" },
+  { img: tim, label: "Tracking live · Tim Rowe", alt: "Drummer at a red kit and bassist bowing an upright bass in the live room" },
+  { img: levis, label: "Overdubs · Joseph's Bones", alt: "Percussionist in headphones holding a frame drum and a shaker at the mic" },
+  { img: guitar, label: "Guitar take · Tim Rowe", alt: "Guitarist playing an archtop with a pedalboard at his feet" },
+  { img: rack, label: "The rack · Maag · Trident", alt: "Maag EQ4 modules beside a Trident 80B equalizer in the Hummingbird Hut rack" },
+];
 ---
 <section class="wrap grid items-end gap-8 pb-10 pt-8 md:grid-cols-12 md:gap-10 md:pb-16 md:pt-14">
   <div class="flex flex-col gap-6 md:col-span-7">
     <p class="eyebrow m-0 flex items-center gap-3">
-      <span class="inline-block size-2 rounded-full bg-white motion-safe:animate-pulse" aria-hidden="true"></span>
-      Recording studio · Music production · Oakland, CA
+      <span class="inline-block size-2 shrink-0 rounded-full bg-white motion-safe:animate-pulse" aria-hidden="true"></span>
+      Music production · Recording studio · Oakland, CA
     </p>
     <h1 class="disp m-0 text-[clamp(2.4rem,5.4vw,4.8rem)] leading-[0.92]">
-      Oakland music, <span class="outline-type">recorded right</span> and played live.
+      Oakland music, from idea <span class="outline-type">to record.</span>
     </h1>
     <p class="m-0 max-w-[560px] text-[19px] text-white/90">
-      Tritone Productions is music production in Oakland: the Hummingbird Hut, a private recording studio, and a family of Bay Area jazz groups, run by trombonist Scott Larson.
+      Tritone Productions is music production in Oakland. We collaborate, produce and record at the Hummingbird Hut, our studio, alongside a family of Bay Area bands led by Scott Larson and rooted in the local scene. Bring us your idea and we'll help make it real.
     </p>
     <div class="flex flex-wrap gap-3.5">
       <Pill href="/sessions">Hear the work</Pill>
       <Pill href="/shows" ghost>Upcoming shows</Pill>
     </div>
   </div>
-  <div class="relative md:col-span-5">
-    <Picture
-      formats={["avif"]}
-      fallbackFormat="webp"
-      src={photo}
-      alt="Fault Line Trio drums set up for tracking at the Hummingbird Hut, Oakland, CA"
-      widths={[480, 720, 960]}
-      sizes="(min-width: 761px) 40vw, 100vw"
-      loading="eager"
-      fetchpriority="high"
-      transition:name="hero-photo"
-      class="aspect-4/3 h-auto w-full rounded-[18px] object-cover md:aspect-4/5"
-    />
-    <p class="absolute bottom-3 left-3 m-0 rounded-full bg-black/70 px-3 py-1.5 text-[14px] font-semibold backdrop-blur">In the live room · Fault Line Trio</p>
+  <div class="relative md:col-span-5" data-hero-rotator>
+    <div class="relative aspect-4/3 overflow-hidden rounded-[18px] bg-black md:aspect-4/5" transition:name="hero-photo">
+      {slides.map((s, i) => (
+        <figure class:list={["hero-slide m-0", i === 0 && "is-on"]} data-slide hidden={i !== 0} aria-hidden={i !== 0 ? "true" : undefined}>
+          <Picture
+            formats={["avif"]}
+            fallbackFormat="webp"
+            src={s.img}
+            alt={s.alt}
+            widths={[480, 720, 960]}
+            sizes="(min-width: 761px) 40vw, 100vw"
+            loading={i === 0 ? "eager" : "lazy"}
+            fetchpriority={i === 0 ? "high" : "low"}
+            decoding={i === 0 ? undefined : "async"}
+            class="absolute inset-0 h-full w-full object-cover"
+          />
+          <figcaption class="absolute bottom-3 left-3 m-0 max-w-[calc(100%-4.5rem)] rounded-full bg-black/70 px-3 py-1.5 text-[14px] font-semibold leading-snug backdrop-blur">{s.label}</figcaption>
+        </figure>
+      ))}
+      <button type="button" class="hero-pause" data-hero-pause hidden aria-label="Pause the photos">
+        <svg class="i-pause" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1h3v12H3zM8 1h3v12H8z" fill="currentColor" /></svg>
+        <svg class="i-play" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1l10 6-10 6z" fill="currentColor" /></svg>
+      </button>
+    </div>
   </div>
 </section>
+
+<style>
+  .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease-in-out; }
+  .hero-slide.is-on { opacity: 1; }
+  .hero-slide[hidden] { display: none; }
+  .hero-pause {
+    position: absolute; right: 10px; bottom: 10px; z-index: 2;
+    display: grid; place-items: center; width: 44px; height: 44px; border-radius: 9999px; cursor: pointer;
+    border: 0; color: var(--color-white); background: rgb(0 0 0 / 0.7); backdrop-filter: blur(8px);
+  }
+  .hero-pause[hidden] { display: none; }
+  .hero-pause:hover { background: var(--color-white); color: var(--color-black); }
+  .hero-pause .i-play, .hero-pause[aria-pressed="true"] .i-pause { display: none; }
+  .hero-pause[aria-pressed="true"] .i-play { display: block; }
+  @media (prefers-reduced-motion: reduce) { .hero-slide { transition: none; } }
+</style>
+
+<script>
+  // Crossfade every 4 s. Each slide is unhidden (so its image starts loading) one turn before it
+  // shows, and only fades in once decoded. Pauses off screen, in a background tab, and on request.
+  const EVERY = 4000;
+  let stop: (() => void) | undefined;
+
+  function setup() {
+    const root = document.querySelector<HTMLElement>("[data-hero-rotator]");
+    if (!root || root.dataset.ready || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    root.dataset.ready = "1";
+    stop?.();
+    const slides = [...root.querySelectorAll<HTMLElement>("[data-slide]")];
+    if (slides.length < 2) return;
+    const btn = root.querySelector<HTMLButtonElement>("[data-hero-pause]")!;
+    let cur = 0;
+    let paused = false;
+    let visible = true;
+    let timer = 0;
+
+    const imgOf = (s: HTMLElement) => s.querySelector("img")!;
+    const warm = (s: HTMLElement) => {
+      if (!s.hidden) return;
+      s.hidden = false; // display back on: the lazy image is now on screen (at opacity 0) and loads
+      imgOf(s).loading = "eager";
+    };
+    const ready = (img: HTMLImageElement) =>
+      img.complete && img.naturalWidth ? Promise.resolve() : img.decode().catch(() => undefined);
+
+    const advance = async () => {
+      const next = (cur + 1) % slides.length;
+      const to = slides[next];
+      warm(to);
+      await ready(imgOf(to));
+      if (!imgOf(to).naturalWidth) return schedule(); // failed to load: try again next turn
+      slides[cur].classList.remove("is-on");
+      slides[cur].setAttribute("aria-hidden", "true");
+      to.classList.add("is-on");
+      to.removeAttribute("aria-hidden");
+      cur = next;
+      warm(slides[(cur + 1) % slides.length]);
+      schedule();
+    };
+    const schedule = () => {
+      clearTimeout(timer);
+      if (!paused && visible && !document.hidden) timer = window.setTimeout(advance, EVERY);
+    };
+
+    btn.hidden = false;
+    btn.addEventListener("click", () => {
+      paused = !paused;
+      btn.setAttribute("aria-pressed", String(paused));
+      btn.setAttribute("aria-label", paused ? "Play the photos" : "Pause the photos");
+      schedule();
+    });
+    const io = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      schedule();
+    });
+    io.observe(root);
+    const onVis = () => schedule();
+    document.addEventListener("visibilitychange", onVis);
+
+    // Wait for the page (and the LCP photo) to finish before fetching the second photo.
+    const start = () => {
+      warm(slides[1]);
+      schedule();
+    };
+    if (document.readyState === "complete") setTimeout(start, 600);
+    else addEventListener("load", () => setTimeout(start, 600), { once: true });
+
+    stop = () => {
+      clearTimeout(timer);
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }
+
+  setup();
+  document.addEventListener("astro:page-load", setup);
+  document.addEventListener("astro:before-swap", () => {
+    stop?.();
+    stop = undefined;
+  });
+</script>

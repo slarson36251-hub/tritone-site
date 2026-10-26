@@ -15,10 +15,12 @@ interface Props {
   /** First cover loads eagerly with high priority. */
   priority?: boolean;
   label: string;
+  /** Conveyor: the shelf drifts slowly through the tapes on its own, in a seamless loop. */
+  drift?: boolean;
 }
-const { sessions, tabs = false, selected, morph = false, priority = false, label } = Astro.props;
+const { sessions, tabs = false, selected, morph = false, priority = false, label, drift = false } = Astro.props;
 ---
-<div class="shelf" data-shelf>
+<div class="shelf" data-shelf data-drift={drift ? "" : undefined}>
   <div class="shelf-head">
     <slot />
     <div class="shelf-nav" aria-hidden="true">
@@ -40,6 +42,16 @@ const { sessions, tabs = false, selected, morph = false, priority = false, label
     )}
   </div>
   <div class="plank" aria-hidden="true"></div>
+  {drift && (
+    <div class="drift-bar" data-drift-bar hidden>
+      <span class="drift-hint">The shelf drifts on its own. Hover, tap or tab to a box to stop it.</span>
+      <button type="button" class="drift-btn" data-drift-toggle aria-pressed="false">
+        <svg class="i-pause" width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1h3v12H3zM8 1h3v12H8z" fill="currentColor" /></svg>
+        <svg class="i-play" width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1l10 6-10 6z" fill="currentColor" /></svg>
+        <span class="t-pause">Pause the shelf</span><span class="t-play">Play the shelf</span>
+      </button>
+    </div>
+  )}
 </div>
 
 <style>
@@ -71,6 +83,20 @@ const { sessions, tabs = false, selected, morph = false, priority = false, label
   .tape-slot { display: contents; }
   .plank { height: 10px; border-radius: 2px; background: var(--color-stone); box-shadow: 0 6px 18px rgb(0 0 0 / 0.45); }
   @media (prefers-reduced-motion: no-preference) { .tapes { scroll-behavior: smooth; } }
+  /* While the conveyor runs, the script owns the scroll position: no snapping, no smoothing. */
+  .shelf.is-drifting .tapes { scroll-snap-type: none; scroll-behavior: auto; }
+  .drift-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+  .drift-bar[hidden] { display: none; }
+  .drift-hint { font-size: 14px; color: var(--color-stone); }
+  .drift-btn {
+    display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; min-height: 44px; padding: 0 16px;
+    border-radius: 9999px; border: 1px solid rgb(168 166 161 / 0.5); background: transparent; color: var(--color-white);
+    font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s, color 0.2s;
+  }
+  .drift-btn:hover { background: var(--color-white); color: var(--color-black); }
+  .drift-btn .i-play, .drift-btn .t-play, .drift-btn[aria-pressed="true"] .i-pause, .drift-btn[aria-pressed="true"] .t-pause { display: none; }
+  .drift-btn[aria-pressed="true"] .i-play, .drift-btn[aria-pressed="true"] .t-play { display: inline; }
+  @media (max-width: 599px) { .drift-hint { display: none; } .drift-bar { justify-content: flex-end; } }
 </style>
 
 <script>
@@ -91,8 +117,128 @@ const { sessions, tabs = false, selected, morph = false, priority = false, label
       row.addEventListener("scroll", sync, { passive: true });
       new ResizeObserver(sync).observe(row);
       sync();
+      if (shelf.hasAttribute("data-drift") && !matchMedia("(prefers-reduced-motion: reduce)").matches) conveyor(shelf, row);
     });
   }
+
+  // The conveyor ("sushi boat"): the row scrolls itself slowly to the right. A copy of the tapes
+  // follows the originals, and when the copy's first tape reaches the start the position jumps
+  // back by exactly one set, which looks identical, so the loop never ends. The copies are for
+  // looks only (aria-hidden, not focusable, no ids or roles); a click on one is handed to its
+  // original. It stops while a mouse is over the shelf, a finger is on it, a tape has focus,
+  // someone scrolls it by hand (for a few seconds), it is off screen, or Pause is pressed.
+  const SPEED = 22; // px per second
+  const IDLE = 3500; // ms of quiet after a touch or a hand scroll before it moves again
+  const lasting: (() => void)[] = [];
+
+  function conveyor(shelf: HTMLElement, row: HTMLElement) {
+    const originals = [...row.children] as HTMLElement[];
+    if (!originals.length || row.scrollWidth <= row.clientWidth + 4) return;
+    const tapeOf = (el: Element) => (el.matches(".tape") ? el : el.querySelector(".tape")) as HTMLAnchorElement;
+
+    for (const el of originals) {
+      const copy = el.cloneNode(true) as HTMLElement;
+      copy.dataset.clone = "";
+      copy.setAttribute("aria-hidden", "true");
+      for (const n of [copy, ...copy.querySelectorAll<HTMLElement>("*")]) {
+        n.removeAttribute("id");
+        n.removeAttribute("aria-controls");
+        n.removeAttribute("role");
+        if (n.classList.contains("tape-cover")) n.removeAttribute("style"); // view-transition names stay unique
+        if (n.tagName === "A") n.tabIndex = -1;
+        if (n.tagName === "IMG") {
+          (n as HTMLImageElement).loading = "lazy";
+          n.removeAttribute("fetchpriority");
+        }
+      }
+      row.append(copy);
+    }
+    const copies = [...row.querySelectorAll<HTMLElement>("[data-clone]")];
+    const origTapes = originals.map(tapeOf);
+    const copyTapes = copies.map(tapeOf);
+
+    // Copies mirror the selected (lifted) state of their originals.
+    const mirror = () => origTapes.forEach((t, i) => copyTapes[i].setAttribute("aria-selected", t.getAttribute("aria-selected") ?? "false"));
+    mirror();
+    const mo = new MutationObserver(mirror);
+    origTapes.forEach((t) => mo.observe(t, { attributes: true, attributeFilter: ["aria-selected"] }));
+
+    const setWidth = () => copyTapes[0].offsetLeft - origTapes[0].offsetLeft;
+    let pos = row.scrollLeft;
+    let lastSet = -1;
+    let hover = false, focus = false, touch = false, paused = false, onScreen = true;
+    let quietUntil = performance.now() + 2500; // newest first: a moment before it starts moving
+    let frame = 0, prev = 0;
+
+    const moving = () => !hover && !focus && !touch && !paused && onScreen && performance.now() > quietUntil;
+    const tick = (now: number) => {
+      frame = requestAnimationFrame(tick);
+      const dt = Math.min(now - (prev || now), 50);
+      prev = now;
+      // Someone else moved it (a hand scroll, the arrow buttons, a selected tab): follow, and wait.
+      if (lastSet >= 0 && Math.abs(row.scrollLeft - lastSet) > 2) {
+        pos = row.scrollLeft;
+        lastSet = -1;
+        quietUntil = Math.max(quietUntil, now + IDLE);
+      }
+      if (!moving()) {
+        lastSet = -1;
+        pos = row.scrollLeft;
+        return;
+      }
+      const w = setWidth();
+      pos += (SPEED * dt) / 1000;
+      if (w > 0 && pos >= w) pos -= w;
+      row.scrollLeft = pos;
+      lastSet = row.scrollLeft;
+    };
+
+    const quiet = () => (quietUntil = performance.now() + IDLE);
+    shelf.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") hover = true; });
+    shelf.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") hover = false; });
+    row.addEventListener("touchstart", () => (touch = true), { passive: true });
+    const lift = () => { touch = false; quiet(); };
+    row.addEventListener("touchend", lift, { passive: true });
+    row.addEventListener("touchcancel", lift, { passive: true });
+    row.addEventListener("wheel", quiet, { passive: true });
+    row.addEventListener("focusin", () => (focus = true));
+    row.addEventListener("focusout", (e) => { if (!row.contains(e.relatedTarget as Node)) { focus = false; quiet(); } });
+
+    // A click on a copy: jump back one set (looks the same) so the original sits where the copy
+    // was, then click the original, which opens its panel (or follows its link).
+    row.addEventListener("click", (e) => {
+      const copy = (e.target as Element).closest<HTMLElement>("[data-clone]");
+      if (!copy || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      row.scrollLeft -= setWidth();
+      pos = row.scrollLeft;
+      lastSet = -1;
+      origTapes[copies.indexOf(copy)].click();
+    }, true);
+
+    const bar = shelf.querySelector<HTMLElement>("[data-drift-bar]");
+    const btn = shelf.querySelector<HTMLButtonElement>("[data-drift-toggle]");
+    if (bar && btn) {
+      bar.hidden = false;
+      btn.addEventListener("click", () => {
+        paused = !paused;
+        btn.setAttribute("aria-pressed", String(paused));
+      });
+    }
+    const io = new IntersectionObserver(([e]) => (onScreen = e.isIntersecting));
+    io.observe(row);
+
+    shelf.classList.add("is-drifting");
+    frame = requestAnimationFrame(tick);
+    lasting.push(() => {
+      cancelAnimationFrame(frame);
+      io.disconnect();
+      mo.disconnect();
+    });
+  }
+
   setup();
   document.addEventListener("astro:page-load", setup);
+  document.addEventListener("astro:before-swap", () => lasting.splice(0).forEach((f) => f()));
 </script>
