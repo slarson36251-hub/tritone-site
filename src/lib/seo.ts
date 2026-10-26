@@ -10,7 +10,21 @@ export const HUT_ID = `${SITE}/hummingbird-hut#studio`;
 export const SCOTT_ID = `${SITE}/#scott-larson`;
 export const LOGO_URL = `${SITE}/tritone-logo.png`;
 export const EMAIL = "scott@tritone-productions.com";
-export const PHONE = "+1-415-200-6291";
+// No phone number anywhere on the site (Scott's call, Oct 2026): email is the way in.
+
+/** Where Tritone works: the whole Bay Area, from the studio in Oakland. Place names only. */
+export const AREA_SERVED = ["San Francisco Bay Area", "Oakland", "San Francisco", "Berkeley", "East Bay", "Marin County", "Peninsula", "South Bay"].map((name) => ({ "@type": "Place", name }));
+
+/** What Tritone records. Used in the Organization and Hut schema, on the Hut page and in /llms-full.txt. */
+export const RECORDING_USES = [
+  { t: "Projects in any style", d: "Jazz, country, klezmer, solo piano, woodwind and chamber groups, ska and more: if you play it, it can be recorded here." },
+  { t: "Small projects", d: "A single song, a demo or a short EP. Small is welcome." },
+  { t: "Overdubs", d: "Piano, horns, percussion or voices over tracks you already have." },
+  { t: "Rehearsals", d: "Record a rehearsal to hear the band back or share it with the group." },
+  { t: "Recitals", d: "A solo, student or ensemble recital program in a quiet room with a grand piano." },
+  { t: "Auditions", d: "Audition and application recordings for schools, programs and ensembles." },
+  { t: "Albums and singles", d: "A band tracked live in one room, then mixed through the analog chain." },
+];
 
 export const SOCIALS = [
   { label: "Instagram", href: "https://www.instagram.com/tritone_productions/" },
@@ -57,13 +71,15 @@ export function organization() {
     logo: { "@type": "ImageObject", url: LOGO_URL, width: 1200, height: 483 },
     description: "Music production in Oakland, CA: the Hummingbird Hut recording studio and Tritone's Bay Area bands.",
     email: EMAIL,
-    telephone: PHONE,
     founder: { "@id": SCOTT_ID },
-    knowsAbout: ["Music production", "Recording", "Mixing", "Live ensemble recording", "Jazz", "Ska", "Live music booking"],
+    slogan: "Music production in the Bay Area: recording projects of any size and any style.",
+    knowsAbout: ["Music production", "Recording", "Mixing", "Overdubs", "Live ensemble recording", "Rehearsal recording", "Recital recording", "Audition recording", "Demo recording", "Live music booking"],
     address: OAKLAND,
-    areaServed: { "@type": "Place", name: "San Francisco Bay Area" },
+    areaServed: AREA_SERVED,
     sameAs: SOCIALS.map((s) => s.href),
-    contactPoint: { "@type": "ContactPoint", contactType: "booking", email: EMAIL, telephone: PHONE, areaServed: "US", availableLanguage: "en" },
+    subOrganization: { "@id": HUT_ID },
+    contactPoint: { "@type": "ContactPoint", contactType: "booking", email: EMAIL, areaServed: "San Francisco Bay Area", availableLanguage: "en" },
+    makesOffer: RECORDING_USES.map((u) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name: u.t, description: u.d, serviceType: "Music recording", provider: { "@id": HUT_ID }, areaServed: AREA_SERVED[0] } })),
   };
 }
 
@@ -76,6 +92,8 @@ export function scottLarson() {
     jobTitle: "Music producer, recording engineer and trombonist",
     description: "Founder of Tritone Productions in Oakland, CA. Runs the Hummingbird Hut recording studio and leads the Hard Bop Quintet and the Scott Larson Quartet on trombone.",
     worksFor: { "@id": ORG_ID },
+    // Bands whose lineups list Scott (src/content/bands), by their MusicGroup @id on the band pages.
+    memberOf: ["hard-bop-quintet", "franco-nero", "scott-larson-quartet"].map((slug) => ({ "@id": `${canonicalUrl(`/bands/${slug}`)}#band` })),
     homeLocation: { "@type": "Place", name: "Oakland, CA" },
     knowsAbout: ["Music production", "Recording engineering", "Mixing", "Trombone", "Jazz"],
     url: SITE,
@@ -118,13 +136,14 @@ export function hummingbirdHut(image: string, services: { t: string; d: string }
     url: canonicalUrl("/hummingbird-hut"),
     image,
     email: EMAIL,
-    telephone: PHONE,
     address: OAKLAND,
-    areaServed: { "@type": "Place", name: "San Francisco Bay Area" },
+    areaServed: AREA_SERVED,
+    knowsAbout: RECORDING_USES.map((u) => u.t),
     parentOrganization: { "@id": ORG_ID },
-    makesOffer: services.map((s) => ({
+    founder: { "@id": SCOTT_ID },
+    makesOffer: [...services, ...RECORDING_USES.filter((u) => !services.some((s) => s.t === u.t))].map((s) => ({
       "@type": "Offer",
-      itemOffered: { "@type": "Service", name: s.t, description: s.d, provider: { "@id": HUT_ID } },
+      itemOffered: { "@type": "Service", name: s.t, description: s.d, provider: { "@id": HUT_ID }, areaServed: AREA_SERVED[0] },
     })),
   };
 }
@@ -155,12 +174,13 @@ export function musicGroup(slug: string, b: BandData, image: string) {
     image,
     ...(b.genres?.length ? { genre: b.genres } : {}),
     foundingLocation: { "@type": "Place", name: "San Francisco Bay Area" },
+    parentOrganization: { "@id": ORG_ID },
     ...(b.lineup.length
       ? {
           member: b.lineup.flatMap((m) =>
             m.name.split(/\s*\/\s*/).map((name) => ({
               "@type": "OrganizationRole",
-              member: { "@type": "Person", name },
+              member: name === "Scott Larson" ? { "@id": SCOTT_ID } : { "@type": "Person", name },
               roleName: m.instrument,
             })),
           ),

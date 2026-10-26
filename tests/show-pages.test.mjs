@@ -75,7 +75,7 @@ test("fixture: private and personal entries never reach dist/", { skip: !fixture
     .filter((f) => /\.(html|ics|xml|txt|json)$/.test(f))
     .map((f) => read(f))
     .join("\n");
-  for (const bad of ["Pick up Madi", "Evergreen", "Antigen", "Private Way", "4321 Example", "Holiday Party", "Rehearsal", "[TEMPLATE]", "Terry's", "94618", "94619", "94610"])
+  for (const bad of ["Pick up Madi", "Evergreen", "Antigen", "Private Way", "4321 Example", "Holiday Party", "Rehearsal - Bogaloo", "Bogaloo", "[TEMPLATE]", "Terry's", "94618", "94619", "94610"])
     assert.ok(!all.includes(bad), `found "${bad}" in dist`);
   assert.ok(existsSync(new URL("shows/scott-larson-quartet-the-deluxe-san-francisco-2026-11-08.html", DIST)));
   const deluxe = ld(read("shows/scott-larson-quartet-the-deluxe-san-francisco-2026-11-08.html")).find((o) => o["@type"] === "MusicEvent");

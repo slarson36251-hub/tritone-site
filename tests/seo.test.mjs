@@ -173,6 +173,30 @@ test("sitemap lists the real pages and none of the noindex ones", () => {
     if (/<meta name="robots" content="noindex/.test(html)) assert.ok(![...locs].some((l) => l.endsWith("/" + f.replace(/\.html$/, ""))), `${f} is noindex but in the sitemap`);
 });
 
+test("no phone number for Scott anywhere: no tel: links, no telephone in JSON-LD, none in llms.txt", () => {
+  const phone = /\(?\b415\)?[\s.-]*200[\s.-]*6291\b|\+?1?4152006291/;
+  for (const { f, html } of pages) {
+    assert.doesNotMatch(html, /href="tel:/, `${f}: tel: link`);
+    assert.doesNotMatch(html, phone, `${f}: phone number`);
+    for (const b of ldBlocks(html)) assert.ok(!nodes(JSON.parse(b)).some((n) => "telephone" in n), `${f}: telephone in JSON-LD`);
+  }
+  for (const t of ["llms.txt", "llms-full.txt"]) assert.doesNotMatch(readFileSync(join(DIST, t), "utf8"), phone, `${t}: phone number`);
+});
+
+test("AI discoverability: the Hut names what it records and the Bay Area it serves", () => {
+  const html = pages.find((p) => p.f === "hummingbird-hut.html").html;
+  const all = nodes(ldBlocks(html).map((b) => JSON.parse(b)));
+  const hut = all.find((n) => n["@type"] === "ProfessionalService");
+  const offers = hut.makesOffer.map((o) => o.itemOffered.name);
+  for (const s of ["Small projects", "Overdubs", "Rehearsals", "Recitals", "Auditions"]) assert.ok(offers.includes(s), `offer ${s}`);
+  assert.ok(hut.areaServed.some((a) => a.name === "San Francisco Bay Area"), "areaServed Bay Area");
+  const faq = all.find((n) => n["@type"] === "FAQPage");
+  assert.ok(faq.mainEntity.some((q) => /Bay Area/.test(q.name)), "a Bay Area question in the FAQ");
+  assert.match(html, /id="uses-h"[^>]*>What we record</, "visible What we record list");
+  const llms = readFileSync(join(DIST, "llms.txt"), "utf8");
+  for (const w of ["Bay Area", "Small projects", "Overdubs", "Rehearsals", "Recitals", "Auditions"]) assert.match(llms, new RegExp(w), `llms.txt: ${w}`);
+});
+
 test("llms.txt is published and names Oakland, CA only", () => {
   const txt = readFileSync(join(DIST, "llms.txt"), "utf8");
   assert.match(txt, /^# Tritone Productions/);
