@@ -87,8 +87,8 @@ const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}
 
   {videos.length > 0 && (
     <section id="watch" class="wrap pb-14 md:pb-20">
-      <p class="eyebrow m-0 text-stone">Watch</p>
-      <div class="mt-4 grid gap-6 md:grid-cols-2">
+      <p class:list={["eyebrow m-0 text-stone", videos.length === 1 && "text-center"]}>Watch</p>
+      <div class:list={["mt-4 grid gap-6", videos.length === 1 ? "mx-auto max-w-[960px]" : "md:grid-cols-2"]}>
         {videos.map((v) => (
           <LiteYouTube id={v.id} title={v.title} note={v.note} alt={`${name} playing live: ${v.title}`} />
         ))}
@@ -120,27 +120,32 @@ const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}
   )}
 
   {strip.length > 0 && (
-    <section class="pb-14 md:pb-20" aria-labelledby="posters-h">
-      <div class="wrap mb-5 flex items-end justify-between gap-4">
-        <div>
-          <p class="eyebrow m-0 text-stone">From the wall</p>
-          <h2 id="posters-h" class="disp mb-0 mt-2 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">Posters</h2>
-        </div>
-        <a href="/gallery" class="shrink-0 font-semibold">Gallery →</a>
+    <!-- Poster carousel: every poster whole (its own aspect ratio, never cropped), swipe or scroll-snap,
+         arrow buttons from tablet up. Short lists sit centered (auto margins on the first and last card). -->
+    <section class="pb-14 md:pb-20" aria-labelledby="posters-h" data-carousel>
+      <div class="wrap mb-6 flex flex-col items-center gap-2 text-center">
+        <p class="eyebrow m-0 text-stone">From the wall</p>
+        <h2 id="posters-h" class="disp m-0 text-[clamp(2rem,4vw,3rem)] leading-[0.95]">Posters</h2>
+        <p class="m-0 text-[14px] text-stone">{strip.length} {strip.length === 1 ? "poster" : "posters"}<span class="md:hidden"> · swipe for more</span><span class="hidden md:inline"> · scroll or use the arrows</span></p>
       </div>
-      <ul class="strip wrap m-0 flex list-none snap-x snap-mandatory gap-4 overflow-x-auto pt-0 pb-3">
+      <ul class="strip m-0 flex list-none snap-x snap-mandatory items-start gap-4 overflow-x-auto px-4 pb-3 pt-0 md:gap-6 md:px-10" data-track tabindex="0" aria-label={`${name} posters`}>
         {strip.map((p) => (
-          <li class="w-[62vw] max-w-[260px] shrink-0 snap-start">
+          <li class="shrink-0 snap-center" style={`width:min(calc(var(--ph) * ${(p.img.width / p.img.height).toFixed(4)}), 84vw)`}>
             <a href={`/gallery#${p.id}`} class="group flex flex-col gap-2 no-underline">
-              <span class="tile block aspect-[2/3]">
-                <Picture formats={["avif"]} fallbackFormat="webp" src={p.img} alt={p.alt} widths={[240, 360, 520]} sizes="(min-width: 761px) 260px, 62vw" class="tile-img absolute inset-0 h-full w-full object-cover group-hover:scale-105" />
+              <span class="tile block !bg-black" style={`aspect-ratio:${p.img.width} / ${p.img.height}`}>
+                <Picture formats={["avif"]} fallbackFormat="webp" src={p.img} alt={p.alt} widths={[320, 480, 720]} sizes="(min-width: 761px) 300px, 70vw" class="tile-img absolute inset-0 h-full w-full object-contain group-hover:scale-[1.03]" />
               </span>
-              <span class="text-sm font-semibold leading-tight">{p.title}</span>
-              <span class="-mt-1.5 text-[14px] text-stone">{p.sub}</span>
+              <span class="text-[15px] font-semibold leading-tight">{p.title}</span>
+              <span class="-mt-1.5 text-[14px] leading-snug text-stone">{p.sub}</span>
             </a>
           </li>
         ))}
       </ul>
+      <div class="wrap mt-4 flex items-center justify-center gap-3">
+        <button type="button" data-prev class="hidden size-12 cursor-pointer place-items-center rounded-full border-2 border-stone/60 text-xl transition-colors hover:border-white disabled:cursor-default disabled:opacity-35 disabled:hover:border-stone/60 md:grid" aria-label="Previous posters"><span aria-hidden="true">←</span></button>
+        <a href="/gallery" class="inline-flex min-h-12 items-center rounded-full border-2 border-stone/60 px-6 text-sm font-semibold uppercase tracking-[.04em] no-underline hover:border-white">Poster gallery →</a>
+        <button type="button" data-next class="hidden size-12 cursor-pointer place-items-center rounded-full border-2 border-stone/60 text-xl transition-colors hover:border-white disabled:cursor-default disabled:opacity-35 disabled:hover:border-stone/60 md:grid" aria-label="Next posters"><span aria-hidden="true">→</span></button>
+      </div>
     </section>
   )}
 
@@ -167,6 +172,44 @@ const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}
 <style>
   .bio :global(p) { margin: 0 0 1em; }
   .bio :global(p:last-child) { margin-bottom: 0; }
-  .strip { scrollbar-width: thin; scrollbar-color: rgb(168 166 161 / .5) transparent; scroll-padding-inline: 16px; }
-  @media (min-width: 761px) { .strip { scroll-padding-inline: 40px; } }
+  .strip { --ph: 300px; scrollbar-width: thin; scrollbar-color: rgb(168 166 161 / .5) transparent; scroll-padding-inline: 16px; overscroll-behavior-x: contain; }
+  .strip > li:first-child { margin-inline-start: auto; }
+  .strip > li:last-child { margin-inline-end: auto; }
+  .strip:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+  @media (min-width: 761px) { .strip { --ph: 400px; scroll-padding-inline: 40px; } }
 </style>
+
+<script>
+  // Arrow buttons for the poster carousel: scroll by most of a screen, disabled at either end,
+  // hidden when everything already fits. Swipe and scroll-snap do the rest.
+  function initCarousels() {
+    document.querySelectorAll<HTMLElement>("[data-carousel]").forEach((root) => {
+      const track = root.querySelector<HTMLElement>("[data-track]");
+      const prev = root.querySelector<HTMLButtonElement>("[data-prev]");
+      const next = root.querySelector<HTMLButtonElement>("[data-next]");
+      if (!track || !prev || !next || root.dataset.ready) return;
+      root.dataset.ready = "1";
+      const update = () => {
+        const max = track.scrollWidth - track.clientWidth;
+        const fits = max <= 2;
+        prev.style.visibility = next.style.visibility = fits ? "hidden" : "";
+        prev.disabled = track.scrollLeft <= 2;
+        next.disabled = track.scrollLeft >= max - 2;
+      };
+      const go = (dir: number) => {
+        const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        track.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: reduce ? "auto" : "smooth" });
+      };
+      prev.addEventListener("click", () => go(-1));
+      next.addEventListener("click", () => go(1));
+      track.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+        if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
+      });
+      track.addEventListener("scroll", update, { passive: true });
+      new ResizeObserver(update).observe(track);
+      update();
+    });
+  }
+  document.addEventListener("astro:page-load", initCarousels);
+</script>

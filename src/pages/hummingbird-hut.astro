@@ -3,7 +3,7 @@ import { Image } from "astro:assets";
 import Base from "../layouts/Base.astro";
 import Pill from "../components/Pill.astro";
 import { bookHref } from "../lib/nav";
-import { SITE, canonicalUrl, faqPage, hummingbirdHut } from "../lib/seo";
+import { RECORDING_USES as uses, SITE, canonicalUrl, faqPage, hummingbirdHut } from "../lib/seo";
 import { HUT_FAQS as faqs } from "../lib/faq";
 
 import heroPhoto from "../assets/photos/fault-line-trio-piano-mics-feb-2026-hummingbird-hut-oakland.jpg";
@@ -71,7 +71,7 @@ const credits = [
 
 const studio = hummingbirdHut(new URL(heroPhoto.src, SITE).href, services);
 ---
-<Base title="Hummingbird Hut · Recording Studio in Oakland, CA" description="Private recording studio in Oakland, CA: whole bands tracked live in one room, multi-mic, with Dante, headphone mixes, overdubs and mixing." breadcrumbs={[{ name: "Hummingbird Hut", path: "/hummingbird-hut" }]} schema={[studio, faqPage(canonicalUrl("/hummingbird-hut"), faqs)]}>
+<Base title="Hummingbird Hut · Recording Studio in Oakland, CA" description="Private recording studio in Oakland, CA for Bay Area musicians: any style, small projects, overdubs, rehearsals, recitals, auditions, live band tracking and mixing." breadcrumbs={[{ name: "Hummingbird Hut", path: "/hummingbird-hut" }]} schema={[studio, faqPage(canonicalUrl("/hummingbird-hut"), faqs)]}>
 
   <!-- Hero -->
   <section class="wrap grid gap-8 pb-14 pt-10 md:grid-cols-12 md:items-center md:gap-10 md:pb-20 md:pt-16">
@@ -137,6 +137,26 @@ const studio = hummingbirdHut(new URL(heroPhoto.src, SITE).href, services);
           <p class="m-0 text-[15.5px] text-white/85">{s.d}</p>
         </article>
       ))}
+    </div>
+  </section>
+
+  <!-- What we record (same list as the schema and llms.txt: src/lib/seo.ts RECORDING_USES) -->
+  <section class="wrap py-12 md:py-16" aria-labelledby="uses-h">
+    <div class="grid gap-8 lg:grid-cols-12 lg:gap-12">
+      <div class="flex flex-col gap-4 lg:col-span-4">
+        <p class="eyebrow m-0 text-stone">Any style · any size</p>
+        <h2 id="uses-h" class="disp m-0 text-[clamp(2.1rem,5vw,3.6rem)] leading-[0.95]">What we record</h2>
+        <p class="m-0 max-w-[40ch] text-white/85">Musicians come to the Hut from all over the Bay Area: Oakland, Berkeley, San Francisco, the East Bay, Marin, the Peninsula and the South Bay. Not sure your project fits? It probably does.</p>
+        <a href="/contact" class="inline-flex min-h-11 items-center self-start font-semibold">Email to plan a session →</a>
+      </div>
+      <ul class="m-0 grid list-none gap-x-8 p-0 sm:grid-cols-2 lg:col-span-8">
+        {uses.map((u) => (
+          <li class="rule flex flex-col gap-1 border-t py-4 sm:last:odd:col-span-2 md:py-5">
+            <span class="text-[19px] font-semibold md:text-[21px]">{u.t}</span>
+            <span class="text-[15px] text-stone">{u.d}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   </section>
 

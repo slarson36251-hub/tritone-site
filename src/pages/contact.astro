@@ -10,22 +10,29 @@ import { ORG_ID, SITE, SOCIALS as socials } from "../lib/seo";
     <p class="mb-0 mt-6 max-w-[48ch] text-[19px]">Sessions, gigs, or a question about either. Scott reads everything himself and usually answers within a day.</p>
   </section>
 
-  <section class="wrap pb-12 md:pb-16" aria-label="Email and phone">
-    <div class="grid gap-4 md:grid-cols-2 md:gap-5">
-      <a href="mailto:scott@tritone-productions.com" class="tile reveal group flex min-h-[200px] flex-col justify-between gap-8 p-6 no-underline md:p-8">
-        <p class="eyebrow m-0 text-stone">Email</p>
-        <div class="flex items-end justify-between gap-4">
-          <span class="disp text-[clamp(1.35rem,3.4vw,2.3rem)] leading-tight">scott@<wbr />tritone-<wbr />productions.com</span>
-          <span class="grid size-12 shrink-0 place-items-center rounded-full bg-white text-xl text-black transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+  <!-- Email is the only way in (no phone on the site). The address is sized to its tile with container
+       units so it always sits on one line, from a 320px phone to a wide desktop. -->
+  <section class="wrap pb-12 md:pb-16" aria-labelledby="email-h">
+    <div class="tile reveal flex flex-col gap-8 p-5 md:gap-12 md:p-10">
+      <div class="grid gap-4 md:grid-cols-12 md:items-end md:gap-10">
+        <div class="flex flex-col gap-3 md:col-span-6">
+          <p class="eyebrow m-0 text-stone">Email Scott</p>
+          <h2 id="email-h" class="disp m-0 text-[clamp(2.2rem,5.4vw,4rem)] leading-[0.92]">Questions or ideas?</h2>
         </div>
-      </a>
-      <a href="tel:+14152006291" class="tile reveal group flex min-h-[200px] flex-col justify-between gap-8 p-6 no-underline md:p-8">
-        <p class="eyebrow m-0 text-stone">Phone</p>
-        <div class="flex items-end justify-between gap-4">
-          <span class="disp text-[clamp(1.6rem,4vw,2.6rem)] leading-tight tabular-nums">(415) 200-6291</span>
-          <span class="grid size-12 shrink-0 place-items-center rounded-full bg-white text-xl text-black transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+        <p class="m-0 max-w-[42ch] text-[17px] text-white/90 md:col-span-6 md:text-[19px]">To plan a session or a project, email to set up a time to consult. Recording, a band for a date, or just an idea you want to talk through.</p>
+      </div>
+
+      <div class="email-fit rule border-t pt-6 md:pt-8">
+        <a href="mailto:scott@tritone-productions.com" class="email-line group flex items-center justify-between gap-[0.4em] no-underline">
+          <span class="disp whitespace-nowrap normal-case leading-none">scott@tritone-productions.com</span>
+          <span class="hidden size-[1.25em] shrink-0 place-items-center md:grid rounded-full bg-white text-[0.7em] text-black transition-transform group-hover:rotate-[-45deg]" aria-hidden="true">→</span>
+        </a>
+        <div class="mt-6 flex flex-wrap items-center gap-3">
+          <a href="mailto:scott@tritone-productions.com?subject=Planning%20a%20session" class="flex min-h-12 items-center rounded-full bg-white px-6 text-sm font-semibold uppercase tracking-[.04em] text-black no-underline transition-transform hover:scale-[1.03]">Write an email</a>
+          <button type="button" data-copy="scott@tritone-productions.com" class="flex min-h-12 cursor-pointer items-center rounded-full border-2 border-stone/60 px-6 text-sm font-semibold uppercase tracking-[.04em] hover:border-white">Copy address</button>
+          <span class="text-[14px] text-stone" data-copied role="status"></span>
         </div>
-      </a>
+      </div>
     </div>
   </section>
 
@@ -70,3 +77,28 @@ import { ORG_ID, SITE, SOCIALS as socials } from "../lib/seo";
     </div>
   </section>
 </Base>
+
+<style>
+  /* The address is ~16.2em wide in lowercase Archivo Black (+1.65em for the arrow from tablet up): size it to the tile
+     so it never wraps or overflows, capped on wide screens. */
+  .email-fit { container-type: inline-size; }
+  .email-line { font-size: calc(100cqi / 16.7); }
+  @media (min-width: 768px) { .email-line { font-size: min(calc(100cqi / 18.3), 76px); } }
+</style>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const btn = document.querySelector<HTMLButtonElement>("[data-copy]");
+    const out = document.querySelector<HTMLElement>("[data-copied]");
+    if (!btn || !out || btn.dataset.ready) return;
+    btn.dataset.ready = "1";
+    btn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copy!);
+        out.textContent = "Copied. Paste it into your email.";
+      } catch {
+        out.textContent = btn.dataset.copy!;
+      }
+    });
+  });
+</script>
