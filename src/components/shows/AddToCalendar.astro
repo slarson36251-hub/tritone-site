@@ -7,7 +7,7 @@ const btn = "inline-flex min-h-11 items-center justify-center rounded-full borde
 <div class="flex flex-col gap-2">
   <span class="eyebrow text-[14px] text-white/80">Add to calendar</span>
   <div class="flex flex-wrap gap-2">
-    <a href={googleCalendarUrl(show)} target="_blank" rel="noopener" class={btn} aria-label={`Google: add ${show.title} to Google Calendar`}>Google</a>
-    <a href={`/shows/${show.slug}.ics`} download={`${show.slug}.ics`} class={btn} aria-label={`Apple / Outlook: download ${show.title} as a calendar file`}>Apple / Outlook</a>
+    <a href={googleCalendarUrl(show)} target="_blank" rel="noopener" data-track="calendar_add" data-track-lbl={show.slug} class={btn} aria-label={`Google: add ${show.title} to Google Calendar`}>Google</a>
+    <a href={`/shows/${show.slug}.ics`} download={`${show.slug}.ics`} data-track="calendar_add" data-track-lbl={show.slug} class={btn} aria-label={`Apple / Outlook: download ${show.title} as a calendar file`}>Apple / Outlook</a>
   </div>
 </div>

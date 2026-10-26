@@ -3,8 +3,11 @@ interface Props {
   href: string;
   ghost?: boolean;
   external?: boolean;
+  /** Analytics hook (src/lib/track.ts): an EventName and its label. */
+  track?: string;
+  trackLbl?: string;
 }
-const { href, ghost = false, external = false } = Astro.props;
+const { href, ghost = false, external = false, track, trackLbl } = Astro.props;
 ---
 <a
   href={href}
@@ -13,6 +16,7 @@ const { href, ghost = false, external = false } = Astro.props;
     ghost ? "border-white bg-transparent" : "border-stone bg-stone text-black",
   ]}
   {...(external ? { target: "_blank", rel: "noopener" } : {})}
+  {...(track ? { "data-track": track, "data-track-lbl": trackLbl ?? "" } : {})}
 >
   <slot />
 </a>

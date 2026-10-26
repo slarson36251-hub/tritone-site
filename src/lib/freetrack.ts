@@ -11,6 +11,8 @@
  * Fields: firstName, lastName, email (plus `name`, the two joined).
  */
 
+import { track } from "./track";
+
 export const ENDPOINT =
   "https://script.google.com/macros/s/AKfycby7DXnYPXt2odT9N5PLVtecmN9ZJNuJFt20iwsX8rMxPHS5TJu6g5QXnfWEO3U2ejI_eA/exec";
 
@@ -86,6 +88,7 @@ export function initFreeTrack() {
         let body: any = null;
         try { body = await r.json(); } catch { /* a non-JSON 2xx still means the row went in */ }
         if (body && body.ok === false) throw new Error(String(body.error || "rejected"));
+        track("free_track", "signup"); // never the name or email
         go("tip");
       })
       .catch(() => {

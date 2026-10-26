@@ -112,12 +112,12 @@ const lastmod = show?.updated?.toISOString() ?? "";
         {upcoming && !show.cancelled && (
           <div class="flex flex-col gap-5 border-y border-stone/40 py-6">
             <div class="flex flex-wrap items-center gap-3">
-              {show.tickets && <Pill href={show.tickets} external>Tickets</Pill>}
+              {show.tickets && <Pill href={show.tickets} external track="ticket_click" trackLbl={show.slug}>Tickets</Pill>}
               {show.price && <span class="font-semibold">{show.price}</span>}
             </div>
             <AddToCalendar show={show} />
             {show.venuePage && (
-              <a href={show.venuePage} target="_blank" rel="noopener" class="font-semibold">See it on {show.venue}'s calendar →</a>
+              <a href={show.venuePage} target="_blank" rel="noopener" data-track="ticket_click" data-track-lbl={show.slug} class="font-semibold">See it on {show.venue}'s calendar →</a>
             )}
           </div>
         )}
