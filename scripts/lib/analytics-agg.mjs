@@ -1,7 +1,13 @@
 // Pure aggregation for the weekly analytics digest (scripts/analytics-digest.mjs) and its tests.
 // Input: hits as plain objects in the shape of src/lib/analytics-schema.ts (t as an ISO string).
 // Nothing here touches the network or the file system.
+//
+// Public API (kept stable for the digest script and the dashboard):
+//   splitWeeks(hits, now) -> { cur, prev }      summarize(hits) -> Summary (Maps inside)
+//   insights(cur, prev) -> string[]              renderDigest(hits, now) -> Markdown
+//   digestSummary(hits, now) -> plain JSON (DigestSummary, below), what the digests collection stores
 import { EVENT_LABELS, SOURCES, SOURCE_LABELS } from "../../src/lib/analytics-schema.ts";
+import { isPrivateHost } from "../../src/lib/track.ts";
 
 const DAY = 86_400_000;
 
@@ -24,6 +30,13 @@ export function weekWindows(now = new Date()) {
   return { prevStart: new Date(end - 14 * DAY), curStart: new Date(end - 7 * DAY), end };
 }
 
+/** YYYY-MM-DD (UTC) of the Monday starting the ISO week that contains `d`: the digest document id. */
+export function isoWeekStart(d) {
+  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
+  return x.toISOString().slice(0, 10);
+}
+
 /** Split hits into this week and last week. */
 export function splitWeeks(hits, now = new Date()) {
   const { prevStart, curStart, end } = weekWindows(now);
@@ -40,19 +53,40 @@ export function splitWeeks(hits, now = new Date()) {
 const inc = (m, k, n = 1) => m.set(k, (m.get(k) ?? 0) + n);
 const top = (m, n = 10) => [...m.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]))).slice(0, n);
 
-/** Totals for one period. A visit is one sid; its source comes from its first hit. */
+/** A stored host that should never have been recorded (older hits, before the filter) -> "". */
+const safeHost = (h) => (isPrivateHost(h) ? "" : String(h ?? ""));
+/** An event label that is a private host (outbound) -> "file upload". */
+const safeLabel = (ev, lbl) => (ev === "outbound" && isPrivateHost(lbl) ? "file upload" : String(lbl ?? ""));
+
+/**
+ * Totals for one period. A visit is a sid whose landing page view has first:true; a sid with only
+ * first:false page views (reload, back/forward, a new tab from an in-site link) is "continued" and
+ * is not counted as a visit, though its page views and events still count.
+ */
 export function summarize(hits) {
-  const visits = new Map(); // sid -> first hit
   const sorted = [...hits].sort((a, b) => String(a.t).localeCompare(String(b.t)));
-  for (const h of sorted) if (h.sid && !visits.has(h.sid)) visits.set(h.sid, h);
+  const firstOf = new Map(); // sid -> first hit seen
+  const landed = new Set(); // sids with a first:true page view
+  for (const h of sorted) {
+    if (!h.sid) continue;
+    if (!firstOf.has(h.sid)) firstOf.set(h.sid, h);
+    if (h.k === "pv" && h.first === true) landed.add(h.sid);
+  }
+  const visits = new Map();
+  let continued = 0;
+  for (const [sid, h] of firstOf) {
+    if (landed.has(sid)) visits.set(sid, h);
+    else continued++;
+  }
 
   const bySource = Object.fromEntries(SOURCES.map((s) => [s, 0]));
   const aiRefs = new Map(), campaigns = new Map(), referrers = new Map(), devices = new Map(), landings = new Map();
   for (const v of visits.values()) {
     const src = SOURCES.includes(v.src) ? v.src : "direct";
+    const ref = safeHost(v.ref);
     bySource[src]++;
-    if (src === "ai") inc(aiRefs, v.ref || v.us || "(unknown assistant)");
-    if (src === "referral" && v.ref) inc(referrers, v.ref);
+    if (src === "ai") inc(aiRefs, ref || v.us || "(unknown assistant)");
+    if (src === "referral" && ref) inc(referrers, ref);
     if (v.uc || v.us) inc(campaigns, campaignKey(v));
     inc(devices, v.dev || "d");
     inc(landings, v.land || v.path || "/");
@@ -66,24 +100,12 @@ export function summarize(hits) {
       inc(pages, h.path || "/");
     } else if (h.k === "ev" && h.ev) {
       inc(events, h.ev);
-      if (h.lbl) inc(eventLabels, `${h.ev}\u0000${h.lbl}`);
+      const lbl = safeLabel(h.ev, h.lbl);
+      if (lbl) inc(eventLabels, `${h.ev}\u0000${lbl}`);
       if (h.ev === "book_submit") inc(bookingsBySource, SOURCES.includes(h.src) ? h.src : "direct");
     }
   }
-  return {
-    visits: visits.size,
-    pageViews,
-    bySource,
-    aiRefs,
-    campaigns,
-    referrers,
-    devices,
-    landings,
-    pages,
-    events,
-    eventLabels,
-    bookingsBySource,
-  };
+  return { visits: visits.size, continued, pageViews, bySource, aiRefs, campaigns, referrers, devices, landings, pages, events, eventLabels, bookingsBySource };
 }
 
 /** "spring-show · instagram / social" style key for an outreach link. */
@@ -104,6 +126,12 @@ const pctOf = (n, total) => (total ? Math.round((n / total) * 100) : 0);
 const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
 const label = (s) => SOURCE_LABELS[s] ?? s;
 
+/**
+ * Anything that came from a visitor's browser (referrer hosts, UTM values, paths, event labels) is
+ * shown as a code span so it cannot render as Markdown or HTML; backticks and line breaks are removed.
+ */
+export const code = (s) => "`" + String(s ?? "").replace(/[`\r\n]/g, "").replace(/\|/g, "\u2502").trim().slice(0, 160) + "`";
+
 /** 3-5 plain-English sentences on what changed. */
 export function insights(cur, prev) {
   const out = [];
@@ -122,14 +150,14 @@ export function insights(cur, prev) {
   if (movers.length) {
     const [s, d] = movers[0];
     let line = `${label(s)} ${d > 0 ? "brought" : "sent"} ${plural(cur.bySource[s], "visit")}, ${d > 0 ? "up" : "down"} from ${prev.bySource?.[s] ?? 0}`;
-    if (s === "ai" && cur.aiRefs.size) line += `; ${top(cur.aiRefs, 1)[0][0]} led`;
-    if (s === "referral" && cur.referrers.size) line += `; ${top(cur.referrers, 1)[0][0]} led`;
+    if (s === "ai" && cur.aiRefs.size) line += `; ${code(top(cur.aiRefs, 1)[0][0])} led`;
+    if (s === "referral" && cur.referrers.size) line += `; ${code(top(cur.referrers, 1)[0][0])} led`;
     out.push(line + ".");
   }
 
   // 3. AI share, when it is meaningful and not already the mover.
   if (cur.bySource.ai && movers[0]?.[0] !== "ai")
-    out.push(`AI assistants accounted for ${pctOf(cur.bySource.ai, cur.visits)}% of visits (${cur.bySource.ai}), mostly from ${top(cur.aiRefs, 1)[0][0]}.`);
+    out.push(`AI assistants accounted for ${pctOf(cur.bySource.ai, cur.visits)}% of visits (${cur.bySource.ai}), mostly from ${code(top(cur.aiRefs, 1)[0][0])}.`);
 
   // 4. Bookings.
   const books = cur.events.get("book_submit") ?? 0;
@@ -144,16 +172,16 @@ export function insights(cur, prev) {
   const jumps = [...cur.pages.entries()].map(([p, n]) => [p, n - (prev.pages.get(p) ?? 0), n]).filter(([, d]) => d > 0).sort((a, b) => b[1] - a[1]);
   if (jumps.length && out.length < 5) {
     const [p, , n] = jumps[0];
-    out.push(`${p} got ${plural(n, "view")}, up from ${prev.pages.get(p) ?? 0}, the biggest jump of any page.`);
+    out.push(`${code(p)} got ${plural(n, "view")}, up from ${prev.pages.get(p) ?? 0}, the biggest jump of any page.`);
   }
 
   // 6. Outreach.
   if (cur.campaigns.size && out.length < 5) {
     const [k, n] = top(cur.campaigns, 1)[0];
-    out.push(`The best outreach link was “${k}”, with ${plural(n, "visit")}.`);
+    out.push(`The best outreach link was ${code(k)}, with ${plural(n, "visit")}.`);
   }
 
-  // 7. Listening and shows, as filler.
+  // 7. Listening and devices, as filler.
   const plays = cur.events.get("play") ?? 0;
   if (out.length < 3 && plays) out.push(`Visitors started ${plural(plays, "play")} (${change(plays, prev.events.get("play") ?? 0)} on last week).`);
   const phones = cur.devices.get("m") ?? 0;
@@ -169,7 +197,7 @@ const table = (head, rows) =>
 
 const fmtDay = (d) => new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", year: "numeric" }).format(d);
 
-/** The whole digest as Markdown. */
+/** The whole digest as Markdown. Visitor-derived strings are shown as code spans (see `code`). */
 export function renderDigest(hits, now = new Date()) {
   const { cur: ch, prev: ph } = splitWeeks(hits, now);
   const cur = summarize(ch), prev = summarize(ph);
@@ -185,17 +213,17 @@ export function renderDigest(hits, now = new Date()) {
   ])), "");
 
   L.push("### AI assistants", "");
-  L.push(table(["Assistant", "Visits", "Last week"], top(cur.aiRefs, 10).map(([k, n]) => [k, n, prev.aiRefs.get(k) ?? 0])), "");
+  L.push(table(["Assistant", "Visits", "Last week"], top(cur.aiRefs, 10).map(([k, n]) => [code(k), n, prev.aiRefs.get(k) ?? 0])), "");
 
   L.push("### Top pages", "");
-  L.push(table(["Page", "Views", "Last week", "Change"], top(cur.pages, 10).map(([p, n]) => [p, n, prev.pages.get(p) ?? 0, change(n, prev.pages.get(p) ?? 0)])), "");
+  L.push(table(["Page", "Views", "Last week", "Change"], top(cur.pages, 10).map(([p, n]) => [code(p), n, prev.pages.get(p) ?? 0, change(n, prev.pages.get(p) ?? 0)])), "");
 
   L.push("### Outreach links (UTM)", "");
-  L.push(table(["Campaign · source / medium", "Visits", "Last week"], top(cur.campaigns, 10).map(([k, n]) => [k, n, prev.campaigns.get(k) ?? 0])), "");
+  L.push(table(["Campaign · source / medium", "Visits", "Last week"], top(cur.campaigns, 10).map(([k, n]) => [code(k), n, prev.campaigns.get(k) ?? 0])), "");
 
   if (cur.referrers.size) {
     L.push("### Other sites linking in", "");
-    L.push(table(["Site", "Visits"], top(cur.referrers, 8)), "");
+    L.push(table(["Site", "Visits"], top(cur.referrers, 8).map(([k, n]) => [code(k), n])), "");
   }
 
   L.push("### Interest", "");
@@ -210,9 +238,77 @@ export function renderDigest(hits, now = new Date()) {
     .map(([ev, title]) => [title, topLabels(ev)]).filter(([, rows]) => rows.length);
   if (details.length) {
     L.push("### Details", "");
-    for (const [title, rows] of details) L.push(`**${title}:** ${rows.map(([k, n]) => `${k} (${n})`).join(", ")}`, "");
+    for (const [title, rows] of details) L.push(`**${title}:** ${rows.map(([k, n]) => `${code(k)} (${n})`).join(", ")}`, "");
   }
   const dev = ["m", "t", "d"].map((d) => `${{ m: "phone", t: "tablet", d: "desktop" }[d]} ${pctOf(cur.devices.get(d) ?? 0, cur.visits)}%`).join(" · ");
-  L.push(`_Devices: ${dev}. Visits are counted without cookies: one visit per page load and its in-site navigation. Scott's own devices are excluded once he has opened /admin._`, "");
+  L.push(`_Devices: ${dev}. Visits are counted without cookies: one visit per page load and its in-site navigation (${cur.continued} continued from a reload or an in-site new tab). Scott's own devices are excluded once he has opened /admin._`, "");
   return L.join("\n");
+}
+
+/** A Map of counts -> sorted [{key, n}] (plain JSON). */
+const rows = (m, n = 25) => top(m, n).map(([key, count]) => ({ key, n: count }));
+
+/** One period's Summary as plain JSON (what `digests` stores under cur / prev). */
+export function serializeSummary(s) {
+  const labelsOf = (ev) => rows(new Map([...s.eventLabels].filter(([k]) => k.startsWith(ev + "\u0000")).map(([k, v]) => [k.split("\u0000")[1], v])), 10);
+  return {
+    visits: s.visits,
+    continued: s.continued,
+    pageViews: s.pageViews,
+    bySource: { ...s.bySource },
+    aiRefs: rows(s.aiRefs),
+    referrers: rows(s.referrers),
+    campaigns: rows(s.campaigns),
+    devices: Object.fromEntries(s.devices),
+    landings: rows(s.landings),
+    pages: rows(s.pages),
+    events: Object.fromEntries(s.events),
+    bookingsBySource: Object.fromEntries(s.bookingsBySource),
+    eventLabels: Object.fromEntries(["play", "show_click", "ticket_click", "calendar_add", "poster_click", "outbound", "book_submit"].map((ev) => [ev, labelsOf(ev)])),
+  };
+}
+
+/**
+ * The Firestore REST document for one digest, written to digests/<week> by scripts/analytics-digest.mjs:
+ *   week (string, = the id), from / to / generatedAt (timestamp), visits / pageViews / bookings (integer,
+ *   this week's headline numbers), md (string, the Markdown), summary (string, JSON of DigestSummary).
+ */
+/**
+ * DigestSummary: the JSON stored in Firestore collection `digests` (field `summary`, as a JSON string).
+ * { week: "YYYY-MM-DD" (ISO week start, the document id), from, to: ISO times of the current 7 days,
+ *   generatedAt: ISO time, cur: serializeSummary(this week), prev: serializeSummary(last week),
+ *   insights: string[] (Markdown: visitor strings are in code spans) }
+ */
+export function digestDoc(summary, md) {
+  const s = (v) => ({ stringValue: String(v) });
+  const ts = (v) => ({ timestampValue: v });
+  const int = (v) => ({ integerValue: String(v) });
+  return {
+    fields: {
+      week: s(summary.week),
+      from: ts(summary.from),
+      to: ts(summary.to),
+      generatedAt: ts(summary.generatedAt),
+      visits: int(summary.cur.visits),
+      pageViews: int(summary.cur.pageViews),
+      bookings: int(summary.cur.events.book_submit ?? 0),
+      md: s(md),
+      summary: s(JSON.stringify(summary)),
+    },
+  };
+}
+
+export function digestSummary(hits, now = new Date()) {
+  const { cur: ch, prev: ph } = splitWeeks(hits, now);
+  const cur = summarize(ch), prev = summarize(ph);
+  const { curStart, end } = weekWindows(now);
+  return {
+    week: isoWeekStart(curStart),
+    from: curStart.toISOString(),
+    to: end.toISOString(),
+    generatedAt: new Date(now).toISOString(),
+    cur: serializeSummary(cur),
+    prev: serializeSummary(prev),
+    insights: insights(cur, prev),
+  };
 }

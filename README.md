@@ -66,9 +66,13 @@ Every page of tritone-productions.com counts visits itself: no Google Analytics,
   browser where `localStorage["tritone:no-track"] = "1"` (set by opening `/admin`). In `astro dev`, add `?track=debug`.
 - Tag outreach links so they show up by name: `https://tritone-productions.com/book-the-hut?utm_source=instagram&utm_medium=social&utm_campaign=fall-show`.
   `utm_medium=email` counts as Email. Extra click tracking: add `data-track="<event>" data-track-lbl="<detail>"` to any link or button.
-- **Weekly digest:** every Monday the **Weekly analytics digest** workflow posts last week vs the week before on the pinned
-  issue "Weekly site analytics" (subscribe to it for the email) and keeps it as an artifact. Locally:
-  `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) node scripts/analytics-digest.mjs`. Aggregation: `scripts/lib/analytics-agg.mjs`.
+- Never recorded: the studio's NAS / file-upload hosts, raw IPs or anything naming the studio (`isPrivateHost` in
+  `track.ts`): such a referrer counts as direct and an outbound click to one is labelled "file upload".
+- **Weekly digest:** every Monday the **Weekly analytics digest** workflow writes last week vs the week before into
+  Firestore collection `digests` (document id = ISO week start, `YYYY-MM-DD`; fields `md`, `summary` JSON, headline
+  numbers), which only `/admin` can read, and keeps the Markdown as a private workflow artifact. Nothing is posted to
+  GitHub, since the repository is public. Locally: `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) node scripts/analytics-digest.mjs`
+  (`DIGEST_NO_WRITE=1` to skip the Firestore write). Aggregation: `scripts/lib/analytics-agg.mjs`.
 
 ## Privacy (hard rule)
 The studio's street address must never be published or inferable. Only "Oakland, CA".

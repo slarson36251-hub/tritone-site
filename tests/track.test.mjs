@@ -72,6 +72,33 @@ test("only the referrer hostname is kept", () => {
   assert.equal(T.classifySource("https://" + "a".repeat(200) + ".com/", "", OWN).ref.length, 100);
 });
 
+test("the studio's own hosts are never recorded", () => {
+  for (const h of [
+    "hummingbirdhut.synology.me", "studio.quickconnect.to", "x.myds.me", "hummingbird-hut.example.com", "nas.ddns.net", "ddns.example.com",
+    "something.duckdns.org", "192.168.1.20", "10.0.0.5", "localhost", "diskstation.local", "[::1]", "fe80::1",
+  ])
+    assert.equal(T.isPrivateHost(h), true, h);
+  for (const h of ["sfjazz.org", "chatgpt.com", "google.com", "tritone-productions.com", "synology-fans.example.com", ""]) assert.equal(T.isPrivateHost(h), false, h);
+  // A referral from the NAS is direct with an empty referrer.
+  assert.deepEqual(T.classifySource("https://hummingbirdhut.synology.me/sharing/abc", "", OWN), { src: "direct", ref: "", us: "", um: "", uc: "", ux: "" });
+  assert.equal(T.referrerHost("https://x.quickconnect.to/"), "");
+  // An outbound click to the file-upload link keeps the event but not the host.
+  assert.deepEqual(T.classifyLink("https://hummingbirdhut.synology.me/sharing/abc", "/upload", OWN), [{ ev: "outbound", lbl: "file upload" }]);
+  assert.deepEqual(T.classifyLink("https://x.quickconnect.to/share", "/", OWN), [{ ev: "outbound", lbl: "file upload" }]);
+});
+
+test("a reload, back/forward, or a new tab from an in-site link continues a visit", () => {
+  assert.equal(T.isInternalReferrer("tritone-productions.com", OWN), true);
+  assert.equal(T.isInternalReferrer("www.tritone-productions.com", OWN), true);
+  assert.equal(T.isInternalReferrer("chatgpt.com", OWN), false);
+  assert.equal(T.isInternalReferrer("", OWN), false);
+  assert.equal(T.isContinuation("https://tritone-productions.com/shows", OWN, "navigate"), true);
+  assert.equal(T.isContinuation("", OWN, "reload"), true);
+  assert.equal(T.isContinuation("https://chatgpt.com/", OWN, "back_forward"), true);
+  assert.equal(T.isContinuation("https://chatgpt.com/", OWN, "navigate"), false);
+  assert.equal(T.isContinuation("", OWN, ""), false);
+});
+
 test("paths lose query and hash; devices by width; bots and hosts", () => {
   assert.equal(T.cleanPath("/shows/x?utm_source=y#z"), "/shows/x");
   assert.equal(T.cleanPath(""), "/");
@@ -79,6 +106,10 @@ test("paths lose query and hash; devices by width; bots and hosts", () => {
   assert.equal(T.isLikelyBot("Mozilla/5.0 (compatible; Googlebot/2.1)"), true);
   assert.equal(T.isLikelyBot("Mozilla/5.0 HeadlessChrome/120"), true);
   assert.equal(T.isLikelyBot("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1"), false);
+  assert.equal(T.isLikelyBot("Mozilla/5.0 (Linux; Android 11; Cubot X30) Chrome/120 Mobile Safari/537.36"), false, "a Cubot phone");
+  assert.equal(T.isLikelyBot("Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"), true);
+  assert.equal(T.isLikelyBot("Mozilla/5.0 (compatible; AhrefsBot/7.0)"), true);
+  assert.equal(T.isLikelyBot("Mozilla/5.0 (compatible; Bot)"), true);
   assert.equal(T.isLikelyBot("Mozilla/5.0 Safari", true), true, "navigator.webdriver");
   assert.equal(T.hostTracked("tritone-productions.com"), true);
   assert.equal(T.hostTracked("www.tritone-productions.com"), true);
@@ -156,6 +187,12 @@ const HITS = [
   ...visit(2, "c", "search", "google.com", ["/shows", "/shows/x"], [["show_click", "x"], ["ticket_click", "x"]]),
   ...visit(3, "d", "campaign", "", ["/listen"], [["play", "spotify: Fault Line Trio"]], { us: "instagram", um: "social", uc: "fall-show" }),
   ...visit(6, "e", "direct", "", ["/"], [], { dev: "d" }),
+  // this week, but not visits: a reload / new tab (first:false only) and events with hostile or private labels
+  hit(1, { sid: "i", src: "direct", ref: "", k: "pv", path: "/shows", first: false, land: "/shows" }),
+  hit(1, { sid: "i", src: "direct", ref: "", k: "ev", ev: "outbound", lbl: "hummingbirdhut.synology.me", path: "/upload" }),
+  hit(1, { sid: "i", src: "direct", ref: "", k: "ev", ev: "outbound", lbl: "evil.example|<img src=x onerror=alert(1)>`", path: "/" }),
+  // this week: a referral stored with a private host before the filter existed
+  ...visit(2, "j", "referral", "hummingbirdhut.synology.me", ["/upload"]),
   // last week: 2 visits
   ...visit(8, "f", "search", "bing.com", ["/"], [["book_submit", "2h Mon"]]),
   ...visit(10, "g", "direct", "", ["/shows"]),
@@ -171,10 +208,14 @@ test("decodeDoc reads Firestore REST documents", () => {
 test("weeks split and summarise", () => {
   const { cur, prev } = A.splitWeeks(HITS, NOW);
   const c = A.summarize(cur), p = A.summarize(prev);
-  assert.equal(c.visits, 5);
-  assert.equal(c.pageViews, 7);
+  assert.equal(c.visits, 6, "a sid without a first:true page view is not a visit");
+  assert.equal(c.continued, 1);
+  assert.equal(c.pageViews, 9);
   assert.equal(p.visits, 2);
-  assert.deepEqual(c.bySource, { ai: 2, search: 1, social: 0, email: 0, campaign: 1, referral: 0, direct: 1 });
+  assert.equal(p.continued, 0);
+  assert.deepEqual(c.bySource, { ai: 2, search: 1, social: 0, email: 0, campaign: 1, referral: 1, direct: 1 });
+  assert.equal(c.referrers.size, 0, "a private referrer host is never listed");
+  assert.deepEqual([...c.eventLabels.keys()].filter((k) => k.startsWith("outbound")).sort(), ["outbound\u0000evil.example|<img src=x onerror=alert(1)>`", "outbound\u0000file upload"]);
   assert.deepEqual([...c.aiRefs].sort(), [["chatgpt.com", 1], ["perplexity.ai", 1]]);
   assert.equal(c.events.get("book_submit"), 1);
   assert.deepEqual([...c.bookingsBySource], [["ai", 1]]);
@@ -190,15 +231,65 @@ test("insights are 3-5 plain sentences and the digest has every section", () => 
   const { cur, prev } = A.splitWeeks(HITS, NOW);
   const lines = A.insights(A.summarize(cur), A.summarize(prev));
   assert.ok(lines.length >= 3 && lines.length <= 5, lines.join("\n"));
-  for (const l of lines) assert.match(l, /^[A-Z0-9/“].*\.$/);
-  assert.match(lines[0], /up 150% at 5 \(from 2\)/);
+  for (const l of lines) assert.match(l, /^[A-Z0-9`].*\.$/);
+  assert.match(lines[0], /up 200% at 6 \(from 2\)/);
   assert.ok(lines.some((l) => /AI assistants/.test(l)), "AI line");
   assert.ok(lines.some((l) => /Book the Hut request/.test(l)), "booking line");
+  // Visitor-derived strings in the sentences are code spans.
+  assert.ok(lines.some((l) => /`chatgpt\.com`|`perplexity\.ai`/.test(l)), "assistant host in a code span");
   const md = A.renderDigest(HITS, NOW);
   for (const h of ["What changed", "Where visits came from", "AI assistants", "Top pages", "Outreach links", "Interest", "Booking requests by source"]) assert.ok(md.includes(`### ${h}`), h);
-  assert.ok(md.includes("| AI assistants | 2 | 0 | new | 40% |"), md);
+  assert.ok(md.includes("| AI assistants | 2 | 0 | new | 33% |"), md);
   assert.ok(!/claude\.ai/.test(md), "hits older than 14 days are ignored");
+  assert.ok(!/synology|hummingbirdhut/.test(md), "a private host never reaches the digest");
+  assert.ok(md.includes("`file upload`"));
+  assert.ok(md.includes("1 continued"));
   assert.deepEqual(A.insights(A.summarize([]), A.summarize([])).length, 1);
+});
+
+test("visitor strings in the digest are code spans with backticks and pipes removed", () => {
+  assert.equal(A.code("evil.example|<img src=x onerror=alert(1)>`"), "`evil.example│<img src=x onerror=alert(1)>`");
+  assert.equal(A.code("a\nb\r`c`"), "`abc`");
+  const md = A.renderDigest(HITS, NOW);
+  // The hostile label sits inside a single code span on one table-safe line, with no raw backtick or pipe inside it.
+  const line = md.split("\n").find((l) => l.includes("evil.example"));
+  assert.ok(line, "the label is listed");
+  assert.ok(!line.includes("alert(1)>`` ") && (line.match(/`/g) ?? []).length % 2 === 0, line);
+  assert.ok(!/evil\.example\|/.test(md), "a pipe in a label cannot break the table");
+  for (const u of ["/", "/shows", "/book-the-hut"]) assert.ok(md.includes(`| \`${u}\` |`), `${u} is a code span in Top pages`);
+});
+
+test("digestSummary is plain JSON with the document shape the dashboard reads", () => {
+  const s = A.digestSummary(HITS, NOW);
+  assert.equal(s.week, "2026-10-19", "ISO week start (Monday) of the window start");
+  assert.equal(s.from, "2026-10-19T15:00:00.000Z");
+  assert.equal(s.to, NOW.toISOString());
+  assert.equal(s.generatedAt, NOW.toISOString());
+  assert.deepEqual(Object.keys(s), ["week", "from", "to", "generatedAt", "cur", "prev", "insights"]);
+  assert.equal(s.cur.visits, 6);
+  assert.equal(s.cur.continued, 1);
+  assert.deepEqual(s.cur.aiRefs.sort((a, b) => a.key.localeCompare(b.key)), [{ key: "chatgpt.com", n: 1 }, { key: "perplexity.ai", n: 1 }]);
+  assert.deepEqual(s.cur.events.book_submit, 1);
+  assert.deepEqual(s.cur.bookingsBySource, { ai: 1 });
+  assert.deepEqual(s.cur.eventLabels.outbound.map((r) => r.key).sort(), ["evil.example|<img src=x onerror=alert(1)>`", "file upload"]);
+  assert.equal(JSON.parse(JSON.stringify(s)).cur.pages.length, s.cur.pages.length, "survives JSON");
+  assert.ok(Array.isArray(s.insights) && s.insights.length >= 3);
+  const doc = A.digestDoc(s, "# md");
+  assert.deepEqual(Object.keys(doc.fields).sort(), ["bookings", "from", "generatedAt", "md", "pageViews", "summary", "to", "visits", "week"]);
+  assert.deepEqual(doc.fields.week, { stringValue: "2026-10-19" });
+  assert.deepEqual(doc.fields.from, { timestampValue: s.from });
+  assert.deepEqual(doc.fields.visits, { integerValue: "6" });
+  assert.deepEqual(doc.fields.bookings, { integerValue: "1" });
+  assert.deepEqual(JSON.parse(doc.fields.summary.stringValue), s);
+  assert.equal(A.isoWeekStart(new Date("2026-10-25T23:59:00Z")), "2026-10-19", "Sunday belongs to the week starting Monday 19th");
+  assert.equal(A.isoWeekStart(new Date("2026-10-26T00:00:00Z")), "2026-10-26");
+});
+
+test("firestore.rules keeps digests read-only for admins and closed to clients", () => {
+  const rules = readFileSync(join(ROOT, "firestore.rules"), "utf8");
+  const block = rules.slice(rules.indexOf("match /digests/"), rules.indexOf("match /{document=**}"));
+  assert.match(block, /allow read: if isAdmin\(\);/);
+  assert.match(block, /allow create, update, delete: if false;/);
 });
 
 // ---- dist/ ----
