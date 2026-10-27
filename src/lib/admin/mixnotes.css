@@ -154,3 +154,4 @@ html.mn-follow-on, html.mn-follow-on body { overflow: hidden; }
 @media (prefers-reduced-motion: no-preference) {
   .mf-range { transition: background-color 0.2s; }
 }
+.mn a.adm-btn { text-decoration: none; }
