@@ -1,0 +1,135 @@
+---
+// Scott's mix-review queue: every review (song) with its clients' submissions and notes, share link,
+// QR code, close / reopen, copy / CSV, and follow-along mode for a tablet or second screen.
+// Same email-link sign-in as /admin; Firestore rules let only the admin emails read or change reviews.
+// Not linked anywhere public, noindex, out of the sitemap. /admin/mix-notes?demo=1 previews it with sample data.
+import { Image } from "astro:assets";
+import Base from "../../layouts/Base.astro";
+import logo from "../../assets/logo/tritone-wordmark-white.png";
+import "../../lib/admin/admin.css";
+import "../../lib/admin/mixnotes.css";
+
+const filters = [
+  ["open", "Open"],
+  ["doing", "Doing"],
+  ["done", "Done"],
+  ["all", "All"],
+];
+---
+<Base title="Mix notes · Tritone admin" description="Private mix-review queue for Tritone Productions: client notes on mixes, by song, client and submission." noindex>
+  <div id="mn" class="adm mn wrap" data-state="boot">
+    <div class="adm-demo" id="mn-demo" hidden>
+      <strong>Demo data</strong>
+      <span>Made-up songs and notes so you can preview the queue and follow-along mode. No audio plays and nothing is saved.</span>
+      <a href="/admin/mix-notes">Exit demo</a>
+    </div>
+
+    <header class="adm-head">
+      <div>
+        <p class="eyebrow adm-eyebrow">Tritone Productions · Private</p>
+        <h1 class="disp adm-title">Mix notes</h1>
+        <p class="adm-who" id="mn-who" aria-live="polite"></p>
+      </div>
+      <div class="adm-head-actions" id="mn-head-actions" hidden>
+        <a class="adm-btn adm-btn-ghost" href="/admin">Visitors</a>
+        <button type="button" class="adm-btn adm-btn-ghost adm-btn-icon" id="mn-refresh" aria-label="Reload the notes">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+        </button>
+        <button type="button" class="adm-btn adm-btn-ghost" id="mn-signout">Sign out</button>
+      </div>
+    </header>
+
+    <!-- Sign in -->
+    <section class="adm-auth" id="mn-auth" hidden aria-labelledby="mn-auth-h">
+      <div class="adm-card adm-auth-card">
+        <Image src={logo} alt="Tritone Productions" class="adm-auth-logo" widths={[240, 480]} sizes="180px" loading="eager" />
+        <h2 class="disp adm-h2" id="mn-auth-h">Sign in</h2>
+        <p class="adm-muted">Enter your email and Firebase sends you a one-time sign-in link. No password. (Signed in on /admin already? Then you're in here too.)</p>
+        <form id="mn-auth-form" novalidate>
+          <label class="tf-label" for="mn-email">Email</label>
+          <input class="adm-input" id="mn-email" type="email" autocomplete="email" inputmode="email" required placeholder="you@example.com" />
+          <button class="adm-btn adm-btn-primary adm-btn-block" id="mn-auth-btn" type="submit">Email me a sign-in link</button>
+        </form>
+        <p class="adm-notice" id="mn-auth-msg" role="status" hidden></p>
+        <p class="adm-muted adm-small">Just looking? <a href="/admin/mix-notes?demo=1">Preview with demo data</a>.</p>
+      </div>
+    </section>
+
+    <!-- Queue -->
+    <div class="adm-app" id="mn-app" hidden>
+      <div class="adm-toolbar mn-toolbar">
+        <div class="adm-seg mn-seg" id="mn-filter" role="group" aria-label="Which notes">
+          {filters.map(([k, label]) => <button type="button" data-filter={k} aria-pressed="false">{label}</button>)}
+        </div>
+        <p class="mn-summary" id="mn-summary"></p>
+      </div>
+      <p class="adm-status" id="mn-status" role="status" aria-live="polite"></p>
+      <div class="mn-list" id="mn-list"></div>
+      <p class="adm-muted adm-small mn-foot">Tap ▶ on a note to hear the song from where the client started listening to the note's time, then their voice note. Audio streams from the studio NAS; a closed review won't play until you reopen it.</p>
+    </div>
+
+    <!-- Now playing (queue) -->
+    <div class="mn-np" id="mn-np" hidden role="status" aria-live="polite">
+      <span class="mn-np-what" id="mn-np-what"></span>
+      <span class="mn-np-time" id="mn-np-time"></span>
+      <button type="button" class="adm-btn adm-btn-primary mn-sm" id="mn-np-stop">Stop</button>
+    </div>
+
+    <!-- Follow-along mode -->
+    <section class="mn-follow" id="mn-follow" hidden role="dialog" aria-modal="true" aria-labelledby="mf-title">
+      <header class="mf-top">
+        <Image src={logo} alt="Tritone Productions" class="mf-logo" widths={[160, 320]} sizes="110px" />
+        <div class="mf-titles">
+          <p class="eyebrow mf-eyebrow">Follow along</p>
+          <h2 class="disp mf-title" id="mf-title"></h2>
+          <p class="mf-sub" id="mf-sub"></p>
+        </div>
+        <button type="button" class="adm-btn adm-btn-ghost" id="mf-close">Close</button>
+      </header>
+
+      <div class="mf-wave" id="mf-wave" aria-label="Waveform: tap to move the playhead, tap a note to jump to it">
+        <div class="mf-wave-svg" id="mf-wave-svg"></div>
+        <div class="mf-markers" id="mf-markers"></div>
+        <div class="mf-ranges" id="mf-ranges"></div>
+        <div class="mf-head" id="mf-head" aria-hidden="true"></div>
+      </div>
+      <div class="mf-clock">
+        <button type="button" class="mf-play" id="mf-play" aria-label="Play">
+          <svg class="i-play" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          <svg class="i-pause" viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>
+        </button>
+        <span class="mf-time" id="mf-time">0:00.0</span>
+        <span class="mf-bb" id="mf-bb"></span>
+        <span class="mf-voice-on" aria-live="polite">Voice note playing</span>
+      </div>
+
+      <div class="mf-main">
+        <article class="mf-note" id="mf-note" aria-live="polite"></article>
+        <div class="mf-side">
+          <div class="mf-controls">
+            <button type="button" class="adm-btn mf-big" id="mf-prev">Previous</button>
+            <button type="button" class="adm-btn mf-big" id="mf-next">Next</button>
+            <button type="button" class="adm-btn mf-big" id="mf-replay">Replay clip</button>
+            <button type="button" class="adm-btn adm-btn-primary mf-big" id="mf-done">Mark done</button>
+          </div>
+          <div class="mf-toggles">
+            <button type="button" class="adm-switch" id="mf-pause-at" role="switch" aria-checked="true"><span class="adm-switch-k" aria-hidden="true"></span>Pause at each note</button>
+            <button type="button" class="adm-switch" id="mf-auto-voice" role="switch" aria-checked="true"><span class="adm-switch-k" aria-hidden="true"></span>Play voice notes automatically</button>
+          </div>
+          <p class="mf-status" id="mf-status" role="status"></p>
+          <p class="mf-keys">Keys: space play / pause · ← → previous / next · R replay · D done · Esc close</p>
+        </div>
+      </div>
+    </section>
+
+    <audio id="mn-song-audio" preload="auto" playsinline></audio>
+    <audio id="mn-voice-audio" preload="auto" playsinline></audio>
+  </div>
+  <noscript><p class="wrap">The mix notes queue needs JavaScript.</p></noscript>
+</Base>
+
+<script>
+  import { init, teardown } from "../../lib/admin/mixnotes-page";
+  document.addEventListener("astro:page-load", () => { if (document.getElementById("mn")) init(); });
+  document.addEventListener("astro:before-swap", teardown);
+</script>

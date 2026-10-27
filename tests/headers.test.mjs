@@ -47,6 +47,35 @@ test("the CSP has no wildcard sources and no unsafe script sources", () => {
   assert.ok(csp["form-action"], "form-action");
 });
 
+// Mix review (docs/mix-review-contract.md): audio streams from the NAS stream server, never from Firebase.
+const STREAM = "https://stream.tritone-productions.com";
+const rule = (src) => hosting.headers.find((h) => h.source === src);
+const ruleHeader = (src, k) => rule(src)?.headers.find((h) => h.key.toLowerCase() === k.toLowerCase())?.value;
+
+test("the CSP lets the review page and /admin/mix-notes stream from the NAS", () => {
+  assert.ok(csp["media-src"].includes(STREAM), "media-src has the stream origin");
+  assert.ok(csp["media-src"].includes("'self'"), "media-src keeps 'self'");
+  assert.ok(csp["connect-src"].includes(STREAM), "connect-src has the stream origin (sign / upload)");
+});
+
+test("/review is private: noindex, no referrer, never cached", () => {
+  for (const src of ["/review", "/review/**"]) {
+    assert.equal(ruleHeader(src, "X-Robots-Tag"), "noindex, nofollow", `${src} X-Robots-Tag`);
+    assert.equal(ruleHeader(src, "Referrer-Policy"), "no-referrer", `${src} Referrer-Policy`);
+    assert.equal(ruleHeader(src, "Cache-Control"), "no-store", `${src} Cache-Control`);
+  }
+  // Rules apply in order and a later one wins, so the review rules must come after "**".
+  const i = (src) => hosting.headers.findIndex((h) => h.source === src);
+  assert.ok(i("/review") > i("**") && i("/review/**") > i("**"), "review rules after the global rule");
+});
+
+test("/admin and its sub-pages (mix notes) are noindex and never cached", () => {
+  for (const src of ["/admin", "/admin/**"]) {
+    assert.equal(ruleHeader(src, "X-Robots-Tag"), "noindex, nofollow", `${src} X-Robots-Tag`);
+    assert.equal(ruleHeader(src, "Cache-Control"), "no-store", `${src} Cache-Control`);
+  }
+});
+
 // ---- dist/ checks (CI builds before npm test) ----
 const DIST = join(ROOT, "dist");
 const built = existsSync(join(DIST, "index.html"));

@@ -74,6 +74,23 @@ Every page of tritone-productions.com counts visits itself: no Google Analytics,
   GitHub, since the repository is public. Locally: `GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token) node scripts/analytics-digest.mjs`
   (`DIGEST_NO_WRITE=1` to skip the Firestore write). Aggregation: `scripts/lib/analytics-agg.mjs`.
 
+## Mix review (Scott and clients)
+Clients review a mix bounce on a hidden page, `/review?k=<reviewKey>` (the link is the key; contract:
+`docs/mix-review-contract.md`). Scott's side is **`/admin/mix-notes`** (same email-link sign-in as `/admin`;
+`?demo=1` previews it with sample data): every song with its share link, QR code, "Open as client", Close / Reopen;
+notes grouped by client and submission (newest first) with Open / Doing / Done, replies, Copy notes and CSV.
+Tap ▶ on a note to hear the song from where the client started to the note, then their voice note.
+**Follow along** (per submission, or all open notes of a version) is for an iPad or second screen while you work in
+Logic: waveform with markers and note ranges, the current note big, pause-at-each-note and auto-play-voice switches,
+Previous / Next / Replay clip / Mark done, and the screen stays awake.
+- Firestore: `reviews/{key}` with `versions`, `submissions`, `notes` (rules in `firestore.rules`, tested against the
+  emulator with `npm run test:rules`, which needs Java; CI runs it on every PR).
+- Audio streams from the NAS stream server, never from Firebase. Its address is the build variable
+  `PUBLIC_REVIEW_STREAM_URL` (default `https://stream.tritone-productions.com`). **To change it**, update that variable
+  *and* the `media-src` / `connect-src` entries of the Content-Security-Policy in `firebase.json` (and `STREAM` in
+  `tests/headers.test.mjs`), or the browser will refuse to play.
+- `/review` and `/admin/**` are noindex, never cached, kept out of the sitemap; `/review` also sends no referrer.
+
 ## Privacy (hard rule)
 The studio's street address must never be published or inferable. Only "Oakland, CA".
 No maps, no geo in schema, no photo metadata, and never read the Hummingbird Hut calendar.

@@ -38,7 +38,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://i.ytimg.com https://lh3.googleusercontent.com https://drive.google.com https://images.squarespace-cdn.com https://static1.squarespace.com; font-src 'self'; media-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src https://bandcamp.com https://open.spotify.com https://www.youtube-nocookie.com https://w.soundcloud.com; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'"
+            "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://i.ytimg.com https://lh3.googleusercontent.com https://drive.google.com https://images.squarespace-cdn.com https://static1.squarespace.com; font-src 'self'; media-src 'self' https://stream.tritone-productions.com; connect-src 'self' https://stream.tritone-productions.com https://script.google.com https://script.googleusercontent.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src https://bandcamp.com https://open.spotify.com https://www.youtube-nocookie.com https://w.soundcloud.com; form-action 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'"
           }
         ]
       },
@@ -48,6 +48,53 @@
           {
             "key": "X-Robots-Tag",
             "value": "noindex, nofollow"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
+        ]
+      },
+      {
+        "source": "/admin/**",
+        "headers": [
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
+        ]
+      },
+      {
+        "source": "/review",
+        "headers": [
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
+        ]
+      },
+      {
+        "source": "/review/**",
+        "headers": [
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
           },
           {
             "key": "Cache-Control",
@@ -143,5 +190,14 @@
   },
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
   }
 }

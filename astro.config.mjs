@@ -76,7 +76,7 @@ export default defineConfig({
   integrations: [
     externalizeInlineScripts(),
     sitemap({
-      filter: (page) => !/\/404$/.test(page),
+      filter: (page) => !/\/(404|review|admin)(\/|$)/.test(new URL(page).pathname),
       serialize(item) {
         const html = builtPage(item.url);
         if (/<meta name="robots" content="noindex/.test(html) || /http-equiv="refresh"/.test(html)) return undefined;
