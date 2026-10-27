@@ -70,13 +70,13 @@ function synth() {
   return cache;
 }
 
-function version(id: string, label: string, order: number): Version {
+function version(id: string, label: string, order: number, bpm: number): Version {
   return {
     id, label, order,
     bounceName: `Demo Tune ${id}.wav`,
     durationSec: DUR,
     sampleRate: RATE,
-    bpm: BPM,
+    bpm,
     beatsPerBar: 4,
     offsetSec: 0,
     markers: MARKERS,
@@ -85,7 +85,8 @@ function version(id: string, label: string, order: number): Version {
 }
 
 export function demoVersions(): Version[] {
-  return [version("v2", "v2 — final", 2), version("v1", "v1 — rough", 1)];
+  // v2 is what the publisher writes now (cycle range, no tempo: bpm 0); v1 shows the Bar · Beat path.
+  return [version("v2", "v2 — final", 2, 0), version("v1", "v1 — rough", 1, BPM)];
 }
 
 export function demoNotes(): Note[] {

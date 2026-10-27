@@ -4,7 +4,7 @@
 import type { Draft, Note, Review, Version } from "./schema.ts";
 import { LIMITS, REVIEW_KEY_RE, STATUS_LABEL, VERSION_ID_RE } from "./schema.ts";
 import {
-  assignLanes, barBeat, clamp, clipStart, fmtShort, fmtTime, frac, laneSections, moveRange, moveStart,
+  assignLanes, barBeat, clamp, hasTempo, clipStart, fmtShort, fmtTime, frac, laneSections, moveRange, moveStart,
   nextMarkerTime, prevMarkerTime, round3, sectionIndexAt, sectionsOf, viewRange, xToTime, type Section,
 } from "./music.ts";
 import {
@@ -335,6 +335,7 @@ export class ReviewApp {
       sel.parentElement!.hidden = true;
     }
     this.el("rv-total").textContent = `of ${fmtTime(v.durationSec)}`;
+    this.el("rv-bb").hidden = !hasTempo(v);
     this.renderMarkers();
     this.renderDrafts();
     this.renderSent();
@@ -385,6 +386,11 @@ export class ReviewApp {
     if (this.dragT !== null) return this.dragT;
     if (this.pendingSeek !== null) return this.pendingSeek;
     return this.A.currentTime || 0;
+  }
+
+  /** Bar · Beat only when the version has a tempo (bpm > 0). */
+  get hasBars(): boolean {
+    return !!this.version && hasTempo(this.version);
   }
 
   get duration() {
@@ -537,9 +543,10 @@ export class ReviewApp {
     const si = sectionIndexAt(this.sections, t);
     const sec = this.sections[si];
     const { bar, beat } = barBeat(t, this.version);
+    const bars = this.hasBars;
     this.setText("rv-now", fmtTime(t));
     this.setText("rv-sec", sec?.name || "—");
-    this.setText("rv-bb", `Bar ${bar} · Beat ${beat}`);
+    this.setText("rv-bb", bars ? `Bar ${bar} · Beat ${beat}` : "");
     this.setText("rv-capture-time", fmtTime(t));
     if (si !== this.lastFrame.sec) {
       this.lastFrame.sec = si;
@@ -552,10 +559,10 @@ export class ReviewApp {
     head.style.left = `${f * 100}%`;
     const wave = this.el("rv-wave");
     wave.setAttribute("aria-valuenow", t.toFixed(1));
-    wave.setAttribute("aria-valuetext", `${fmtTime(t)}, ${sec?.name ? sec.name + ", " : ""}bar ${bar}`);
+    wave.setAttribute("aria-valuetext", `${fmtTime(t)}${sec?.name ? ", " + sec.name : ""}${bars ? `, bar ${bar}` : ""}`);
     if (this.drag?.kind === "wave") {
       const b = this.el("rv-bubble");
-      b.textContent = `${fmtTime(t)} · ${sec?.name ? sec.name + " · " : ""}Bar ${bar}`;
+      b.textContent = [fmtTime(t), sec?.name, bars ? `Bar ${bar}` : ""].filter(Boolean).join(" · ");
       b.style.left = `${clamp(f * 100, 14, 86)}%`;
     }
 
@@ -1002,7 +1009,7 @@ export class ReviewApp {
     const b = this.el("rv-bubble");
     const a = barBeat(d.from, this.version);
     const z = barBeat(d.t, this.version);
-    b.textContent = `${fmtTime(d.from)} – ${fmtTime(d.t)} · Bar ${a.bar}${z.bar !== a.bar ? `–${z.bar}` : ""}`;
+    b.textContent = `${fmtTime(d.from)} – ${fmtTime(d.t)}${this.hasBars ? ` · Bar ${a.bar}${z.bar !== a.bar ? `–${z.bar}` : ""}` : ""}`;
     b.style.left = `${clamp(frac((this.drag as any)?.mode === "start" ? d.from : (d.from + d.t) / 2, v) * 100, 14, 86)}%`;
   }
 
@@ -1041,7 +1048,8 @@ export class ReviewApp {
     const play = btn("rv-chip", "", () => this.listenDraft(d), `Listen to draft ${n}: ${fmtTime(d.from)} to ${fmtTime(d.t)}${d.kind === "voice" ? ", then your voice note" : ""}`);
     play.innerHTML = ICON.small;
     play.append(` ${fmtTime(d.from)} – ${fmtTime(d.t)}`);
-    top.append(h("span", "rv-num", String(n)), play, h("span", "rv-sec", sec), h("span", "rv-dim", `Bar ${bar} · ${beat}`));
+    top.append(h("span", "rv-num", String(n)), play, h("span", "rv-sec", sec));
+    if (this.hasBars) top.append(h("span", "rv-dim", `Bar ${bar} · ${beat}`));
     const body = h("div", "rv-card-body");
     const icon = h("span", "rv-icon");
     icon.innerHTML = d.kind === "voice" ? ICON.mic : ICON.lines;
@@ -1118,7 +1126,8 @@ export class ReviewApp {
     const play = btn("rv-chip", "", () => this.playNote(n), `Play from ${fmtTime(n.from)}${n.kind === "voice" ? ", then the voice note" : ""}`);
     play.innerHTML = ICON.small;
     play.append(` ${fmtTime(n.t)}`);
-    top.append(play, h("span", "rv-sec", n.section), h("span", "rv-dim", `Bar ${n.bar} · ${n.beat}`));
+    top.append(play, h("span", "rv-sec", n.section));
+    if (this.hasBars) top.append(h("span", "rv-dim", `Bar ${n.bar} · ${n.beat}`));
     const body = h("div", "rv-card-body");
     const icon = h("span", "rv-icon");
     icon.innerHTML = n.kind === "voice" ? ICON.mic : ICON.lines;
@@ -1202,7 +1211,7 @@ export class ReviewApp {
     const { bar, beat } = barBeat(c.t, this.version);
     const sec = this.sections[sectionIndexAt(this.sections, c.t)]?.name;
     this.el("rv-c-title").textContent = `Note at ${fmtTime(c.t)}`;
-    this.el("rv-c-where").textContent = `${sec ? sec + " · " : ""}Bar ${bar} · Beat ${beat}`;
+    this.el("rv-c-where").textContent = [sec, this.hasBars ? `Bar ${bar} · Beat ${beat}` : ""].filter(Boolean).join(" · ");
     this.el("rv-c-from").textContent = fmtTime(c.from);
     this.el("rv-c-to").textContent = fmtTime(c.t);
   }

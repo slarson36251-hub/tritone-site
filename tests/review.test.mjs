@@ -26,7 +26,24 @@ test("bar and beat follow the contract formula", () => {
   assert.deepEqual(M.barBeat(101.3, tempo), { bar: Math.floor(Math.floor((101.3 * 160) / 60) / 4) + 1, beat: (Math.floor((101.3 * 160) / 60) % 4) + 1 });
   assert.deepEqual(M.barBeat(0, { bpm: 120, beatsPerBar: 3, offsetSec: 1 }), { bar: 1, beat: 3 }); // offset shifts session time
   assert.deepEqual(M.barBeat(0, { bpm: 120, beatsPerBar: 4, offsetSec: -3 }), { bar: 1, beat: 1 }); // before session zero clamps
-  assert.deepEqual(M.barBeat(10, { bpm: 0, beatsPerBar: 0, offsetSec: 0 }), M.barBeat(10, { bpm: 120, beatsPerBar: 4, offsetSec: 0 }));
+});
+
+test("no tempo (bpm 0 or missing): no bars, notes still carry bar 1 · beat 1", () => {
+  for (const t of [{ bpm: 0, beatsPerBar: 4, offsetSec: 0 }, { beatsPerBar: 4, offsetSec: 0 }, { bpm: -5, beatsPerBar: 4, offsetSec: 0 }, { bpm: NaN, beatsPerBar: 4, offsetSec: 0 }, null]) {
+    assert.equal(M.hasTempo(t), false, JSON.stringify(t));
+    if (t) assert.deepEqual(M.barBeat(123.4, t), { bar: 1, beat: 1 });
+  }
+  assert.equal(M.hasTempo({ bpm: 160 }), true);
+  const v0 = { ...version, bpm: 0 };
+  const n = F.noteFromDraft(draft(), v0, "Jay", "S");
+  assert.equal(n.bar, 1);
+  assert.equal(n.beat, 1);
+  assert.equal(n.section, "Head B", "section still comes from the markers");
+  assert.deepEqual(F.noteFields(n).bar, { integerValue: "1" });
+  assert.deepEqual(F.noteFields(n).beat, { integerValue: "1" });
+  // A version written without bpm (or with 0) parses as no tempo.
+  assert.equal(F.docToVersion({ name: "x/versions/v1", fields: { durationSec: { doubleValue: 60 } } }).bpm, 0);
+  assert.equal(F.docToVersion({ name: "x/versions/v1", fields: { durationSec: { doubleValue: 60 }, bpm: { integerValue: "0" } } }).bpm, 0);
 });
 
 const markers = [

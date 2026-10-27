@@ -12,12 +12,23 @@ export interface Tempo {
 export const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 /**
+ * No tempo (bpm 0 or missing): the publisher bounces the Logic cycle range with no click, so
+ * times are plain m:ss.s and the page shows no Bar · Beat anywhere.
+ */
+export function hasTempo(tempo: Partial<Tempo> | null | undefined): boolean {
+  const bpm = Number(tempo?.bpm);
+  return Number.isFinite(bpm) && bpm > 0;
+}
+
+/**
  * Contract: beat = floor((t + offsetSec) * bpm / 60); bar = floor(beat / beatsPerBar) + 1;
  * beatInBar = beat % beatsPerBar + 1. Bars before session zero clamp to bar 1, beat 1.
  * A tiny epsilon keeps a marker placed exactly on a downbeat from reading as the beat before.
  */
 export function barBeat(t: number, tempo: Tempo): { bar: number; beat: number } {
-  const bpm = tempo.bpm > 0 ? tempo.bpm : 120;
+  // Without a tempo, notes still carry bar 1 · beat 1 so their shape satisfies the rules.
+  if (!hasTempo(tempo)) return { bar: 1, beat: 1 };
+  const bpm = tempo.bpm;
   const per = clamp(Math.round(tempo.beatsPerBar) || 4, 1, 16);
   const beats = Math.floor(((t || 0) + (tempo.offsetSec || 0)) * bpm / 60 + 1e-6);
   if (beats < 0) return { bar: 1, beat: 1 };

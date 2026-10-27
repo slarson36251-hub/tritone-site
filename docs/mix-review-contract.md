@@ -61,6 +61,7 @@ media        map      { wav: "<path>", aac: "<path>" }   paths relative to the N
                       and  "Projects/Logic /Fault Line/Mix/Final Mixes/Translucent/Bounce/_review/Translucent v2 - final.m4a"
 ```
 Bar/beat for a time t: `beat = floor((t + offsetSec) * bpm / 60)`; `bar = floor(beat / beatsPerBar) + 1`; `beatInBar = beat % beatsPerBar + 1`.
+**No tempo (Scott, v1.2):** markers come from the Logic cycle range and times run from cycle start (0) to cycle end; the publisher writes `bpm: 0`. With `bpm` 0 or missing the page shows no Bar · Beat anywhere (m:ss.s and section only) and notes still send `bar: 1`, `beat: 1`.
 Clients: `get`/`list` when the parent review is open. Writes: publisher/admin only.
 
 ### `reviews/{reviewKey}/notes/{noteId}`

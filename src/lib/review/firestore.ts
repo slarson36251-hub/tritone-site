@@ -61,7 +61,7 @@ export function docToVersion(doc: FsDoc | undefined): Version | null {
     bounceName: str(g("bounceName"), 300),
     durationSec,
     sampleRate: num(g("sampleRate"), 48000),
-    bpm: num(g("bpm"), 120) || 120,
+    bpm: Math.max(0, num(g("bpm"), 0)), // 0 = no tempo: no Bar · Beat shown
     beatsPerBar: clamp(Math.round(num(g("beatsPerBar"), 4)) || 4, 1, 16),
     offsetSec: num(g("offsetSec")),
     markers,
