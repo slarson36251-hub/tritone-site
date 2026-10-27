@@ -35,7 +35,8 @@ test("the CSP has no wildcard sources and no unsafe script sources", () => {
   for (const [dir, sources] of Object.entries(csp)) {
     for (const s of sources) {
       assert.ok(!s.includes("*"), `${dir}: wildcard source ${s}`);
-      assert.ok(!/^(https?:|data:|blob:)$/.test(s), `${dir}: bare scheme source ${s}`);
+      // blob: only in media-src: the mix review plays back the client's own voice recording before sending.
+      if (!(dir === "media-src" && s === "blob:")) assert.ok(!/^(https?:|data:|blob:)$/.test(s), `${dir}: bare scheme source ${s}`);
     }
   }
   assert.deepEqual(csp["default-src"], ["'self'"]);
@@ -45,6 +46,37 @@ test("the CSP has no wildcard sources and no unsafe script sources", () => {
   assert.deepEqual(csp["base-uri"], ["'self'"]);
   assert.deepEqual(csp["frame-ancestors"], ["'self'"]);
   assert.ok(csp["form-action"], "form-action");
+});
+
+// Mix review (docs/mix-review-contract.md): audio streams from the NAS stream server, never from Firebase.
+const STREAM = "https://stream.tritone-productions.com";
+const rule = (src) => hosting.headers.find((h) => h.source === src);
+const ruleHeader = (src, k) => rule(src)?.headers.find((h) => h.key.toLowerCase() === k.toLowerCase())?.value;
+
+test("the CSP lets the review page stream from the NAS and play local voice previews", () => {
+  assert.ok(csp["media-src"].includes(STREAM), "media-src has the stream origin");
+  assert.ok(csp["media-src"].includes("blob:"), "media-src has blob: (voice preview)");
+  assert.ok(csp["media-src"].includes("'self'"), "media-src keeps 'self'");
+  assert.ok(csp["connect-src"].includes(STREAM), "connect-src has the stream origin (sign / upload)");
+  assert.ok(!csp["connect-src"].includes("blob:"), "connect-src without blob:");
+});
+
+test("/review is private: noindex, no referrer, never cached", () => {
+  for (const src of ["/review", "/review/**"]) {
+    assert.equal(ruleHeader(src, "X-Robots-Tag"), "noindex, nofollow", `${src} X-Robots-Tag`);
+    assert.equal(ruleHeader(src, "Referrer-Policy"), "no-referrer", `${src} Referrer-Policy`);
+    assert.equal(ruleHeader(src, "Cache-Control"), "no-store", `${src} Cache-Control`);
+  }
+  // Rules apply in order and a later one wins, so the review rules must come after "**".
+  const i = (src) => hosting.headers.findIndex((h) => h.source === src);
+  assert.ok(i("/review") > i("**") && i("/review/**") > i("**"), "review rules after the global rule");
+});
+
+test("/admin and its sub-pages (mix notes) are noindex and never cached", () => {
+  for (const src of ["/admin", "/admin/**"]) {
+    assert.equal(ruleHeader(src, "X-Robots-Tag"), "noindex, nofollow", `${src} X-Robots-Tag`);
+    assert.equal(ruleHeader(src, "Cache-Control"), "no-store", `${src} Cache-Control`);
+  }
 });
 
 // ---- dist/ checks (CI builds before npm test) ----
