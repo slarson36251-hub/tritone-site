@@ -9,10 +9,10 @@ import {
 } from "./music.ts";
 import {
   ReviewError, cleanName, commitBody, commitSubmission, draftReady, getReview, listNotes, listVersions,
-  noteFromDraft, pickVersion, randomId, type ErrorKind,
+  noteExists, noteFromDraft, pickVersion, randomId, type ErrorKind,
 } from "./firestore.ts";
-import { signMix, signVoice, streamBase, uploadVoice, type MediaKind } from "./stream.ts";
-import { deleteVoice, getVoice, loadDrafts, loadName, putVoice, saveDrafts, saveName } from "./drafts.ts";
+import { fetchSigned, signMix, signVoice, streamBase, uploadVoice, type MediaKind } from "./stream.ts";
+import { deleteVoice, getVoice, loadDrafts, loadName, planSend, putVoice, saveDrafts, saveName } from "./drafts.ts";
 import { Dictation, VoiceRecorder, dictationCtor, isIOS, isSafari } from "./recorder.ts";
 import { drawWave } from "./waveform.ts";
 import { BufferPlayer, Sound, audioSession } from "./webaudio.ts";
@@ -30,6 +30,7 @@ interface Api {
   voiceData(voiceId: string): Promise<ArrayBuffer>;
   uploadVoice(version: string, blob: Blob): Promise<string>;
   commit(body: ReturnType<typeof commitBody>): Promise<void>;
+  noteExists(noteId: string): Promise<boolean>;
 }
 
 /** What the player needs from the mix: an <audio> element, or BufferPlayer in the demo. */
@@ -50,19 +51,10 @@ function liveApi(key: string, apiKey: string, stream: string): Api {
     versions: () => listVersions(key, apiKey),
     notes: () => listNotes(key, apiKey),
     mix: async (v, kind) => ({ url: await signMix(stream, key, v, kind) }),
-    voiceData: async (id) => {
-      const url = await signVoice(stream, key, id);
-      let res: Response;
-      try {
-        res = await fetch(url, { credentials: "omit", referrerPolicy: "no-referrer" });
-      } catch {
-        throw new ReviewError("offline", "voice network");
-      }
-      if (!res.ok) throw new ReviewError(res.status === 403 || res.status === 404 ? "inactive" : "server", `voice ${res.status}`, res.status);
-      return res.arrayBuffer();
-    },
+    voiceData: async (id) => fetchSigned(await signVoice(stream, key, id)),
     uploadVoice: (v, blob) => uploadVoice(stream, key, v, blob),
     commit: (body) => commitSubmission(apiKey, body),
+    noteExists: (id) => noteExists(key, id, apiKey),
   };
 }
 
@@ -86,8 +78,10 @@ function demoApi(): Api {
       voices.set(id, blob);
       return id;
     },
+    noteExists: async (id) => sent.some((n) => n.id === id),
     commit: async (body) => {
       await wait(500);
+      if (sent.some((n) => n.id === body.writes[1]?.update.name.split("/").pop())) throw new ReviewError("exists", "already sent", 409);
       for (const w of body.writes.slice(1)) {
         const f = w.update.fields as Record<string, any>;
         const v = (k: string) => f[k]?.stringValue ?? Number(f[k]?.doubleValue ?? f[k]?.integerValue ?? 0);
@@ -145,6 +139,10 @@ const ERROR_TEXT: Record<ErrorKind, { title: string; body: string }> = {
   config: {
     title: "Mix review isn't set up yet",
     body: "This part of the site isn't configured yet. Reply to Scott and he'll send the mix another way.",
+  },
+  exists: {
+    title: "Something went wrong",
+    body: "The review couldn't be loaded just now. Try again in a minute.",
   },
   server: {
     title: "Something went wrong",
@@ -594,6 +592,8 @@ export class ReviewApp {
     document.addEventListener("keydown", () => this.unlock(), { capture: true, once: true });
 
     this.A.addEventListener("loadedmetadata", () => {
+      // A (re)signed link worked: a tab left open for days keeps re-signing after every 6 h expiry.
+      this.mediaTries = 0;
       if (this.pendingSeek !== null) {
         const t = this.pendingSeek;
         try {
@@ -1293,12 +1293,15 @@ export class ReviewApp {
     audioSession("play-and-record");
     const err = await this.recorder.open();
     if (err) {
+      audioSession("auto");
       this.composerMsg(err === "denied"
         ? "The microphone is blocked. Allow it for this site in your browser settings, or type your note instead."
         : "The microphone couldn't start. Type your note instead, or try again.", true);
       return;
     }
     if (!this.recorder.start(this.safari || this.ios)) {
+      this.recorder.close();
+      audioSession("auto");
       this.composerMsg("Recording couldn't start. Try again.", true);
       return;
     }
@@ -1327,6 +1330,7 @@ export class ReviewApp {
     this.dictation = null;
     const r = await this.recorder.stop();
     this.recorder.close(); // mic off between takes (also restores normal playback on iPhone)
+    audioSession("auto");
     this.pause();
     c.recording = false;
     this.root.classList.remove("rv-recording");
@@ -1358,7 +1362,7 @@ export class ReviewApp {
     const now = Date.now();
     let d = c.draftId ? this.drafts.find((x) => x.id === c.draftId) : undefined;
     if (!d) {
-      d = { id: randomId(20), versionId: this.version.id, t: c.t, from: c.from, kind: "text", text: "", voiceSec: 0, hasVoice: false, voiceType: "", voiceId: "", createdAt: now, updatedAt: now };
+      d = { id: randomId(20), versionId: this.version.id, t: c.t, from: c.from, kind: "text", text: "", voiceSec: 0, hasVoice: false, voiceType: "", voiceId: "", submissionId: "", noteId: "", createdAt: now, updatedAt: now };
       this.drafts.push(d);
     }
     d.t = c.t;
@@ -1393,7 +1397,10 @@ export class ReviewApp {
   closeComposer() {
     if (this.composer?.recording) {
       this.dictation?.stop();
-      this.recorder.stop().then(() => this.recorder.close());
+      this.recorder.stop().then(() => {
+        this.recorder.close();
+        audioSession("auto");
+      });
       this.pause();
       this.root.classList.remove("rv-recording");
     }
@@ -1428,63 +1435,92 @@ export class ReviewApp {
       return;
     }
     if (!this.name) return this.askName(() => this.send());
-    const all = this.versionDrafts().filter(draftReady);
-    if (!all.length) return this.sendMsg("Add a note first: words, or a voice note.", true);
-    const batch = all.slice(0, LIMITS.notesPerSubmission);
+    const ready = this.versionDrafts().filter(draftReady);
+    const plan = planSend(ready, () => randomId(20), LIMITS.notesPerSubmission);
+    if (!plan) return this.sendMsg("Add a note first: words, or a voice note.", true);
+    // Fix this round's ids on the device before anything leaves it, so a retry (after a timeout,
+    // a lost answer or a reload) writes the very same documents instead of a second round.
+    if (plan.fresh) {
+      for (const { draft, noteId } of plan.notes) {
+        draft.submissionId = plan.submissionId;
+        draft.noteId = noteId;
+      }
+      this.persist();
+    }
+    const batch = plan.notes.map((n) => n.draft);
     this.sending = true;
     this.renderDrafts();
     this.sendMsg("Sending…");
     try {
-      // 1. Voice notes to the studio drive (ids kept on the draft, so a retry doesn't upload twice).
-      const voices = batch.filter((d) => d.kind === "voice" && !d.voiceId);
-      for (let i = 0; i < voices.length; i++) {
-        const d = voices[i];
-        this.sendMsg(`Uploading voice note ${i + 1} of ${voices.length}…`);
-        const blob = await getVoice(this.key, d.id);
-        if (!blob) {
-          d.hasVoice = false;
+      // 0. A retried round may already be in Firestore (the answer got lost): then it is sent.
+      let landed = false;
+      if (!plan.fresh) landed = await this.api.noteExists(plan.notes[0].noteId).catch(() => false);
+      if (!landed) {
+        // 1. Voice notes to the studio drive (ids kept on the draft, so a retry doesn't upload twice).
+        const voices = batch.filter((d) => d.kind === "voice" && !d.voiceId);
+        for (let i = 0; i < voices.length; i++) {
+          const d = voices[i];
+          this.sendMsg(`Uploading voice note ${i + 1} of ${voices.length}…`);
+          const blob = await getVoice(this.key, d.id);
+          if (!blob) {
+            d.hasVoice = false;
+            this.persist();
+            throw new Error(`missing:${this.draftNumber(d.id)}`);
+          }
+          d.voiceId = await this.api.uploadVoice(this.version.id, blob);
+          this.sentBlobs.set(d.voiceId, blob);
           this.persist();
-          throw new Error(`missing:${this.draftNumber(d.id)}`);
         }
-        d.voiceId = await this.api.uploadVoice(this.version.id, blob);
-        this.sentBlobs.set(d.voiceId, blob);
-        this.persist();
+        // 2. One atomic commit: the submission and all its notes, create-only.
+        this.sendMsg("Sending your notes…");
+        try {
+          await this.api.commit(commitBody(this.key, plan.submissionId, this.name, this.version.id,
+            plan.notes.map(({ draft, noteId }) => ({ id: noteId, note: noteFromDraft(draft, this.version, this.name, plan.submissionId) }))));
+        } catch (e) {
+          // Already written by an earlier attempt: that round is sent.
+          if (!(e instanceof ReviewError && e.kind === "exists")) throw e;
+        }
       }
-      // 2. One atomic commit: the submission and all its notes.
-      this.sendMsg("Sending your notes…");
-      const submissionId = randomId(20);
-      const notes = batch.map((d) => ({ id: randomId(20), note: noteFromDraft(d, this.version, this.name, submissionId) }));
-      await this.api.commit(commitBody(this.key, submissionId, this.name, this.version.id, notes));
-      // 3. Done: drafts leave the device, the notes join the sent list.
-      const sentIds = new Set(batch.map((d) => d.id));
-      this.drafts = this.drafts.filter((d) => !sentIds.has(d.id));
-      this.persist();
-      for (const d of batch) deleteVoice(this.key, d.id);
-      const stamp = `local:${new Date().toISOString()}`;
-      for (const { id, note } of notes)
-        this.notes.push({ ...note, id, createdAt: stamp, status: "open", reply: "", transcript: "" });
-      this.notes.sort((a, b) => a.t - b.t);
-      this.activeDraft = null;
-      this.justSent = notes.length;
-      const ok = this.el("rv-sent-ok");
-      this.el("rv-sent-ok-text").textContent = `${plural(notes.length, "note")} on ${this.version.label}.${all.length > batch.length ? ` ${all.length - batch.length} more still to send.` : ""} You can keep listening and send more any time.`;
-      ok.hidden = false;
-      this.sendMsg("");
-      this.renderSent();
-      this.renderLane(true);
-      this.frame(true);
-      ok.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      setTimeout(() => this.refreshNotes(), 1500);
+      this.sentRound(plan.submissionId, plan.notes);
     } catch (e) {
       const m = e instanceof Error ? e.message : "";
       if (m.startsWith("missing:")) this.sendMsg(`The recording for draft ${m.slice(8)} isn't on this device any more. Record it again or delete it, then send.`, true);
       else if (e instanceof ReviewError && e.kind === "offline") this.sendMsg("You're offline. Your drafts are safe on this device: send again when you're back online.", true);
       else if (e instanceof ReviewError && e.kind === "inactive") this.sendMsg("This review has been closed, so new notes can't be sent. Your drafts are still on this device; reply to Scott's email instead.", true);
+      else if (e instanceof ReviewError && e.kind === "config") this.sendMsg("Sending isn't set up correctly on this site. Your drafts are safe on this device; reply to Scott's email so he can fix it.", true);
       else this.sendMsg("Sending didn't work just now. Your drafts are safe on this device: try again in a minute.", true);
     } finally {
       this.sending = false;
       this.renderDrafts();
     }
+  }
+
+  /** A round reached Firestore: its drafts leave the device and its notes join the sent list. */
+  sentRound(submissionId: string, sent: { draft: Draft; noteId: string }[]) {
+    const ids = new Set(sent.map((n) => n.draft.id));
+    this.drafts = this.drafts.filter((d) => !ids.has(d.id));
+    this.persist();
+    for (const { draft } of sent) deleteVoice(this.key, draft.id);
+    const stamp = `local:${new Date().toISOString()}`;
+    const have = new Set(this.notes.map((n) => n.id));
+    for (const { draft, noteId } of sent) {
+      if (have.has(noteId)) continue;
+      const note = noteFromDraft(draft, this.version, this.name, submissionId);
+      this.notes.push({ ...note, id: noteId, createdAt: stamp, status: "open", reply: "", transcript: "" });
+    }
+    this.notes.sort((a, b) => a.t - b.t);
+    this.activeDraft = null;
+    this.justSent = sent.length;
+    const left = this.versionDrafts().filter(draftReady).length;
+    const ok = this.el("rv-sent-ok");
+    this.el("rv-sent-ok-text").textContent = `${plural(sent.length, "note")} on ${this.version.label}.${left ? ` ${left} more still to send.` : ""} You can keep listening and send more any time.`;
+    ok.hidden = false;
+    this.sendMsg("");
+    this.renderSent();
+    this.renderLane(true);
+    this.frame(true);
+    ok.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    setTimeout(() => this.refreshNotes(), 1500);
   }
 
   /* ---------------- title ---------------- */

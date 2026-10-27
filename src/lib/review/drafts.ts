@@ -35,11 +35,34 @@ export function parseDrafts(raw: string | null): Draft[] {
       hasVoice: x.hasVoice === true,
       voiceType: String(x.voiceType ?? "").slice(0, 60),
       voiceId: typeof x.voiceId === "string" ? x.voiceId.slice(0, LIMITS.voiceId) : "",
+      submissionId: typeof x.submissionId === "string" && /^[A-Za-z0-9]{1,40}$/.test(x.submissionId) ? x.submissionId : "",
+      noteId: typeof x.noteId === "string" && /^[A-Za-z0-9]{1,40}$/.test(x.noteId) ? x.noteId : "",
       createdAt: Number(x.createdAt) || 0,
       updatedAt: Number(x.updatedAt) || 0,
     });
   }
   return out;
+}
+
+/**
+ * Which drafts to send now, and under which ids. A round that was already given ids (an earlier
+ * attempt that failed, or whose answer was lost) is always finished first, with exactly its own
+ * drafts and ids; only then does a new round start, up to `max` notes, with fresh ids.
+ * Returns null when nothing is ready. Pure: assigning the ids to the drafts is the caller's job.
+ */
+export function planSend(
+  ready: Draft[],
+  newId: () => string,
+  max: number,
+): { submissionId: string; fresh: boolean; notes: { draft: Draft; noteId: string }[] } | null {
+  const pending = ready.find((d) => d.submissionId && d.noteId);
+  if (pending) {
+    const sid = pending.submissionId;
+    return { submissionId: sid, fresh: false, notes: ready.filter((d) => d.submissionId === sid && d.noteId).map((d) => ({ draft: d, noteId: d.noteId })) };
+  }
+  const batch = ready.filter((d) => !d.submissionId).slice(0, max);
+  if (!batch.length) return null;
+  return { submissionId: newId(), fresh: true, notes: batch.map((d) => ({ draft: d, noteId: newId() })) };
 }
 
 export function loadDrafts(reviewKey: string): Draft[] {

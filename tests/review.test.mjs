@@ -127,7 +127,7 @@ const version = {
 };
 const draft = (o = {}) => ({
   id: "abcdefghij0123456789", versionId: "v2", t: 101.3, from: 96.3, kind: "text", text: "  Ride up a bit  ", voiceSec: 0,
-  hasVoice: false, voiceType: "", voiceId: "", createdAt: 1, updatedAt: 1, ...o,
+  hasVoice: false, voiceType: "", voiceId: "", submissionId: "", noteId: "", createdAt: 1, updatedAt: 1, ...o,
 });
 
 test("a text draft becomes exactly the note shape the contract allows", () => {
@@ -222,6 +222,10 @@ test("errors map to what the client is told", () => {
   assert.equal(F.classifyFirestoreError(403, { error: { status: "PERMISSION_DENIED" } }), "inactive");
   assert.equal(F.classifyFirestoreError(404, null), "inactive");
   assert.equal(F.classifyFirestoreError(400, { error: { message: "API key not valid" } }), "config");
+  // The referrer-restricted key refusing us is a setup problem, never "this link isn't active".
+  assert.equal(F.classifyFirestoreError(403, { error: { status: "PERMISSION_DENIED", message: "Requests from referer <empty> are blocked.", details: [{ reason: "API_KEY_HTTP_REFERRER_BLOCKED" }] } }), "config");
+  assert.equal(F.classifyFirestoreError(409, { error: { status: "ALREADY_EXISTS" } }), "exists");
+  assert.equal(F.classifyFirestoreError(400, [{ error: { status: "ALREADY_EXISTS" } }]), "exists");
   assert.equal(F.classifyFirestoreError(500, null), "server");
 });
 
@@ -229,6 +233,68 @@ test("random ids are Firestore-safe", () => {
   const id = F.randomId(20);
   assert.match(id, /^[A-Za-z0-9]{20}$/);
   assert.notEqual(F.randomId(20), id);
+});
+
+test("every Firestore and stream-server fetch sends the origin only (the API key is referrer-restricted)", async () => {
+  const calls = [];
+  const real = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url: String(url), init });
+    const body = String(url).includes("/v1/sign") ? { url: "https://s.example/v1/m/tok" }
+      : String(url).includes("/v1/voice") ? { voiceId: "abc.m4a" }
+      : String(url).includes("/notes/") ? { name: "x/notes/n1", fields: { t: { doubleValue: 1 } } }
+      : String(url).includes("/notes") || String(url).includes("/versions") ? { documents: [] }
+      : { fields: { status: { stringValue: "open" } } };
+    return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+  try {
+    await F.getReview("K", "key");
+    await F.listVersions("K", "key");
+    await F.listNotes("K", "key");
+    await F.noteExists("K", "n1", "key");
+    await F.commitSubmission("key", F.commitBody("K", "S", "Jay", "v2", []));
+    await St.signMix("https://s.example", "K", "v2", "aac");
+    await St.signVoice("https://s.example", "K", "abc.m4a");
+    await St.uploadVoice("https://s.example", "K", "v2", new Blob(["x"], { type: "audio/mp4" }));
+    await St.fetchSigned("https://s.example/v1/m/tok");
+  } finally {
+    globalThis.fetch = real;
+  }
+  assert.equal(calls.length, 9);
+  for (const c of calls) {
+    assert.equal(c.init?.referrerPolicy, "strict-origin", c.url);
+    assert.equal(c.init?.credentials, "omit", c.url);
+  }
+  assert.equal(Sc.FETCH_REFERRER_POLICY, "strict-origin");
+  for (const f of readdirSync(join(ROOT, "src/lib/review")))
+    assert.doesNotMatch(readFileSync(join(ROOT, "src/lib/review", f), "utf8"), /referrerPolicy:\s*["']no-referrer/, `${f}: no-referrer on a fetch`);
+});
+
+test("a send round keeps its ids: retries reuse them, new drafts wait for the next round", () => {
+  let n = 0;
+  const id = () => `id${++n}`;
+  const a = draft({ id: "aaaaaaaaaa" }), b = draft({ id: "bbbbbbbbbb" }), c = draft({ id: "cccccccccc" });
+  const fresh = D.planSend([a, b, c], id, 2);
+  assert.equal(fresh.fresh, true);
+  assert.equal(fresh.submissionId, "id1");
+  assert.deepEqual(fresh.notes.map((x) => [x.draft.id, x.noteId]), [["aaaaaaaaaa", "id2"], ["bbbbbbbbbb", "id3"]]);
+  // The caller stores the ids on the drafts; the attempt fails; a later retry (with a new draft added).
+  const a2 = { ...a, submissionId: "id1", noteId: "id2" }, b2 = { ...b, submissionId: "id1", noteId: "id3" }, d = draft({ id: "dddddddddd" });
+  const retry = D.planSend([c, a2, d, b2], id, 200);
+  assert.equal(retry.fresh, false);
+  assert.equal(retry.submissionId, "id1");
+  assert.deepEqual(retry.notes.map((x) => [x.draft.id, x.noteId]), [["aaaaaaaaaa", "id2"], ["bbbbbbbbbb", "id3"]]);
+  // Once that round is sent, the rest form a new one.
+  const next = D.planSend([c, d], id, 200);
+  assert.equal(next.fresh, true);
+  assert.deepEqual(next.notes.map((x) => x.draft.id), ["cccccccccc", "dddddddddd"]);
+  assert.equal(D.planSend([], id, 200), null);
+  // The ids survive a reload.
+  const back = D.parseDrafts(JSON.stringify([a2, { ...b, submissionId: "bad id", noteId: "x".repeat(41) }]));
+  assert.equal(back[0].submissionId, "id1");
+  assert.equal(back[0].noteId, "id2");
+  assert.equal(back[1].submissionId, "");
+  assert.equal(back[1].noteId, "");
 });
 
 /* ---------------- stream server ---------------- */

@@ -165,6 +165,7 @@ import "../lib/review/review.css";
               <label for="rv-c-text" id="rv-c-textlabel">What would you like changed here?</label>
               <textarea id="rv-c-text" rows="3" maxlength="4000" placeholder="e.g. Bring the ride up under the solo"></textarea>
             </div>
+            <p class="rv-dim rv-small">Drafts stay on this device until you press Send feedback.</p>
             <p id="rv-c-msg" class="rv-msg" role="status"></p>
             <div class="rv-c-actions">
               <button type="button" id="rv-c-save" class="rv-btn rv-btn-primary" disabled>Save draft</button>
@@ -182,7 +183,8 @@ import "../lib/review/review.css";
               <h2 id="rv-drafts-h" class="rv-disp rv-h2">Your drafts</h2>
               <span id="rv-drafts-count" class="rv-dim"></span>
             </div>
-            <p id="rv-drafts-empty" class="rv-dim">No drafts yet. Play the mix, and when something needs changing tap <strong>Capture note</strong>. Drafts stay on this device until you send them.</p>
+            <p id="rv-drafts-empty" class="rv-dim">No drafts yet. Play the mix, and when something needs changing tap <strong>Capture note</strong>.</p>
+            <p class="rv-dim rv-small">Drafts stay on this device until you press Send feedback.</p>
             <div id="rv-drafts" class="rv-list"></div>
             <button type="button" id="rv-send" class="rv-btn rv-btn-primary rv-send" hidden>Send feedback</button>
             <p id="rv-send-msg" class="rv-msg" role="status" hidden></p>

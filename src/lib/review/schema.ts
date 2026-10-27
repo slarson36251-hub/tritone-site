@@ -76,6 +76,12 @@ export interface Draft {
   voiceType: string;
   /** Set once the blob has been uploaded, so a retried send does not upload it twice. */
   voiceId: string;
+  /**
+   * Ids for the send round this draft belongs to, fixed (and stored) before the first attempt so a
+   * retried send writes the same documents and can never post the round twice. "" until sending.
+   */
+  submissionId: string;
+  noteId: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -106,6 +112,17 @@ export const LIMITS = {
 /** A share-link key: the contract makes 24 base62 characters; accept a little either side. */
 export const REVIEW_KEY_RE = /^[A-Za-z0-9]{20,64}$/;
 export const VERSION_ID_RE = /^[a-z0-9-]{1,20}$/;
+
+/**
+ * Referrer for Firestore and stream-server fetches. The page itself is no-referrer (the URL holds
+ * the review key), but the public web API key is HTTP-referrer restricted, so Google needs to see
+ * the site's origin. "strict-origin" sends the origin only (never the path or ?k=), and nothing
+ * on an https -> http downgrade.
+ */
+export const FETCH_REFERRER_POLICY: ReferrerPolicy = "strict-origin";
+
+/** Every fetch the review page makes: no cookies, origin-only referrer. */
+export const FETCH_INIT = { credentials: "omit", referrerPolicy: FETCH_REFERRER_POLICY } as const satisfies RequestInit;
 
 export const STATUS_LABEL: Record<NoteStatus, string> = {
   open: "Sent",

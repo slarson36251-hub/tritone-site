@@ -2,7 +2,7 @@
 // and send one round of feedback as a single atomic :commit (submission + its notes).
 // Builders and parsers are pure (tests/review.test.mjs); the fetch wrappers never throw raw errors,
 // they throw ReviewError with a kind the page can explain.
-import { DOC_PREFIX, FIRESTORE_DOCS, LIMITS, NOTE_KEYS, SUBMISSION_KEYS } from "./schema.ts";
+import { DOC_PREFIX, FETCH_INIT, FIRESTORE_DOCS, LIMITS, NOTE_KEYS, SUBMISSION_KEYS } from "./schema.ts";
 import type { Draft, Note, NoteKind, NoteStatus, Review, Version } from "./schema.ts";
 import { barBeat, clamp, round3, sectionNameAt, sectionsOf } from "./music.ts";
 
@@ -111,6 +111,7 @@ export function pickVersion(vs: Version[], wanted: string | null, latest: string
 /* ------------------------------------------------------------- URLs ------------------------------------------------------------- */
 
 const enc = encodeURIComponent;
+export const noteUrl = (key: string, noteId: string, apiKey: string) => `${FIRESTORE_DOCS}/reviews/${enc(key)}/notes/${enc(noteId)}?key=${enc(apiKey)}`;
 export const reviewUrl = (key: string, apiKey: string) => `${FIRESTORE_DOCS}/reviews/${enc(key)}?key=${enc(apiKey)}`;
 export const listUrl = (key: string, sub: "versions" | "notes", apiKey: string, pageToken = "") =>
   `${FIRESTORE_DOCS}/reviews/${enc(key)}/${sub}?key=${enc(apiKey)}&pageSize=300${pageToken ? `&pageToken=${enc(pageToken)}` : ""}`;
@@ -234,7 +235,7 @@ export function randomId(len = 20): string {
 
 /* ------------------------------------------------------------- fetch ------------------------------------------------------------- */
 
-export type ErrorKind = "offline" | "inactive" | "config" | "server" | "closed";
+export type ErrorKind = "offline" | "inactive" | "config" | "server" | "closed" | "exists";
 
 export class ReviewError extends Error {
   kind: ErrorKind;
@@ -248,16 +249,19 @@ export class ReviewError extends Error {
 
 /** HTTP status + Firestore error body -> what to tell the client. */
 export function classifyFirestoreError(status: number, body: any): ErrorKind {
-  const s = String(body?.error?.status ?? body?.[0]?.error?.status ?? "");
+  const e = body?.error ?? body?.[0]?.error;
+  const s = String(e?.status ?? "");
+  // The web API key is referrer-restricted: a blocked referrer is a setup problem, not a dead link.
+  if (/API[ _]KEY|referer|referrer/i.test(`${e?.message ?? ""} ${JSON.stringify(e?.details ?? "")}`)) return "config";
+  if (status === 409 || s === "ALREADY_EXISTS") return "exists";
   if (status === 403 || status === 404 || s === "PERMISSION_DENIED" || s === "NOT_FOUND") return "inactive";
-  if (status === 400 && /API key/i.test(String(body?.error?.message ?? ""))) return "config";
   return "server";
 }
 
 async function call(url: string, init?: RequestInit): Promise<any> {
   let res: Response;
   try {
-    res = await fetch(url, { credentials: "omit", referrerPolicy: "no-referrer", ...init });
+    res = await fetch(url, { ...init, ...FETCH_INIT });
   } catch {
     throw new ReviewError("offline", "network");
   }
@@ -295,6 +299,16 @@ export async function listVersions(key: string, apiKey: string): Promise<Version
 
 export async function listNotes(key: string, apiKey: string): Promise<Note[]> {
   return (await listAll(key, "notes", apiKey)).map(docToNote).filter((n): n is Note => !!n).sort((a, b) => a.t - b.t);
+}
+
+/** Did an earlier send land? (Notes are readable while the review is open.) */
+export async function noteExists(key: string, noteId: string, apiKey: string): Promise<boolean> {
+  try {
+    return !!docToNote(await call(noteUrl(key, noteId, apiKey)));
+  } catch (e) {
+    if (e instanceof ReviewError && e.status === 404) return false;
+    throw e;
+  }
 }
 
 export async function commitSubmission(apiKey: string, body: ReturnType<typeof commitBody>): Promise<void> {

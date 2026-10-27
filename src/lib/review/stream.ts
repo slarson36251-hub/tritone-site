@@ -1,6 +1,7 @@
 // The NAS stream server (docs/mix-review-contract.md): sign a mix or voice note for playback, and
 // upload a voice note. Base URL from PUBLIC_REVIEW_STREAM_URL. URL/body builders are pure (tests).
 import { ReviewError } from "./firestore.ts";
+import { FETCH_INIT } from "./schema.ts";
 
 /** "https://stream.example.com/" -> "https://stream.example.com"; anything that isn't an http(s) origin -> "". */
 export function streamBase(raw: string | undefined | null): string {
@@ -47,7 +48,7 @@ export function trustedSignedUrl(base: string, url: unknown): string {
 async function post(url: string, body: BodyInit, type: string): Promise<any> {
   let res: Response;
   try {
-    res = await fetch(url, { method: "POST", body, headers: { "Content-Type": type }, credentials: "omit", referrerPolicy: "no-referrer" });
+    res = await fetch(url, { method: "POST", body, headers: { "Content-Type": type }, ...FETCH_INIT });
   } catch {
     throw new ReviewError("offline", "stream network");
   }
@@ -74,6 +75,18 @@ export async function signVoice(base: string, review: string, voiceId: string): 
   const url = trustedSignedUrl(base, j?.url);
   if (!url) throw new ReviewError("server", "bad signed url");
   return url;
+}
+
+/** Download a voice note from its signed URL (played with Web Audio). */
+export async function fetchSigned(url: string): Promise<ArrayBuffer> {
+  let res: Response;
+  try {
+    res = await fetch(url, { ...FETCH_INIT });
+  } catch {
+    throw new ReviewError("offline", "stream network");
+  }
+  if (!res.ok) throw new ReviewError(res.status === 403 || res.status === 404 || res.status === 410 ? "inactive" : "server", `stream ${res.status}`, res.status);
+  return res.arrayBuffer();
 }
 
 export async function uploadVoice(base: string, review: string, version: string, blob: Blob): Promise<string> {
