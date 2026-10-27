@@ -108,6 +108,25 @@ test("CSV: the agreed columns, quoting, formula-safe, CRLF", () => {
   assert.equal(M.fileSlug("Translucent (v2) — Fault Line"), "translucent-v2-fault-line");
 });
 
+test("no tempo (bpm 0 or missing): no Bar · Beat anywhere, time and section only", () => {
+  const V0 = { ...V2, bpm: 0 };
+  const n0 = note({ bar: 1, beat: 1 });
+  assert.equal(M.hasTempo(V0), false);
+  assert.equal(M.hasTempo({ bpm: NaN }), false);
+  assert.equal(M.hasTempo(undefined), false);
+  assert.equal(M.hasTempo(V2), true);
+  assert.equal(M.noteBarBeat(n0, [V0]), "");
+  assert.equal(M.noteBarBeat(n0, [V2]), "Bar 1 · Beat 1");
+  assert.equal(M.noteBarBeat(n0, []), "", "unknown version: no tempo");
+  const txt = M.notesPlainText({ title: "T", artist: "", key: KEY }, [V0], [n0]);
+  assert.match(txt, /^- 0:42\.5  Head A — Jay: Bass up here \(open\)$/m);
+  assert.ok(!/Bar/.test(txt));
+  assert.equal(M.notesCsv([n0], [V0]).split("\r\n")[1], "0:42.5,,,Head A,Jay,text,Bass up here,open");
+  assert.equal(M.notesCsv([n0], [V2]).split("\r\n")[1], "0:42.5,1,1,Head A,Jay,text,Bass up here,open");
+  const doc = { name: "x/versions/v1", fields: M.toFields({ label: "v1", order: 1 }) };
+  assert.equal(M.docToVersion(doc).bpm, 0, "missing bpm reads as no tempo");
+});
+
 test("queue groups song -> client -> submission, newest first, notes in timeline order", () => {
   const review = { key: KEY, title: "Translucent", artist: "FLT", clients: ["Jay"], status: "open", latestVersion: "v2", createdAt: "2026-10-01T00:00:00Z", updatedAt: "" };
   const subs = [

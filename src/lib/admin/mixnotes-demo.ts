@@ -1,7 +1,7 @@
 // Sample data for /admin/mix-notes?demo=1: two made-up reviews with submissions and notes, so the queue
 // and follow-along mode can be previewed without signing in. Nothing here is real; no audio is played.
 import type { ReviewData } from "./mixnotes-api.ts";
-import { barBeat, sectionAt, type Marker, type Note, type Version } from "./mixnotes.ts";
+import { barBeat, hasTempo, sectionAt, type Marker, type Note, type Version } from "./mixnotes.ts";
 
 function peaks(seed: number, n = 1200): number[] {
   let x = seed;
@@ -21,10 +21,11 @@ function version(id: string, order: number, label: string, dur: number, bpm: num
 export function demoQueue(now = Date.now()): ReviewData[] {
   const iso = (minAgo: number) => new Date(now - minAgo * 60e3).toISOString();
   const tMarkers: Marker[] = [{ name: "Intro", t: 0 }, { name: "Head A", t: 12 }, { name: "Head B", t: 48 }, { name: "Piano solo", t: 84 }, { name: "Bass solo", t: 150 }, { name: "Head out", t: 198 }, { name: "END", t: 236 }];
-  const v1 = version("v1", 1, "v1 — rough", 236.4, 160, tMarkers, iso(4000));
-  const v2 = version("v2", 2, "v2 — final", 236.4, 160, tMarkers, iso(900));
+  // Recorded without a click: bpm 0, so the queue shows time and section only.
+  const v1 = version("v1", 1, "v1 — rough", 236.4, 0, tMarkers, iso(4000));
+  const v2 = version("v2", 2, "v2 — final", 236.4, 0, tMarkers, iso(900));
   const mk = (id: string, v: Version, t: number, author: string, sub: string, o: Partial<Note> = {}): Note => {
-    const bb = barBeat(t, v);
+    const bb = hasTempo(v) ? barBeat(t, v) : { bar: 1, beat: 1 }; // no click: placeholders, never shown
     return {
       id, versionId: v.id, t, from: Math.max(0, t - 5), section: sectionAt(t, v.markers), bar: bb.bar, beat: bb.beat, kind: "text", text: "",
       voiceId: "", voiceSec: 0, author, createdAt: iso(60), status: "open", submissionId: sub, reply: "", transcript: "", updatedAt: "", ...o,
@@ -49,7 +50,7 @@ export function demoQueue(now = Date.now()): ReviewData[] {
     ],
   };
   const bMarkers: Marker[] = [{ name: "Intro", t: 0 }, { name: "Verse", t: 9.5 }, { name: "Chorus", t: 41 }, { name: "Outro", t: 150 }, { name: "END", t: 182 }];
-  const bv1 = version("v1", 1, "v1", 182.2, 92, bMarkers, iso(20000));
+  const bv1 = version("v1", 1, "v1", 182.2, 92, bMarkers, iso(20000)); // one with a tempo: Bar · Beat shown
   const blue: ReviewData = {
     review: { key: "DEMObluemonday0000000000", title: "Blue Monday", artist: "Scott Larson Quartet", clients: ["Dee"], status: "closed", latestVersion: "v1", createdAt: iso(20000), updatedAt: iso(15000) },
     versions: [bv1],

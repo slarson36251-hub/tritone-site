@@ -10,7 +10,7 @@ import { esc } from "./charts.ts";
 import { commitWrites, loadQueue, signUrl, StreamError, type ReviewData } from "./mixnotes-api.ts";
 import { demoQueue } from "./mixnotes-demo.ts";
 import {
-  DB_ROOT, barBeat, barBeatLabel, clipFor, crossedNote, fileSlug, fmtTime, groupQueue, noteAt, noteReplyWrite,
+  DB_ROOT, barBeat, clipFor, hasTempo, noteBarBeat, crossedNote, fileSlug, fmtTime, groupQueue, noteAt, noteReplyWrite, sectionAt,
   noteStatusWrite, notesCsv, notesPlainText, noteWords, reviewStatusWrite, shareLink, streamBase, submissionStatusWrite,
   versionLabel, waveformPath, type Note, type NoteFilter, type NoteStatus, type SongGroup, type SubmissionStatus, type Version,
 } from "./mixnotes.ts";
@@ -258,7 +258,8 @@ function setReviewStatus(key: string, status: "open" | "closed") {
 // ------------------------------------------------------------------ rendering: the queue
 const STATUS_LABEL: Record<NoteStatus, string> = { open: "Open", doing: "Doing", done: "Done" };
 
-function noteHtml(key: string, n: Note): string {
+function noteHtml(key: string, n: Note, versions: Version[]): string {
+  const bb = noteBarBeat(n, versions);
   const voice = n.kind === "voice";
   const words = noteWords(n);
   const actions = [
@@ -272,7 +273,7 @@ function noteHtml(key: string, n: Note): string {
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
     </button>
     <div class="mn-note-body">
-      <p class="mn-where"><b class="mn-t">${fmtTime(n.t)}</b>${n.section ? `<span>${esc(n.section)}</span>` : ""}<span>${barBeatLabel(n)}</span>
+      <p class="mn-where"><b class="mn-t">${fmtTime(n.t)}</b>${n.section ? `<span>${esc(n.section)}</span>` : ""}${bb ? `<span>${bb}</span>` : ""}
         <span class="mn-kind${voice ? " is-voice" : ""}">${voice ? `Voice ${fmtTime(n.voiceSec).replace(/\.\d$/, "")}` : "Typed"}</span>
         <span class="mn-st mn-st-${n.status}">${STATUS_LABEL[n.status]}</span></p>
       <p class="mn-text${voice && !n.transcript && !n.text ? " is-muted" : ""}">${esc(words)}</p>
@@ -305,7 +306,7 @@ function songHtml(g: SongGroup): string {
             <p class="mn-sub-meta"><b>${s.id ? "Sent " + esc(when(s.createdAt)) : "Notes"}</b> · ${esc(versionLabel(s.versionId, g.versions))} · ${plural(sg.total, "note")}${sg.open ? ` · ${sg.open} open` : ""}</p>
             <div class="mn-sub-actions">${seg}<button type="button" class="adm-btn mn-sm" data-act="follow-sub"${sg.total ? "" : " disabled"}>Follow along</button></div>
           </div>
-          ${sg.notes.length ? `<ol class="mn-notes">${sg.notes.map((n) => noteHtml(r.key, n)).join("")}</ol>` : `<p class="adm-empty">No ${filter === "all" ? "" : filter + " "}notes in this one.</p>`}
+          ${sg.notes.length ? `<ol class="mn-notes">${sg.notes.map((n) => noteHtml(r.key, n, g.versions)).join("")}</ol>` : `<p class="adm-empty">No ${filter === "all" ? "" : filter + " "}notes in this one.</p>`}
         </div>`;
       }).join("")}
     </section>`).join("");
@@ -548,7 +549,7 @@ function renderFollow(full = false) {
     card.innerHTML = `
       <p class="mf-count">Note ${f.idx + 1} of ${f.notes.length} <span class="mn-st mn-st-${n.status}">${STATUS_LABEL[n.status]}</span></p>
       <p class="mf-who">${esc(n.author)}</p>
-      <p class="mf-where"><b>${barBeatLabel(n)}</b>${n.section ? ` · ${esc(n.section)}` : ""} · ${fmtTime(n.t)}</p>
+      <p class="mf-where">${[`<b>${fmtTime(n.t)}</b>`, n.section ? esc(n.section) : "", noteBarBeat(n, [f.version])].filter(Boolean).join(" · ")}</p>
       <p class="mf-words${voice && !n.transcript && !n.text ? " is-muted" : ""}">${esc(noteWords(n))}</p>
       ${n.reply ? `<p class="mn-reply"><b>Your reply:</b> ${esc(n.reply)}</p>` : ""}
       ${voice ? `<button type="button" class="adm-btn mf-voice" id="mf-voice">${voiceDone ? "Stop voice note" : `Play voice note (${fmtTime(n.voiceSec).replace(/\.\d$/, "")})`}</button>` : ""}`;
@@ -568,9 +569,9 @@ function renderFollowTime() {
   const t = song.time();
   const dur = durationOf(f);
   $("mf-head").style.left = `${Math.max(0, Math.min(100, (t / dur) * 100))}%`;
-  const bb = barBeat(t, f.version);
   $("mf-time").textContent = `${fmtTime(t)} / ${fmtTime(dur)}`;
-  $("mf-bb").textContent = `Bar ${bb.bar} · Beat ${bb.beat}`;
+  if (hasTempo(f.version)) { const bb = barBeat(t, f.version); $("mf-bb").textContent = `Bar ${bb.bar} · Beat ${bb.beat}`; }
+  else $("mf-bb").textContent = sectionAt(t, f.version.markers);
   const playing = !song.paused();
   $("mf-play").setAttribute("aria-label", playing ? "Pause" : "Play");
   $("mf-play").classList.toggle("is-playing", playing);

@@ -73,6 +73,14 @@ export function barBeat(t: number, v: Pick<Version, "bpm" | "beatsPerBar" | "off
 
 export const barBeatLabel = (n: Pick<Note, "bar" | "beat">) => `Bar ${n.bar} · Beat ${n.beat}`;
 
+/** A version with a project tempo. Without one (bpm 0 / missing: no click) notes carry bar 1 / beat 1
+ *  placeholders, so Bar · Beat is never shown or exported; time and section only. */
+export const hasTempo = (v: Pick<Version, "bpm"> | undefined | null) => !!v && Number.isFinite(v.bpm) && v.bpm > 0;
+/** "Bar 29 · Beat 2" for a note, or "" when its version has no tempo. */
+export function noteBarBeat(n: Pick<Note, "bar" | "beat" | "versionId">, versions: Pick<Version, "id" | "bpm">[]): string {
+  return hasTempo(versions.find((v) => v.id === n.versionId)) ? barBeatLabel(n) : "";
+}
+
 /** The words of a note: typed text, or for a voice note its transcript (or the typed text, or a placeholder). */
 export function noteWords(n: Pick<Note, "kind" | "text" | "transcript" | "voiceSec">): string {
   if (n.kind === "text") return n.text;
@@ -107,7 +115,7 @@ export function notesPlainText(review: Pick<Review, "title" | "artist" | "key">,
   for (const id of ids) {
     lines.push(versionLabel(id, versions));
     for (const n of notes.filter((x) => x.versionId === id).sort(byTimeline)) {
-      const where = [fmtTime(n.t), barBeatLabel(n), n.section].filter(Boolean).join("  ");
+      const where = [fmtTime(n.t), noteBarBeat(n, versions), n.section].filter(Boolean).join("  ");
       const voice = n.kind === "voice" ? " [voice]" : "";
       lines.push(`- ${where} — ${n.author}${voice}: ${noteWords(n).replace(/\s+/g, " ").trim()} (${n.status})`);
       if (n.reply) lines.push(`    Reply: ${n.reply.replace(/\s+/g, " ").trim()}`);
@@ -124,11 +132,15 @@ const csvCell = (v: string | number) => {
 };
 export const CSV_COLUMNS = ["time", "bar", "beat", "section", "author", "kind", "text", "status"] as const;
 
-/** CSV (time, bar, beat, section, author, kind, text, status), timeline order, CRLF line ends. */
+/** CSV (time, bar, beat, section, author, kind, text, status), timeline order, CRLF line ends.
+ *  bar / beat stay empty for a version without a tempo (pass the versions). */
 export function notesCsv(notes: Note[], versions: Version[] = []): string {
   const rows = [...notes].sort((a, b) => versionOrder(a.versionId, versions) - versionOrder(b.versionId, versions) || byTimeline(a, b));
   const out = [CSV_COLUMNS.join(",")];
-  for (const n of rows) out.push([fmtTime(n.t), n.bar, n.beat, n.section, n.author, n.kind, noteWords(n), n.status].map(csvCell).join(","));
+  for (const n of rows) {
+    const tempo = hasTempo(versions.find((v) => v.id === n.versionId));
+    out.push([fmtTime(n.t), tempo ? n.bar : "", tempo ? n.beat : "", n.section, n.author, n.kind, noteWords(n), n.status].map(csvCell).join(","));
+  }
   return out.join("\r\n") + "\r\n";
 }
 
@@ -252,7 +264,7 @@ export function docToVersion(doc: { name?: string; fields?: Record<string, any> 
   const peaks = fromValue(f.peaks);
   return {
     id: idOf(doc), label: s(f, "label") || idOf(doc), order: n(f, "order"), createdAt: s(f, "createdAt"), bounceName: s(f, "bounceName"),
-    durationSec: n(f, "durationSec"), bpm: n(f, "bpm", 120), beatsPerBar: n(f, "beatsPerBar", 4), offsetSec: n(f, "offsetSec"),
+    durationSec: n(f, "durationSec"), bpm: n(f, "bpm", 0), beatsPerBar: n(f, "beatsPerBar", 4), offsetSec: n(f, "offsetSec"),
     markers: Array.isArray(markers) ? markers.filter((m) => m && typeof m.name === "string" && typeof m.t === "number").sort((a, b) => a.t - b.t) : [],
     peaks: Array.isArray(peaks) ? peaks.map((p) => (typeof p === "number" ? p : 0)) : [],
   };
