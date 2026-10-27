@@ -35,8 +35,7 @@ test("the CSP has no wildcard sources and no unsafe script sources", () => {
   for (const [dir, sources] of Object.entries(csp)) {
     for (const s of sources) {
       assert.ok(!s.includes("*"), `${dir}: wildcard source ${s}`);
-      // blob: only in media-src: the mix review plays back the client's own voice recording before sending.
-      if (!(dir === "media-src" && s === "blob:")) assert.ok(!/^(https?:|data:|blob:)$/.test(s), `${dir}: bare scheme source ${s}`);
+      assert.ok(!/^(https?:|data:|blob:)$/.test(s), `${dir}: bare scheme source ${s}`);
     }
   }
   assert.deepEqual(csp["default-src"], ["'self'"]);
@@ -53,12 +52,10 @@ const STREAM = "https://stream.tritone-productions.com";
 const rule = (src) => hosting.headers.find((h) => h.source === src);
 const ruleHeader = (src, k) => rule(src)?.headers.find((h) => h.key.toLowerCase() === k.toLowerCase())?.value;
 
-test("the CSP lets the review page stream from the NAS and play local voice previews", () => {
+test("the CSP lets the review page and /admin/mix-notes stream from the NAS", () => {
   assert.ok(csp["media-src"].includes(STREAM), "media-src has the stream origin");
-  assert.ok(csp["media-src"].includes("blob:"), "media-src has blob: (voice preview)");
   assert.ok(csp["media-src"].includes("'self'"), "media-src keeps 'self'");
   assert.ok(csp["connect-src"].includes(STREAM), "connect-src has the stream origin (sign / upload)");
-  assert.ok(!csp["connect-src"].includes("blob:"), "connect-src without blob:");
 });
 
 test("/review is private: noindex, no referrer, never cached", () => {

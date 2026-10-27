@@ -15,48 +15,6 @@ service cloud.firestore {
         && request.resource.data.createdAt is string && request.resource.data.createdAt.size() < 40;
       allow read, update, delete: if false;
     }
-    // First-party visitor analytics (src/lib/track.ts, contract src/lib/analytics-schema.ts).
-    // Visitors may only create a hit in the exact shape, stamped with the server time; only
-    // Scott (a verified admin email via Firebase Auth) may read. Nobody can change or delete.
-    function isAdmin() {
-      return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email in ['slarson36251@gmail.com', 'scott@tritone-productions.com'];
-    }
-    function str(v, max) {
-      return v is string && v.size() <= max;
-    }
-    function validHit(d) {
-      return d.keys().hasAll(['k', 't', 'sid', 'path', 'first', 'src', 'ref', 'us', 'um', 'uc', 'ux', 'land', 'dev', 'tz', 'lang', 'ev', 'lbl'])
-        && d.keys().hasOnly(['k', 't', 'sid', 'path', 'first', 'src', 'ref', 'us', 'um', 'uc', 'ux', 'land', 'dev', 'tz', 'lang', 'ev', 'lbl'])
-        && d.k in ['pv', 'ev']
-        && d.t is timestamp && d.t == request.time
-        && str(d.sid, 16) && d.sid.size() > 0
-        && str(d.path, 200) && d.path.matches('^/.*')
-        && d.first is bool
-        && d.src in ['ai', 'search', 'social', 'email', 'campaign', 'referral', 'direct']
-        && str(d.ref, 100)
-        && str(d.us, 80) && str(d.um, 80) && str(d.uc, 80) && str(d.ux, 80)
-        && str(d.land, 200)
-        && d.dev in ['m', 't', 'd']
-        && str(d.tz, 40)
-        && str(d.lang, 12)
-        && str(d.lbl, 120)
-        && ((d.k == 'pv' && d.ev == '' && d.lbl == '')
-          || (d.k == 'ev' && d.ev in ['book_submit', 'book_earlier', 'show_click', 'ticket_click', 'calendar_add',
-                                      'poster_click', 'play', 'free_track', 'contact_click', 'outbound']));
-    }
-    match /hits/{id} {
-      allow create: if id.size() <= 40 && validHit(request.resource.data);
-      allow read: if isAdmin();
-      allow update, delete: if false;
-    }
-    // Weekly digests, written only by the service account (scripts/analytics-digest.mjs via
-    // .github/workflows/analytics-digest.yml) and shown on /admin. Clients can never write.
-    match /digests/{week} {
-      allow read: if isAdmin();
-      allow create, update, delete: if false;
-    }
     // ---- Mix review (docs/mix-review-contract.md) ----
     // The share link is the key: reviews/{reviewKey} where reviewKey is 24 random base62 characters.
     // Clients (no sign-in) may read an OPEN review, its versions, notes and submissions, and may add
@@ -147,6 +105,48 @@ service cloud.firestore {
           && stampedNow(request.resource.data);
         allow delete: if false;
       }
+    }
+    // First-party visitor analytics (src/lib/track.ts, contract src/lib/analytics-schema.ts).
+    // Visitors may only create a hit in the exact shape, stamped with the server time; only
+    // Scott (a verified admin email via Firebase Auth) may read. Nobody can change or delete.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['slarson36251@gmail.com', 'scott@tritone-productions.com'];
+    }
+    function str(v, max) {
+      return v is string && v.size() <= max;
+    }
+    function validHit(d) {
+      return d.keys().hasAll(['k', 't', 'sid', 'path', 'first', 'src', 'ref', 'us', 'um', 'uc', 'ux', 'land', 'dev', 'tz', 'lang', 'ev', 'lbl'])
+        && d.keys().hasOnly(['k', 't', 'sid', 'path', 'first', 'src', 'ref', 'us', 'um', 'uc', 'ux', 'land', 'dev', 'tz', 'lang', 'ev', 'lbl'])
+        && d.k in ['pv', 'ev']
+        && d.t is timestamp && d.t == request.time
+        && str(d.sid, 16) && d.sid.size() > 0
+        && str(d.path, 200) && d.path.matches('^/.*')
+        && d.first is bool
+        && d.src in ['ai', 'search', 'social', 'email', 'campaign', 'referral', 'direct']
+        && str(d.ref, 100)
+        && str(d.us, 80) && str(d.um, 80) && str(d.uc, 80) && str(d.ux, 80)
+        && str(d.land, 200)
+        && d.dev in ['m', 't', 'd']
+        && str(d.tz, 40)
+        && str(d.lang, 12)
+        && str(d.lbl, 120)
+        && ((d.k == 'pv' && d.ev == '' && d.lbl == '')
+          || (d.k == 'ev' && d.ev in ['book_submit', 'book_earlier', 'show_click', 'ticket_click', 'calendar_add',
+                                      'poster_click', 'play', 'free_track', 'contact_click', 'outbound']));
+    }
+    match /hits/{id} {
+      allow create: if id.size() <= 40 && validHit(request.resource.data);
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+    // Weekly digests, written only by the service account (scripts/analytics-digest.mjs via
+    // .github/workflows/analytics-digest.yml) and shown on /admin. Clients can never write.
+    match /digests/{week} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
     }
     match /{document=**} {
       allow read, write: if false;
