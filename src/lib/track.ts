@@ -175,6 +175,14 @@ export function cleanPath(pathname: string): string {
   return p.slice(0, LIMITS.path);
 }
 
+/**
+ * Pages never recorded: Scott's /admin, and the private client mix review (/review?k=<key>),
+ * whose link is its only key, so not even its path is sent.
+ */
+export function pathTracked(pathname: string): boolean {
+  return !/^\/(admin|review)\b/.test(cleanPath(pathname));
+}
+
 export function deviceOf(width: number): "m" | "t" | "d" {
   return width < 640 ? "m" : width < 1024 ? "t" : "d";
 }
@@ -355,7 +363,7 @@ function send(k: "pv" | "ev", ev: string, lbl: string, first = false) {
   try {
     if (!enabled() || sent >= MAX_HITS) return;
     const path = cleanPath(location.pathname);
-    if (/^\/admin\b/.test(path)) return;
+    if (!pathTracked(path)) return;
     const v = ensureVisit();
     let tz = "";
     try {
