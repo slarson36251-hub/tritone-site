@@ -32,12 +32,14 @@ jobs:
         run: SHOWS_FIXTURE=tests/fixtures/music.ics npm run build && npm test
         env:
           PUBLIC_FEEDBACK_API_KEY: ${{ vars.FEEDBACK_API_KEY }}
+          PUBLIC_REVIEW_STREAM_URL: ${{ vars.REVIEW_STREAM_URL }}
       - run: npm run build
         env:
           MUSIC_CALENDAR_ID: ${{ vars.MUSIC_CALENDAR_ID }}
           GOOGLE_CALENDAR_API_KEY: ${{ secrets.GOOGLE_CALENDAR_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.CALENDAR_SERVICE_ACCOUNT }}
           PUBLIC_FEEDBACK_API_KEY: ${{ vars.FEEDBACK_API_KEY }}
+          PUBLIC_REVIEW_STREAM_URL: ${{ vars.REVIEW_STREAM_URL }}
       - uses: actions/setup-java@v5
         if: github.event_name != 'schedule'
         with:
