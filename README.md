@@ -53,6 +53,14 @@ and speak (or type), then **Send**. `?feedback=off` hides it again. It never loa
 - Code: `src/components/Feedback.astro` (gate), `src/lib/feedback-overlay.ts` (overlay, loaded on demand).
   Browser check: `PUBLIC_FEEDBACK_API_KEY=test-key npm run build && node scripts/check-feedback.mjs`.
 
+## Mix review (clients)
+`/review?k=<reviewKey>[&v=<versionId>]` is the private page a client gets in their review email: the mix streams from
+the NAS (stream server at `PUBLIC_REVIEW_STREAM_URL`, repo variable `REVIEW_STREAM_URL`) with Scott's Logic markers on
+the waveform, and they leave time-stamped draft notes (typed, or talked over the music) that stay on their device until
+they press **Send feedback** (one atomic Firestore commit: a `submissions` doc plus its `notes`). noindex/nofollow, no
+referrer, never counted by analytics. Contract: `docs/mix-review-contract.md`; code: `src/lib/review/`.
+`/review?demo=1` runs the whole page on a generated test tune with nothing fetched or sent.
+
 ## Analytics (first-party, no cookies)
 Every page of tritone-productions.com counts visits itself: no Google Analytics, no cookies, no consent banner.
 - `src/lib/track.ts` (loaded from `Base.astro`) sends one Firestore document per page view and per interest event
