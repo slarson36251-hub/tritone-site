@@ -7,3 +7,6 @@ dist/
 .firebase/
 *.log
 .DS_Store
+
+# Firebase emulator logs (npm run test:rules)
+*-debug.log

@@ -50,6 +50,18 @@ const denied = (r, why = "") => assert.equal(r.status, 403, `${why} expected 403
 
 const get = (who, ...path) => call(who, "GET", `${BASE}/${path.join("/")}`);
 const list = (who, ...path) => call(who, "GET", `${BASE}/${path.join("/")}?pageSize=300`);
+/** Every document of a collection, following nextPageToken (the emulator caps a page). */
+async function listAll(who, ...path) {
+  const docs = [];
+  let token = "";
+  do {
+    const r = await call(who, "GET", `${BASE}/${path.join("/")}?pageSize=300${token ? `&pageToken=${encodeURIComponent(token)}` : ""}`);
+    ok(r, "listing");
+    docs.push(...(r.json.documents ?? []));
+    token = r.json.nextPageToken ?? "";
+  } while (token);
+  return docs;
+}
 const commit = (who, writes) => call(who, "POST", `${BASE}:commit`, { writes });
 const name = (...path) => docName(ROOT, ...path);
 const create = (who, path, fields) => commit(who, [stampedCreate(name(...path), fields)]);
@@ -138,8 +150,7 @@ test("a full 200-note send fits in one :commit (rules access-call limits)", asyn
   const writes = [stampedCreate(name("reviews", KEY, "submissions", "big"), submission({ noteCount: 200 }))];
   for (let i = 0; i < 200; i++) writes.push(stampedCreate(name("reviews", KEY, "notes", `b${i}`), (i % 2 ? voiceNote : textNote)({ submissionId: "big", t: i + 0.5, from: Math.max(0, i - 4.5) })));
   ok(await commit(CLIENT, writes));
-  const all = await list(OWNER, "reviews", KEY, "notes");
-  assert.equal(all.json.documents.length, 201);
+  assert.equal((await listAll(OWNER, "reviews", KEY, "notes")).length, 201);
 });
 
 test("the whole :commit fails when one note is bad (all-or-nothing)", async () => {
@@ -160,7 +171,10 @@ test("a note needs an existing submission and an existing version", async () => 
   denied(await create(CLIENT, ["reviews", KEY, "notes", "a1"], textNote({ submissionId: "missing" })));
   denied(await create(CLIENT, ["reviews", KEY, "notes", "a1"], textNote({ submissionId: "seed", versionId: "v9" })));
   ok(await create(CLIENT, ["reviews", KEY, "notes", "a1"], textNote({ submissionId: "seed" })));
-  denied(await create(CLIENT, ["reviews", KEY, "notes", "a1"], textNote({ submissionId: "seed" })), "no overwrite of an existing note");
+  // An existing note can't be overwritten: the exists:false precondition (409) or the rules (403) refuse it.
+  const again = await create(CLIENT, ["reviews", KEY, "notes", "a1"], textNote({ submissionId: "seed", text: "changed" }));
+  assert.ok([403, 409].includes(again.status), `overwrite refused, got ${again.status}`);
+  assert.equal((await get(OWNER, "reviews", KEY, "notes", "a1")).json.fields.text.stringValue, "Bass up here");
 });
 
 test("note shapes the rules refuse", async () => {
