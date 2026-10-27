@@ -31,8 +31,8 @@ export interface Note {
 }
 
 // ------------------------------------------------------------------ links
-/** Base62 review key (the publisher makes 24 characters). */
-export const isReviewKey = (k: string) => /^[A-Za-z0-9]{16,64}$/.test(k);
+/** Base62 review key: 20-64 characters (the publisher makes 24). */
+export const isReviewKey = (k: string) => /^[A-Za-z0-9]{20,64}$/.test(k);
 
 /** The client's share link: https://tritone-productions.com/review?k=<key>[&v=<versionId>]. */
 export function shareLink(key: string, versionId = "", origin = SITE): string {
@@ -114,7 +114,7 @@ export function notesPlainText(review: Pick<Review, "title" | "artist" | "key">,
     }
     lines.push("");
   }
-  return lines.join("\n").replace(/\n+$/, "\n");
+  return lines.join("\n").replace(/\n*$/, "\n");
 }
 
 const csvCell = (v: string | number) => {
