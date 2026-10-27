@@ -1,7 +1,7 @@
 rules_version = '2';
-// Two collections clients may write to: Scott's beta-site feedback notes and the visitor
-// analytics hits (below). Anyone may add a document in the expected shape; nobody can change or
-// delete through the client. Claude reads feedback with a service account (.github/workflows/feedback.yml).
+// Collections clients may write to: Scott's beta-site feedback notes, the visitor analytics hits,
+// and mix-review submissions / notes (below). Anyone may add a document in the expected shape;
+// nobody can change or delete through the client (only Scott, signed in, may update a few fields). Claude reads feedback with a service account (.github/workflows/feedback.yml).
 service cloud.firestore {
   match /databases/{db}/documents {
     match /feedback/{id} {
@@ -56,6 +56,97 @@ service cloud.firestore {
     match /digests/{week} {
       allow read: if isAdmin();
       allow create, update, delete: if false;
+    }
+    // ---- Mix review (docs/mix-review-contract.md) ----
+    // The share link is the key: reviews/{reviewKey} where reviewKey is 24 random base62 characters.
+    // Clients (no sign-in) may read an OPEN review, its versions, notes and submissions, and may add
+    // a submission plus its notes in the exact shapes below (one :commit batch, so a send is
+    // all-or-nothing). Nobody can list the reviews collection except Scott. Closing a review
+    // (status "closed") shuts every client read and write. Reviews and versions are written by the
+    // publisher's service account (bypasses rules); Scott may only change a review's status /
+    // clients / title, a submission's status, and a note's status / reply / transcript.
+    function reviewPath(key) {
+      return /databases/$(db)/documents/reviews/$(key);
+    }
+    function reviewOpen(key) {
+      return exists(reviewPath(key)) && get(reviewPath(key)).data.status == 'open';
+    }
+    function versionIdOk(v) {
+      return v is string && v.matches('^[a-z0-9-]{1,20}$');
+    }
+    function versionExists(key, v) {
+      return versionIdOk(v) && exists(/databases/$(db)/documents/reviews/$(key)/versions/$(v));
+    }
+    function stampedNow(d) {
+      return d.updatedAt is timestamp && d.updatedAt == request.time;
+    }
+    function validSubmission(key, d) {
+      return d.keys().hasAll(['author', 'versionId', 'noteCount', 'createdAt', 'status'])
+        && d.keys().hasOnly(['author', 'versionId', 'noteCount', 'createdAt', 'status'])
+        && d.author is string && d.author.size() >= 1 && d.author.size() <= 60
+        && d.noteCount is int && d.noteCount >= 1 && d.noteCount <= 200
+        && d.createdAt is timestamp && d.createdAt == request.time
+        && d.status == 'new'
+        && versionExists(key, d.versionId);
+    }
+    function validNote(key, d) {
+      return d.keys().hasAll(['versionId', 't', 'from', 'section', 'bar', 'beat', 'kind', 'text', 'voiceId', 'voiceSec',
+                              'author', 'createdAt', 'status', 'submissionId'])
+        && d.keys().hasOnly(['versionId', 't', 'from', 'section', 'bar', 'beat', 'kind', 'text', 'voiceId', 'voiceSec',
+                             'author', 'createdAt', 'status', 'submissionId'])
+        && d.t is number && d.t >= 0 && d.t <= 36000
+        && d.from is number && d.from >= 0 && d.from <= d.t
+        && str(d.section, 80)
+        && d.bar is int && d.bar >= 1
+        && d.beat is int && d.beat >= 1 && d.beat <= 16
+        && str(d.text, 4000)
+        && str(d.voiceId, 64)
+        && d.voiceSec is number && d.voiceSec >= 0 && d.voiceSec <= 600
+        && ((d.kind == 'text' && d.text.size() > 0 && d.voiceId == '' && d.voiceSec == 0)
+          || (d.kind == 'voice' && d.voiceId.matches('^[A-Za-z0-9_-]{1,58}[.][a-z0-9]{2,5}$')))
+        && d.author is string && d.author.size() >= 1 && d.author.size() <= 60
+        && d.createdAt is timestamp && d.createdAt == request.time
+        && d.status == 'open'
+        && d.submissionId is string && d.submissionId.matches('^[A-Za-z0-9_-]{1,40}$')
+        && versionExists(key, d.versionId)
+        // existsAfter: the submission may be created in the same :commit batch as its notes.
+        && existsAfter(/databases/$(db)/documents/reviews/$(key)/submissions/$(d.submissionId));
+    }
+    match /reviews/{key} {
+      allow get: if isAdmin() || resource.data.status == 'open';
+      allow list: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'clients', 'title', 'updatedAt'])
+        && request.resource.data.status in ['open', 'closed']
+        && request.resource.data.title is string && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 200
+        && request.resource.data.clients is list && request.resource.data.clients.size() <= 20
+        && stampedNow(request.resource.data);
+      allow create, delete: if false;
+
+      match /versions/{versionId} {
+        allow read: if isAdmin() || reviewOpen(key);
+        allow write: if false;
+      }
+      match /submissions/{submissionId} {
+        allow read: if isAdmin() || reviewOpen(key);
+        allow create: if submissionId.size() <= 40 && reviewOpen(key) && validSubmission(key, request.resource.data);
+        allow update: if isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status in ['new', 'listening', 'done']
+          && stampedNow(request.resource.data);
+        allow delete: if false;
+      }
+      match /notes/{noteId} {
+        allow read: if isAdmin() || reviewOpen(key);
+        allow create: if noteId.size() <= 40 && reviewOpen(key) && validNote(key, request.resource.data);
+        allow update: if isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reply', 'transcript', 'updatedAt'])
+          && request.resource.data.status in ['open', 'doing', 'done']
+          && str(request.resource.data.get('reply', ''), 4000)
+          && str(request.resource.data.get('transcript', ''), 8000)
+          && stampedNow(request.resource.data);
+        allow delete: if false;
+      }
     }
     match /{document=**} {
       allow read, write: if false;
