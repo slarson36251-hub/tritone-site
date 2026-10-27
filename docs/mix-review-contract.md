@@ -110,6 +110,13 @@ may `create` in the exact shape above, never update or delete.
   options: "pause at each note" on/off, "play voice note automatically" on/off; big Next/Previous note, Replay clip,
   Mark done (moves on). Large type and targets, works landscape on an iPad, screen stays awake (Wake Lock API where available).
 
+## v1.2 change (Scott, 22:20): cycle range, no tempo
+
+- Scott bounces the Logic CYCLE range. Markers = only those inside the cycle; marker time in the bounce =
+  (markerTick − cycleStartTick) / (cycleEndTick − cycleStartTick) × bounce duration. No tempo, no click.
+- Versions are written with `bpm: 0`; pages show no Bar·Beat when bpm is 0 (time m:ss.s + section only).
+  Notes still carry `bar: 1, beat: 1` as placeholders so the rules' shape is unchanged.
+
 ## NAS stream server  (base URL from `PUBLIC_REVIEW_STREAM_URL`, e.g. `https://stream.tritone-productions.com`)
 
 - `POST /v1/sign` JSON `{ "review": key, "version": id, "kind": "aac" | "wav" }` → `{ "url": "<base>/v1/m/<token>", "expiresAt": iso }`.
