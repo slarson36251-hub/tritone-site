@@ -24,8 +24,8 @@ const ERR_MSG = "Couldn’t reach the booking calendar. Give it a minute and try
 const MIN_HOURS = 2;
 const MAX_HOURS = 12;
 const DEFAULT_HOURS = 4;
-const MAX_DAYS = 21;
-const MIN_FILL_MS = 3000; // faster than this from page open = a bot // same as the Squarespace block: the next 21 open days
+const MAX_MONTHS = 6; // open days offered up to six months out (Scott, Oct 2026; was the next 21 open days)
+const MIN_FILL_MS = 3000; // faster than this from page open = a bot
 // Weekday sessions can start from 4 pm (Scott, Oct 2026). The calendar web app still opens weekday
 // evenings at 6 pm, so a weekday whose first window opens exactly at 6 pm is offered from 4 pm too.
 // Once the web app itself opens at 4 pm this is a no-op. Earlier than 4 pm: ask in the notes.
@@ -133,7 +133,10 @@ export function initBooking() {
       .then((r) => r.json())
       .then((data) => {
         if (!data || !data.ok) throw new Error("bad payload");
-        days = (data.days || []).slice(0, MAX_DAYS).map((d: any) => ({
+        const now = new Date();
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + MAX_MONTHS, now.getDate());
+        const cutoff = lastDay.getFullYear() + "-" + String(lastDay.getMonth() + 1).padStart(2, "0") + "-" + String(lastDay.getDate()).padStart(2, "0");
+        days = (data.days || []).filter((d: any) => String(d.date) <= cutoff).map((d: any) => ({
           date: String(d.date),
           windows: (d.windows || []).map((w: any) => ({ startMin: minutesOf(w.start), endMin: minutesOf(w.end) })),
         })).filter((d: Day) => d.windows.length).map(withWeekdayHours);
