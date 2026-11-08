@@ -115,6 +115,20 @@ import logo from "../assets/logo/tritone-wordmark-white.png";
     if (prefs.mic !== undefined || prefs.micLabel) pick(micSel, mics, prefs.mic, prefs.micLabel);
   }
 
+  // Chrome hides the list of sound inputs (Dante Virtual Soundcard, Audio Bridge…) until the
+  // page has microphone permission. Ask once, right after the camera starts; Chrome remembers it.
+  async function unlockSoundInputs() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const hidden = devices.filter((d) => d.kind === "audioinput").every((d) => !d.label);
+    if (!hidden) return;
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      s.getTracks().forEach((t) => t.stop());
+    } catch {
+      /* declined: picture only */
+    }
+  }
+
   function stop() {
     stream?.getTracks().forEach((t) => t.stop());
     stream = null;
@@ -148,6 +162,7 @@ import logo from "../assets/logo/tritone-wordmark-white.png";
     // Chrome sends that sound to the TV with the picture.
     video.muted = !audio;
     await video.play().catch(() => {});
+    await unlockSoundInputs();
     await listDevices();
     const cam = stream.getVideoTracks()[0];
     const mic = stream.getAudioTracks()[0];
