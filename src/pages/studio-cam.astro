@@ -223,8 +223,12 @@ import logo from "../assets/logo/tritone-wordmark-white.png";
     say("This browser can't use a camera here. Open this page in Chrome on the studio Mac.");
     startBtn.disabled = true;
   } else {
-    listDevices().catch(() => {});
-    // If Chrome already allows the camera for this site, go live straight away.
-    navigator.permissions?.query({ name: "camera" as PermissionName }).then((p) => { if (p.state === "granted") start(); }).catch(() => {});
+    // List devices (restoring the saved camera and sound) before any automatic start, so an
+    // auto-start uses the saved Sound input instead of starting picture-only.
+    listDevices()
+      .catch(() => {})
+      .then(() => navigator.permissions?.query({ name: "camera" as PermissionName }))
+      .then((p) => { if (p?.state === "granted") start(); })
+      .catch(() => {});
   }
 </script>
