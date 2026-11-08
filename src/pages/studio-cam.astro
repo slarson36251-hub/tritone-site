@@ -157,7 +157,34 @@ import logo from "../assets/logo/tritone-wordmark-white.png";
     say(`Live: ${cam?.label || "camera"}${s?.width ? ` at ${s.width}×${s.height}` : ""}${mic ? ` · sound from ${mic.label}` : " · no sound"}`);
     root.dataset.state = "live";
     startBtn.textContent = "Restart";
+    liveText = status.textContent || "";
+    startMeter();
     nudge();
+  }
+
+  // Smoothness meter: frames the camera actually delivers per second, and freezes
+  // (a gap of more than a quarter second between frames), shown under the status line.
+  let liveText = "";
+  let meterGen = 0;
+  function startMeter() {
+    const gen = ++meterGen;
+    const v = video as HTMLVideoElement & { requestVideoFrameCallback?: (cb: (now: number) => void) => number };
+    if (!v.requestVideoFrameCallback) return;
+    let frames = 0, last = 0, freezes = 0, windowStart = performance.now();
+    const tick = (now: number) => {
+      if (gen !== meterGen) return;
+      if (last && now - last > 250) freezes++;
+      last = now;
+      frames++;
+      if (now - windowStart >= 2000) {
+        const fps = Math.round((frames * 1000) / (now - windowStart));
+        say(`${liveText} · ${fps} fps${freezes ? ` · ${freezes} freeze${freezes > 1 ? "s" : ""} so far` : ""}`);
+        frames = 0;
+        windowStart = now;
+      }
+      v.requestVideoFrameCallback!(tick);
+    };
+    v.requestVideoFrameCallback(tick);
   }
 
   // Hide the panel and cursor after a few still seconds while live; any movement brings them back.
