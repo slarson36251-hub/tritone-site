@@ -1,0 +1,186 @@
+---
+// Studio Cam: /studio-cam — Scott's own tool for showing the Hummingbird Hut camera on the
+// living-room TV. Open it in Chrome on the studio Mac, then Chrome menu > Cast… > the TV.
+// The NexiGo picture and (optionally) a stereo studio feed play in this one tab, so the
+// Chromecast delays both by the same amount and they stay in sync on the TV.
+// Private and unlinked: noindex/nofollow, never in the sitemap, not counted by src/lib/track.ts.
+// Nothing leaves the browser: no uploads, no fetches; camera and audio are used on this page only.
+// firebase.json gives /studio-cam its own Permissions-Policy (camera + microphone for this page).
+import Base from "../layouts/Base.astro";
+import { Image } from "astro:assets";
+import logo from "../assets/logo/tritone-wordmark-white.png";
+---
+<Base
+  title="Studio Cam · Tritone Productions"
+  description="Private Hummingbird Hut camera view from Tritone Productions, for casting the studio picture and sound to a TV."
+  noindex
+  nofollow
+  bare
+>
+  <div id="sc" class="sc" data-state="idle">
+    <video id="sc-video" class="sc-video" playsinline autoplay muted></video>
+
+    <div class="sc-panel" id="sc-panel">
+      <Image src={logo} alt="Tritone Productions" class="sc-logo" widths={[240, 480]} sizes="160px" loading="eager" />
+      <p class="sc-status" id="sc-status" role="status">Click Start to show the studio camera.</p>
+      <label class="sc-row">
+        <span>Camera</span>
+        <select id="sc-cam"><option value="">Default camera</option></select>
+      </label>
+      <label class="sc-row">
+        <span>Sound</span>
+        <select id="sc-mic"><option value="">No sound (picture only)</option></select>
+      </label>
+      <label class="sc-row">
+        <span>Quality</span>
+        <select id="sc-res">
+          <option value="1080">1080p (best for casting)</option>
+          <option value="2160">4K</option>
+          <option value="720">720p (smoothest on weak Wi-Fi)</option>
+        </select>
+      </label>
+      <div class="sc-buttons">
+        <button type="button" id="sc-start" class="sc-btn sc-btn-main">Start</button>
+        <button type="button" id="sc-full" class="sc-btn">Full screen</button>
+      </div>
+      <p class="sc-hint">To put it on the TV: Chrome menu ⋮ → <b>Cast…</b> → pick the TV. With Sound on, the TV plays the picture and sound together, in sync.</p>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  html, body { background: #000; margin: 0; height: 100%; overflow: hidden; }
+  .sc { position: fixed; inset: 0; background: #000; color: #f5f5f5; font-family: "Space Grotesk", system-ui, sans-serif; }
+  .sc-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+  .sc-panel {
+    position: absolute; left: 24px; bottom: 24px; width: min(380px, calc(100% - 48px));
+    background: rgba(12, 12, 12, 0.86); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px;
+    padding: 18px 18px 14px; display: grid; gap: 10px; transition: opacity 0.4s ease; backdrop-filter: blur(6px);
+  }
+  .sc-logo { width: 150px; height: auto; display: block; }
+  .sc-status { margin: 0; font-size: 14px; color: #d8d8d8; min-height: 1.3em; }
+  .sc-row { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 10px; font-size: 14px; }
+  .sc-row select { width: 100%; padding: 7px 8px; border-radius: 8px; background: #1d1d1d; color: #f5f5f5; border: 1px solid #3a3a3a; font: inherit; font-size: 13px; }
+  .sc-buttons { display: flex; gap: 8px; margin-top: 4px; }
+  .sc-btn { flex: 1; padding: 9px 12px; border-radius: 9px; border: 1px solid #444; background: #222; color: #f5f5f5; font: inherit; font-weight: 600; cursor: pointer; }
+  .sc-btn-main { background: #e8b23a; border-color: #e8b23a; color: #111; }
+  .sc-btn:hover { filter: brightness(1.1); }
+  .sc-hint { margin: 2px 0 0; font-size: 12px; color: #a8a8a8; line-height: 1.4; }
+  .sc[data-state="live"].sc-idle .sc-panel { opacity: 0; pointer-events: none; }
+  .sc[data-state="live"].sc-idle { cursor: none; }
+</style>
+
+<script>
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const root = $<HTMLDivElement>("sc");
+  const video = $<HTMLVideoElement>("sc-video");
+  const status = $<HTMLParagraphElement>("sc-status");
+  const camSel = $<HTMLSelectElement>("sc-cam");
+  const micSel = $<HTMLSelectElement>("sc-mic");
+  const resSel = $<HTMLSelectElement>("sc-res");
+  const startBtn = $<HTMLButtonElement>("sc-start");
+  const fullBtn = $<HTMLButtonElement>("sc-full");
+
+  const KEY = "tritone.studioCam";
+  type Prefs = { cam?: string; camLabel?: string; mic?: string; micLabel?: string; res?: string };
+  const load = (): Prefs => { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; } };
+  const save = (p: Prefs) => { try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* private mode */ } };
+  let prefs = load();
+  if (prefs.res) resSel.value = prefs.res;
+
+  let stream: MediaStream | null = null;
+  const say = (t: string) => { status.textContent = t; };
+
+  // Fill the device lists (labels appear once the browser has camera permission).
+  async function listDevices() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter((d) => d.kind === "videoinput");
+    const mics = devices.filter((d) => d.kind === "audioinput" && d.deviceId !== "default" && d.deviceId !== "communications");
+    const fill = (sel: HTMLSelectElement, list: MediaDeviceInfo[], first: string, word: string) => {
+      const keep = sel.value;
+      sel.replaceChildren(new Option(first, ""));
+      list.forEach((d, i) => sel.add(new Option(d.label || `${word} ${i + 1}`, d.deviceId)));
+      if ([...sel.options].some((o) => o.value === keep)) sel.value = keep;
+    };
+    fill(camSel, cams, "Default camera", "Camera");
+    fill(micSel, mics, "No sound (picture only)", "Input");
+    // Saved choice by id, else by name (ids can change), else the NexiGo for the picture.
+    const pick = (sel: HTMLSelectElement, list: MediaDeviceInfo[], id?: string, label?: string, fallback?: RegExp) => {
+      const hit = list.find((d) => d.deviceId === id) ?? list.find((d) => label && d.label === label) ?? (fallback ? list.find((d) => fallback.test(d.label)) : undefined);
+      if (hit) sel.value = hit.deviceId;
+    };
+    pick(camSel, cams, prefs.cam, prefs.camLabel, /nexigo|n970/i);
+    if (prefs.mic !== undefined || prefs.micLabel) pick(micSel, mics, prefs.mic, prefs.micLabel);
+  }
+
+  function stop() {
+    stream?.getTracks().forEach((t) => t.stop());
+    stream = null;
+  }
+
+  async function start() {
+    stop();
+    const h = Number(resSel.value) || 1080;
+    const w = Math.round((h * 16) / 9);
+    const video_: MediaTrackConstraints = { width: { ideal: w }, height: { ideal: h }, frameRate: { ideal: 30 } };
+    if (camSel.value) video_.deviceId = { exact: camSel.value };
+    // Music, not a phone call: no echo cancelling, noise suppression or auto gain; stereo.
+    const audio: MediaTrackConstraints | false = micSel.value
+      ? { deviceId: { exact: micSel.value }, echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: { ideal: 2 }, sampleRate: { ideal: 48000 } }
+      : false;
+    say("Starting the camera…");
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: video_, audio });
+    } catch (e) {
+      const err = e as DOMException;
+      say(err.name === "NotAllowedError"
+        ? "Chrome blocked the camera. Click the camera icon in the address bar, choose Allow, then Start again."
+        : err.name === "NotReadableError"
+          ? "The camera is busy in another app (FaceTime, Photo Booth, Zoom, the NexiGo app's Preview). Close it and Start again."
+          : `Couldn't start: ${err.message || err.name}`);
+      root.dataset.state = "idle";
+      return;
+    }
+    video.srcObject = stream;
+    // Sound plays from this tab only when a sound input is chosen. While the tab is cast,
+    // Chrome sends that sound to the TV with the picture.
+    video.muted = !audio;
+    await video.play().catch(() => {});
+    await listDevices();
+    const cam = stream.getVideoTracks()[0];
+    const mic = stream.getAudioTracks()[0];
+    prefs = { cam: camSel.value, camLabel: cam?.label, mic: micSel.value, micLabel: mic?.label, res: resSel.value };
+    save(prefs);
+    const s = cam?.getSettings();
+    say(`Live: ${cam?.label || "camera"}${s?.width ? ` at ${s.width}×${s.height}` : ""}${mic ? ` · sound from ${mic.label}` : " · no sound"}`);
+    root.dataset.state = "live";
+    startBtn.textContent = "Restart";
+    nudge();
+  }
+
+  // Hide the panel and cursor after a few still seconds while live; any movement brings them back.
+  let idleTimer = 0;
+  function nudge() {
+    root.classList.remove("sc-idle");
+    clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => root.classList.add("sc-idle"), 4000);
+  }
+  ["mousemove", "keydown", "pointerdown"].forEach((ev) => document.addEventListener(ev, nudge));
+
+  startBtn.addEventListener("click", start);
+  [camSel, micSel, resSel].forEach((s) => s.addEventListener("change", () => { if (root.dataset.state === "live") start(); }));
+  fullBtn.addEventListener("click", () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else root.requestFullscreen().catch(() => {});
+  });
+  navigator.mediaDevices?.addEventListener("devicechange", () => { listDevices().catch(() => {}); });
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    say("This browser can't use a camera here. Open this page in Chrome on the studio Mac.");
+    startBtn.disabled = true;
+  } else {
+    listDevices().catch(() => {});
+    // If Chrome already allows the camera for this site, go live straight away.
+    navigator.permissions?.query({ name: "camera" as PermissionName }).then((p) => { if (p.state === "granted") start(); }).catch(() => {});
+  }
+</script>

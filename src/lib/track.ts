@@ -176,11 +176,11 @@ export function cleanPath(pathname: string): string {
 }
 
 /**
- * Pages never recorded: Scott's /admin, and the private client mix review (/review?k=<key>),
- * whose link is its only key, so not even its path is sent.
+ * Pages never recorded: Scott's /admin and /studio-cam, and the private client mix review
+ * (/review?k=<key>), whose link is its only key, so not even its path is sent.
  */
 export function pathTracked(pathname: string): boolean {
-  return !/^\/(admin|review)\b/.test(cleanPath(pathname));
+  return !/^\/(admin|review|studio-cam)\b/.test(cleanPath(pathname));
 }
 
 export function deviceOf(width: number): "m" | "t" | "d" {
