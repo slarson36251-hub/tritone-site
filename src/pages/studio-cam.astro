@@ -22,6 +22,7 @@ import logo from "../assets/logo/tritone-wordmark-white.png";
 
     <div class="sc-panel" id="sc-panel">
       <Image src={logo} alt="Tritone Productions" class="sc-logo" widths={[240, 480]} sizes="160px" loading="eager" />
+      <h1 class="sc-title">Studio Cam</h1>
       <p class="sc-status" id="sc-status" role="status">Click Start to show the studio camera.</p>
       <label class="sc-row">
         <span>Camera</span>
@@ -58,6 +59,7 @@ import logo from "../assets/logo/tritone-wordmark-white.png";
     padding: 18px 18px 14px; display: grid; gap: 10px; transition: opacity 0.4s ease; backdrop-filter: blur(6px);
   }
   .sc-logo { width: 150px; height: auto; display: block; }
+  .sc-title { margin: 0; font-family: "Archivo Black", system-ui, sans-serif; font-size: 18px; font-weight: 400; letter-spacing: 0.02em; }
   .sc-status { margin: 0; font-size: 14px; color: #d8d8d8; min-height: 1.3em; }
   .sc-row { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 10px; font-size: 14px; }
   .sc-row select { width: 100%; padding: 7px 8px; border-radius: 8px; background: #1d1d1d; color: #f5f5f5; border: 1px solid #3a3a3a; font: inherit; font-size: 13px; }
