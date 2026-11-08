@@ -119,3 +119,12 @@ test("every off-site script, image and frame in dist/ is allowed by the CSP", { 
       assert.ok(allows("frame-src", `https://${m[1]}`), `${f}: embeds ${m[1]}`);
   }
 });
+
+test("/studio-cam is private and the only page allowed the camera", () => {
+  assert.equal(ruleHeader("/studio-cam", "X-Robots-Tag"), "noindex, nofollow");
+  assert.equal(ruleHeader("/studio-cam", "Cache-Control"), "no-store");
+  assert.ok(ruleHeader("/studio-cam", "Permissions-Policy")?.includes("camera=(self)"), "camera allowed on /studio-cam");
+  assert.ok(header("Permissions-Policy")?.includes("camera=()"), "camera still off everywhere else");
+  const i = (src) => hosting.headers.findIndex((h) => h.source === src);
+  assert.ok(i("/studio-cam") > i("**"), "studio-cam rule after the global rule (later wins)");
+});

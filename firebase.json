@@ -103,6 +103,27 @@
         ]
       },
       {
+        "source": "/studio-cam",
+        "headers": [
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(self), microphone=(self), geolocation=(), interest-cohort=()"
+          },
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          }
+        ]
+      },
+      {
         "source": "/_astro/**",
         "headers": [
           {
