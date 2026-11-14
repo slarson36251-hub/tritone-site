@@ -86,11 +86,12 @@ const event = {
           <img class="l7-foot" src={details.src} width={details.width} height={details.height} alt="" decoding="async" />
         </div>
 
-        <div class="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <button type="button" id="l7-play" data-src="/audio/lucky-7/lucky-7-mashup-loop.mp3" aria-pressed="false" class="inline-flex min-h-12 cursor-pointer items-center gap-3 rounded-full border-2 border-stone bg-stone px-7 text-sm font-semibold uppercase tracking-[.04em] text-black transition-opacity hover:opacity-85">
-            <span class="l7-icon" aria-hidden="true"></span><span id="l7-play-label">Hear the band</span>
+        <div class="mt-3 flex items-center justify-end gap-2">
+          <span class="text-[13px] text-white/70" aria-hidden="true">Lucky 7 mix</span>
+          <button type="button" id="l7-play" data-src="/audio/lucky-7/lucky-7-mashup-loop.mp3" aria-pressed="false" class="l7-mute inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-stone/60 bg-transparent text-white transition-opacity hover:opacity-80">
+            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="l7-on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="l7-off" d="M17 9l5 6M22 9l-5 6"/></svg>
+            <span id="l7-play-label" class="sr-only">Music off</span>
           </button>
-          <p class="m-0 text-[15px] text-white/80">A Lucky 7 mix: ten tunes, ten seconds each</p>
         </div>
       </div>
 
@@ -99,6 +100,7 @@ const event = {
           <p class="eyebrow m-0 text-white/80">Scotch Larson presents his</p>
           <h1 class="disp m-0 text-[clamp(3rem,10vw,5.5rem)] leading-[.9]">Lucky 7</h1>
           <p class="m-0 text-[19px]">featuring <strong>Allegra Bandy</strong></p>
+          <p class="disp m-0 text-[clamp(1.3rem,4.5vw,1.7rem)] leading-tight text-stone">25 years later, we come out to play</p>
         </header>
 
         <div class="flex flex-col gap-3 border-y border-stone/40 py-6">
@@ -114,7 +116,8 @@ const event = {
 
         <section aria-labelledby="l7-about" class="flex flex-col gap-3">
           <h2 id="l7-about" class="eyebrow m-0 text-white/80">The band</h2>
-          <p class="m-0 text-[17px]">Lucky 7 is trombonist Scott Larson’s seven-piece swing band: four horns out front, with guitar, bass and drums behind them. The book runs from St. James Infirmary and Mood Indigo to Robbins’ Nest, played for dancers. For this night vocalist Allegra Bandy joins the band at the Woodchopper’s Ball, the Tuesday swing dance at San Francisco’s Verdi Club.</p>
+          <p class="m-0 text-[17px]">Lucky 7 plays the hot jazz of New Orleans and the dance music of the 1920s, ’30s and ’40s. Trombonist Scott Larson started the band twenty-five years ago, and it has worked Bay Area rooms ever since, from the Make-Out Room and happy hours at The Chapel to a summer of Sunday sets at Drake’s Dealership in Oakland.</p>
+          <p class="m-0 text-[17px]">Four horns ride up front with guitar, bass and drums underneath, and the book is made for dancers: St. James Infirmary, Mood Indigo, After You’re Gone, Robbins’ Nest. On December 15 vocalist Allegra Bandy joins the band at the Woodchopper’s Ball, the Tuesday night swing dance at the Verdi Club.</p>
         </section>
 
         <section aria-labelledby="l7-lineup">
@@ -171,8 +174,9 @@ const event = {
     .l7-art, .l7-rays, .l7-shadow, .l7-title { animation: none; }
     .l7-rays { opacity: 0; }
   }
-  .l7-icon { display: inline-block; width: 0; height: 0; border-style: solid; border-width: 7px 0 7px 12px; border-color: transparent transparent transparent currentColor; }
-  [aria-pressed="true"] .l7-icon { width: 12px; height: 12px; border: 0; background: currentColor; }
+  .l7-mute .l7-on { display: none; }
+  .l7-mute[aria-pressed="true"] .l7-on { display: inline; }
+  .l7-mute[aria-pressed="true"] .l7-off { display: none; }
 </style>
 
 <script>
@@ -194,7 +198,7 @@ const event = {
     const btn = document.getElementById("l7-play");
     btn?.setAttribute("aria-pressed", "false");
     const label = document.getElementById("l7-play-label");
-    if (label) label.textContent = "Hear the band";
+    if (label) label.textContent = "Music off. Turn music on";
   }
 
   let starting = false;
@@ -206,7 +210,7 @@ const event = {
       ctx ??= new AudioContext();
       await ctx.resume();
       if (!buffer) {
-        if (label) label.textContent = "Loading…";
+        if (label) label.textContent = "Loading music";
         const data = await (await fetch(btn.dataset.src!)).arrayBuffer();
         buffer = await ctx.decodeAudioData(data);
       }
@@ -224,7 +228,7 @@ const event = {
       node.connect(gain);
       node.start(0, 0.1);
       btn.setAttribute("aria-pressed", "true");
-      if (label) label.textContent = "Stop the music";
+      if (label) label.textContent = "Music on. Turn music off";
       document.getElementById("l7-poster")?.classList.add("is-playing");
     } catch {
       stop();
