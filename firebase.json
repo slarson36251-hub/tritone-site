@@ -153,6 +153,11 @@
     ],
     "redirects": [
       {
+        "source": "/press/lucky-7-woodchoppers-ball",
+        "destination": "/lucky-7-woodchoppers-ball#promo-kit",
+        "type": 302
+      },
+      {
         "source": "/hard-bop-quintet",
         "destination": "/bands/hard-bop-quintet",
         "type": 301
