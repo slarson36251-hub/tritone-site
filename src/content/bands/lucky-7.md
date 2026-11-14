@@ -21,4 +21,4 @@ seoDescription: "Lucky 7, Scott Larson's New Orleans hot jazz and swing band fro
 
 Lucky 7 plays the hot jazz of New Orleans and the dance music of the 1920s, ’30s and ’40s. Trombonist Scott Larson started the band twenty-five years ago, and it has worked Bay Area rooms ever since, from the Make-Out Room and happy hours at The Chapel to a summer of Sunday sets at Drake’s Dealership in Oakland.
 
-Four horns ride up front with guitar, bass and drums underneath, and the book is made for dancers: St. James Infirmary, Mood Indigo, After You’re Gone, Black & Blue and Come Sunday.
+It is live music for dancers: four horns up front, guitar, bass and drums underneath, playing originals alongside favorite covers from Duke Ellington to Cab Calloway.
