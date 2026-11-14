@@ -1,10 +1,9 @@
 ---
 name: Lucky 7
 order: 3
-tagline: Nine tracks, from St. James Infirmary to Come Sunday.
+tagline: New Orleans hot jazz and swing for dancers, led by trombonist Scott Larson.
 poster: ../../assets/photos/lucky-7-band-live.jpg
 posterAlt: Lucky 7 on stage in sepia, trumpet, trombone and clarinet up front, upright bass and guitar behind, bunting over the curtain
-# TODO(scott): bio (the old site had none) and lineup
 tracks:
   - { title: St. James Infirmary, src: "/audio/lucky-7/st-james-infirmary.mp3" }
   - { title: "After You're Gone", src: "/audio/lucky-7/after-youre-gone.mp3" }
@@ -15,7 +14,11 @@ tracks:
   - { title: "Sad Days Indeed!", src: "/audio/lucky-7/sad-days-indeed.mp3" }
   - { title: "Black & Blue", src: "/audio/lucky-7/black-and-blue.mp3" }
   - { title: Come Sunday, src: "/audio/lucky-7/come-sunday.mp3" }
-genres: [] # TODO(scott): genre for the MusicGroup schema
+genres: [Hot jazz, Swing, New Orleans jazz, Traditional jazz]
 seoTitle: "Lucky 7 · Bay Area Band · Listen to Nine Tracks"
-seoDescription: "Lucky 7, a Tritone Productions band from the Bay Area, with trumpet, trombone and clarinet up front. Hear St. James Infirmary, Mood Indigo and Come Sunday."
+seoDescription: "Lucky 7, Scott Larson's New Orleans hot jazz and swing band from the Bay Area: four horns, guitar, bass and drums. Hear St. James Infirmary and Mood Indigo."
 ---
+
+Lucky 7 plays the hot jazz of New Orleans and the dance music of the 1920s, ’30s and ’40s. Trombonist Scott Larson started the band twenty-five years ago, and it has worked Bay Area rooms ever since, from the Make-Out Room and happy hours at The Chapel to a summer of Sunday sets at Drake’s Dealership in Oakland.
+
+Four horns ride up front with guitar, bass and drums underneath, and the book is made for dancers: St. James Infirmary, Mood Indigo, After You’re Gone, Black & Blue and Come Sunday.
