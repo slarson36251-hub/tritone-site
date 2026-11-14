@@ -58,6 +58,7 @@ const event = {
     { "@type": "MusicGroup", name: "Lucky 7", url: `${SITE}/bands/lucky-7` },
     ...lineup.map((m) => ({ "@type": "Person", name: m.name })),
   ],
+  offers: { "@type": "Offer", price: "20", priceCurrency: "USD", availability: "https://schema.org/InStock", url: "https://woodchoppersball.com/dance-party/", validFrom: "2026-11-14T00:00:00-08:00" },
   organizer: { "@type": "Organization", name: "The Woodchopper's Ball", url: "https://woodchoppersball.com/" },
   superEvent: { "@type": "EventSeries", name: "The Woodchopper's Ball", url: "https://woodchoppersball.com/" },
 };
@@ -106,6 +107,7 @@ const event = {
         <div class="flex flex-col gap-3 border-y border-stone/40 py-6">
           <p class="m-0 text-[21px] font-semibold"><time datetime="2026-12-15T21:15:00-08:00">Tuesday, December 15, 2026</time></p>
           <p class="m-0 text-[17px]">Two sets: <strong>9:15 PM</strong> and <strong>10:30 PM</strong></p>
+          <p class="m-0 text-[17px] text-white/80">Drop-in swing lesson at 9:00 · $20 at the door, $10 students, cash only</p>
           <p class="m-0 text-[17px]"><strong>The Woodchopper’s Ball</strong> at the {venue.name}</p>
           <p class="m-0 text-[17px] text-white/80">{venue.street}, {venue.city}</p>
           <div class="mt-2 flex flex-wrap gap-3">
