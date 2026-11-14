@@ -4,6 +4,7 @@ import PageHead from "../components/PageHead.astro";
 import Pill from "../components/Pill.astro";
 import ShowCard from "../components/shows/ShowCard.astro";
 import ShowRow from "../components/shows/ShowRow.astro";
+import Lucky7Feature from "../components/shows/Lucky7Feature.astro";
 import { getShows, getUpcomingShows, getPastShows, isUpcoming, showUrl, SITE } from "../lib/shows";
 import { pastDate } from "../components/shows/format";
 import type { Venue } from "../data/venues";
@@ -63,6 +64,8 @@ const venueList = [...venues.values()].sort((a, b) => b.count - a.count || a.ven
       )}
     </div>
   </PageHead>
+
+  <div class="wrap pb-8"><Lucky7Feature /></div>
 
   <section class="wrap pb-16 md:pb-20" aria-labelledby="upcoming-h">
     <div class="rule mb-8 flex items-baseline justify-between gap-4 border-t pt-6">

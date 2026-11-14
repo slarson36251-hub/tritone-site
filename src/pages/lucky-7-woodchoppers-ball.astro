@@ -1,7 +1,7 @@
 ---
 // One show, one page: Lucky 7 at the Woodchopper's Ball (Verdi Club, Dec 15 2026).
 // The poster is built from layers so it can move a little, and a 13 second loop of
-// the band's own recording of Robbins' Nest plays on request.
+// a 95 second mashup of the band's own recordings plays as soon as the browser allows.
 import Base from "../layouts/Base.astro";
 import Pill from "../components/Pill.astro";
 import { SITE, canonicalUrl } from "../lib/seo";
@@ -87,10 +87,10 @@ const event = {
         </div>
 
         <div class="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <button type="button" id="l7-play" data-src="/audio/lucky-7/robbins-nest-loop.mp3" aria-pressed="false" class="inline-flex min-h-12 cursor-pointer items-center gap-3 rounded-full border-2 border-stone bg-stone px-7 text-sm font-semibold uppercase tracking-[.04em] text-black transition-opacity hover:opacity-85">
+          <button type="button" id="l7-play" data-src="/audio/lucky-7/lucky-7-mashup-loop.mp3" aria-pressed="false" class="inline-flex min-h-12 cursor-pointer items-center gap-3 rounded-full border-2 border-stone bg-stone px-7 text-sm font-semibold uppercase tracking-[.04em] text-black transition-opacity hover:opacity-85">
             <span class="l7-icon" aria-hidden="true"></span><span id="l7-play-label">Hear the band</span>
           </button>
-          <p class="m-0 text-[15px] text-white/80">Lucky 7 playing Robbins’ Nest</p>
+          <p class="m-0 text-[15px] text-white/80">A Lucky 7 mix: ten tunes, ten seconds each</p>
         </div>
       </div>
 
@@ -176,7 +176,7 @@ const event = {
 </style>
 
 <script>
-  // Seamless loop through Web Audio: the file holds one 13 s period plus a short wrap,
+  // Seamless loop through Web Audio: the file holds one 95 s period plus a short wrap,
   // so looping between fixed points never clicks, whatever padding the decoder adds.
   let ctx: AudioContext | undefined;
   let gain: GainNode | undefined;
@@ -197,7 +197,10 @@ const event = {
     if (label) label.textContent = "Hear the band";
   }
 
+  let starting = false;
   async function play(btn: HTMLElement) {
+    if (starting || node) return;
+    starting = true;
     const label = document.getElementById("l7-play-label");
     try {
       ctx ??= new AudioContext();
@@ -217,7 +220,7 @@ const event = {
       node.buffer = buffer;
       node.loop = true;
       node.loopStart = 0.1;
-      node.loopEnd = 13.1;
+      node.loopEnd = 95.1;
       node.connect(gain);
       node.start(0, 0.1);
       btn.setAttribute("aria-pressed", "true");
@@ -225,16 +228,39 @@ const event = {
       document.getElementById("l7-poster")?.classList.add("is-playing");
     } catch {
       stop();
+    } finally {
+      starting = false;
     }
   }
 
+  // Music starts with the page. Browsers refuse sound before a visitor has touched the
+  // page, so if autoplay is blocked it starts on the first tap, click or key instead.
+  // Someone who pressed Stop is never restarted.
+  let userStopped = false;
   function init() {
     const btn = document.getElementById("l7-play");
     if (!btn || btn.dataset.ready) return;
     btn.dataset.ready = "1";
-    const toggle = () => (node ? stop() : play(btn));
+    userStopped = false;
+    const toggle = (e: Event) => {
+      e.stopPropagation();
+      if (node) { userStopped = true; stop(); } else { userStopped = false; play(btn); }
+    };
     btn.addEventListener("click", toggle);
     document.getElementById("l7-poster")?.addEventListener("click", toggle);
+    const kick = () => {
+      if (!node && !userStopped && document.getElementById("l7-play") === btn) play(btn);
+    };
+    const opts = { once: true, capture: true } as const;
+    window.addEventListener("pointerdown", kick, opts);
+    window.addEventListener("keydown", kick, opts);
+    window.addEventListener("touchend", kick, opts);
+    // Try straight away; this works where the visitor has already played sound on the site.
+    ctx ??= new AudioContext();
+    if (ctx.state === "running") play(btn);
+    else ctx.resume().then(() => { if (ctx?.state === "running" && !node && !userStopped) play(btn); }).catch(() => {});
+    // Warm the file so the first tap starts the music at once.
+    if (!buffer) fetch(btn.dataset.src!).then((r) => r.arrayBuffer()).then((d) => ctx!.decodeAudioData(d)).then((b) => { buffer ??= b; }).catch(() => {});
   }
   document.addEventListener("astro:page-load", init);
   document.addEventListener("astro:before-swap", stop);
