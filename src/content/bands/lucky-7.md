@@ -19,6 +19,6 @@ seoTitle: "Lucky 7 · Bay Area Band · Listen to Nine Tracks"
 seoDescription: "Lucky 7, Scott Larson's New Orleans hot jazz and swing band from the Bay Area: four horns, guitar, bass and drums. Hear St. James Infirmary and Mood Indigo."
 ---
 
-Lucky 7 plays the hot jazz of New Orleans and the dance music of the 1920s, ’30s and ’40s. Trombonist Scott Larson started the band twenty-five years ago, and it has worked Bay Area rooms ever since, from the Make-Out Room and happy hours at The Chapel to a summer of Sunday sets at Drake’s Dealership in Oakland.
+Lucky 7 plays the hot jazz of New Orleans and the dance music of the 1920s, ’30s and ’40s. Trombonist Scott Larson started the band twenty-five years ago, and it has worked Bay Area rooms ever since, from the Amnesia of yesteryear and the Make-Out Room to happy hours at The Chapel and a summer of Sunday sets at Drake’s Dealership in Oakland.
 
 It is live music for dancers: four horns up front, guitar, bass and drums underneath, playing originals alongside favorite covers from Duke Ellington to Cab Calloway.
