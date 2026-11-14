@@ -1,0 +1,242 @@
+---
+// One show, one page: Lucky 7 at the Woodchopper's Ball (Verdi Club, Dec 15 2026).
+// The poster is built from layers so it can move a little, and a 13 second loop of
+// the band's own recording of Robbins' Nest plays on request.
+import Base from "../layouts/Base.astro";
+import Pill from "../components/Pill.astro";
+import { SITE, canonicalUrl } from "../lib/seo";
+import { VENUES } from "../data/venues";
+import art from "../assets/posters/lucky-7-woodchoppers-ball/lucky-7-big-band-illustration-orange-blue.webp";
+import titleImg from "../assets/posters/lucky-7-woodchoppers-ball/lucky-7-title.webp";
+import shadowImg from "../assets/posters/lucky-7-woodchoppers-ball/lucky-7-title-shadow.webp";
+import details from "../assets/posters/lucky-7-woodchoppers-ball/lucky-7-verdi-club-dec-15-details.webp";
+import poster from "../assets/posters/lucky-7-woodchoppers-ball/scotch-larson-lucky-7-verdi-club-san-francisco-dec-15-2026-swing-poster.jpg";
+import share from "../assets/posters/lucky-7-woodchoppers-ball/scotch-larson-lucky-7-verdi-club-dec-15-2026-share.jpg";
+
+const PATH = "/lucky-7-woodchoppers-ball";
+const venue = VENUES.find((v) => v.name === "Verdi Club")!;
+const lineup = [
+  { name: "Scotch Larson", role: "Trombone" },
+  { name: "Henry Hung", role: "Trumpet" },
+  { name: "James Dunning", role: "Trumpet" },
+  { name: "Patrick Wolff", role: "Clarinet, tenor sax" },
+  { name: "Myles Boisen", role: "Guitar" },
+  { name: "Safa Shokrai", role: "Bass" },
+  { name: "Benny Amon", role: "Drums" },
+  { name: "Allegra Bandy", role: "Vocals" },
+];
+const title = "Lucky 7 at the Woodchopper's Ball · Verdi Club · Dec 15";
+const description =
+  "Scotch Larson presents his Lucky 7, featuring Allegra Bandy, at the Woodchopper's Ball. Verdi Club, San Francisco, Tuesday, December 15, 2026. Sets at 9:15 and 10:30.";
+const alt =
+  "Poster in orange and navy: Scotch Larson presents his Lucky 7, featuring Allegra Bandy. Eight musicians on a bandstand with name stands. Tuesday Dec 15, 9:15 PM, Verdi Club, San Francisco.";
+const event = {
+  "@type": "MusicEvent",
+  name: "Scotch Larson presents his Lucky 7, featuring Allegra Bandy",
+  description,
+  url: canonicalUrl(PATH),
+  image: [new URL(poster.src, SITE).href, new URL(share.src, SITE).href],
+  startDate: "2026-12-15T21:15:00-08:00",
+  endDate: "2026-12-15T23:30:00-08:00",
+  doorTime: "2026-12-15T21:15:00-08:00",
+  eventStatus: "https://schema.org/EventScheduled",
+  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+  location: {
+    "@type": "MusicVenue",
+    name: venue.name,
+    url: venue.url,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: venue.street,
+      addressLocality: venue.city,
+      addressRegion: "CA",
+      postalCode: venue.postalCode,
+      addressCountry: "US",
+    },
+  },
+  performer: [
+    { "@type": "MusicGroup", name: "Lucky 7", url: `${SITE}/bands/lucky-7` },
+    ...lineup.map((m) => ({ "@type": "Person", name: m.name })),
+  ],
+  organizer: { "@type": "Organization", name: "The Woodchopper's Ball", url: "https://woodchoppersball.com/" },
+  superEvent: { "@type": "EventSeries", name: "The Woodchopper's Ball", url: "https://woodchoppersball.com/" },
+};
+---
+<Base title={title} description={description} image={share.src} imageAlt={alt} breadcrumbs={[{ name: "Shows", path: "/shows" }, { name: "Lucky 7 at the Woodchopper's Ball", path: PATH }]} schema={[event]}>
+  <Fragment slot="head">
+    <meta name="twitter:image" content={new URL(share.src, SITE).href} />
+    <link rel="preload" as="image" href={art.src} fetchpriority="high" />
+  </Fragment>
+
+  <article class="wrap pb-16 pt-8 md:pb-24 md:pt-12">
+    <nav aria-label="Breadcrumb" class="eyebrow mb-6 flex flex-wrap gap-x-2 text-white/80">
+      <a href="/shows" class="no-underline hover:underline">Shows</a><span aria-hidden="true">/</span><span>Lucky 7</span>
+    </nav>
+
+    <div class="grid gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:gap-12 lg:gap-16">
+      <div class="md:sticky md:top-28 md:self-start">
+        <div class="l7 mx-auto rounded-md md:max-w-[calc((100dvh-14rem)*11/17)]" id="l7-poster" role="img" aria-label={alt}>
+          <div class="l7-artwrap">
+            <img class="l7-art" src={art.src} width={art.width} height={art.height} alt="" decoding="async" fetchpriority="high" />
+            <div class="l7-rays" aria-hidden="true"></div>
+            <div class="l7-frame" aria-hidden="true"></div>
+          </div>
+          <img class="l7-layer l7-shadow" src={shadowImg.src} width={shadowImg.width} height={shadowImg.height} alt="" decoding="async" />
+          <img class="l7-layer l7-title" src={titleImg.src} width={titleImg.width} height={titleImg.height} alt="" decoding="async" />
+          <img class="l7-foot" src={details.src} width={details.width} height={details.height} alt="" decoding="async" />
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+          <button type="button" id="l7-play" data-src="/audio/lucky-7/robbins-nest-loop.mp3" aria-pressed="false" class="inline-flex min-h-12 cursor-pointer items-center gap-3 rounded-full border-2 border-stone bg-stone px-7 text-sm font-semibold uppercase tracking-[.04em] text-black transition-opacity hover:opacity-85">
+            <span class="l7-icon" aria-hidden="true"></span><span id="l7-play-label">Hear the band</span>
+          </button>
+          <p class="m-0 text-[15px] text-white/80">Lucky 7 playing Robbins’ Nest</p>
+        </div>
+      </div>
+
+      <div class="flex min-w-0 flex-col gap-7">
+        <header class="flex flex-col gap-4">
+          <p class="eyebrow m-0 text-white/80">Scotch Larson presents his</p>
+          <h1 class="disp m-0 text-[clamp(3rem,10vw,5.5rem)] leading-[.9]">Lucky 7</h1>
+          <p class="m-0 text-[19px]">featuring <strong>Allegra Bandy</strong></p>
+        </header>
+
+        <div class="flex flex-col gap-3 border-y border-stone/40 py-6">
+          <p class="m-0 text-[21px] font-semibold"><time datetime="2026-12-15T21:15:00-08:00">Tuesday, December 15, 2026</time></p>
+          <p class="m-0 text-[17px]">Two sets: <strong>9:15 PM</strong> and <strong>10:30 PM</strong></p>
+          <p class="m-0 text-[17px]"><strong>The Woodchopper’s Ball</strong> at the {venue.name}</p>
+          <p class="m-0 text-[17px] text-white/80">{venue.street}, {venue.city}</p>
+          <div class="mt-2 flex flex-wrap gap-3">
+            <Pill href="https://woodchoppersball.com/" external track="ticket_click" trackLbl="lucky-7-woodchoppers-ball">The Woodchopper’s Ball</Pill>
+            <Pill href="/bands/lucky-7" ghost>More Lucky 7 tracks</Pill>
+          </div>
+        </div>
+
+        <section aria-labelledby="l7-about" class="flex flex-col gap-3">
+          <h2 id="l7-about" class="eyebrow m-0 text-white/80">The band</h2>
+          <p class="m-0 text-[17px]">Lucky 7 is trombonist Scott Larson’s seven-piece swing band: four horns out front, with guitar, bass and drums behind them. The book runs from St. James Infirmary and Mood Indigo to Robbins’ Nest, played for dancers. For this night vocalist Allegra Bandy joins the band at the Woodchopper’s Ball, the Tuesday swing dance at San Francisco’s Verdi Club.</p>
+        </section>
+
+        <section aria-labelledby="l7-lineup">
+          <h2 id="l7-lineup" class="eyebrow m-0 mb-3 text-white/80">Lineup</h2>
+          <ul class="m-0 flex list-none flex-col p-0">
+            {lineup.map((m) => (
+              <li class="rule flex justify-between gap-4 border-b py-2.5">
+                <span class="min-w-0 font-semibold">{m.name}</span>
+                <span class="shrink-0 text-white/80">{m.role}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section aria-labelledby="l7-venue" class="flex flex-col gap-2 rounded-md border border-stone/40 bg-black/20 p-5 md:p-6">
+          <h2 id="l7-venue" class="eyebrow m-0 text-white/80">Venue</h2>
+          <p class="disp m-0 text-[1.6rem] leading-tight">{venue.name}</p>
+          <p class="m-0">{venue.street}, {venue.city}, CA {venue.postalCode}</p>
+          <a href={venue.url} target="_blank" rel="noopener" class="inline-flex min-h-11 items-center self-start font-semibold">{venue.name} website →</a>
+        </section>
+
+        <p class="m-0"><a href={poster.src} download="scotch-larson-lucky-7-verdi-club-san-francisco-dec-15-2026-poster.jpg" class="inline-flex min-h-11 items-center font-semibold">Download the poster →</a></p>
+      </div>
+    </div>
+  </article>
+</Base>
+
+<style>
+  /* Poster colours belong to the artwork, not the site palette. */
+  .l7 { position: relative; width: 100%; aspect-ratio: 1100 / 1700; overflow: hidden; background: #13284a; container-type: inline-size; cursor: pointer; isolation: isolate; }
+  .l7 img { display: block; max-width: none; user-select: none; -webkit-user-drag: none; }
+  .l7-artwrap { position: absolute; inset: 0 0 auto 0; height: 80.47%; overflow: hidden; background: #f3e9d2; }
+  .l7-art { width: 100%; height: auto; transform-origin: 50% 62%; animation: l7-drift 13s ease-in-out infinite alternate; }
+  .l7-rays {
+    position: absolute; left: -40cqw; top: -8cqw; width: 180cqw; height: 180cqw; border-radius: 50%;
+    background: repeating-conic-gradient(from 0deg, rgb(255 244 214 / 0.95) 0 7deg, rgb(255 244 214 / 0) 7deg 20deg);
+    mix-blend-mode: soft-light; opacity: 0.4;
+    -webkit-mask: radial-gradient(circle, #000 0 35%, transparent 62%); mask: radial-gradient(circle, #000 0 35%, transparent 62%);
+    animation: l7-spin 72s linear infinite;
+  }
+  .l7-frame { position: absolute; inset: 2.18cqw 2.18cqw -2cqw 2.18cqw; border: 0.55cqw solid #13284a; pointer-events: none; }
+  .l7-layer { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
+  .l7-shadow { transform: translate(0.82cqw, 0.82cqw); animation: l7-shadow 3.25s ease-in-out infinite alternate; }
+  .l7-title { animation: l7-in 0.9s cubic-bezier(0.2, 1.3, 0.4, 1) both; }
+  .l7-foot { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; }
+  .l7.is-playing .l7-art { animation-duration: 6.5s; }
+  .l7.is-playing .l7-rays { animation-duration: 30s; opacity: 0.55; }
+  .l7.is-playing .l7-shadow { animation-duration: 1.625s; }
+  @keyframes l7-drift { from { transform: scale(1.012) rotate(-0.2deg); } to { transform: scale(1.04) rotate(0.25deg); } }
+  @keyframes l7-spin { to { transform: rotate(360deg); } }
+  @keyframes l7-shadow { from { transform: translate(0.82cqw, 0.82cqw); } to { transform: translate(1.25cqw, 1.25cqw); } }
+  @keyframes l7-in { from { opacity: 0; transform: translateY(-4cqw); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .l7-art, .l7-rays, .l7-shadow, .l7-title { animation: none; }
+    .l7-rays { opacity: 0; }
+  }
+  .l7-icon { display: inline-block; width: 0; height: 0; border-style: solid; border-width: 7px 0 7px 12px; border-color: transparent transparent transparent currentColor; }
+  [aria-pressed="true"] .l7-icon { width: 12px; height: 12px; border: 0; background: currentColor; }
+</style>
+
+<script>
+  // Seamless loop through Web Audio: the file holds one 13 s period plus a short wrap,
+  // so looping between fixed points never clicks, whatever padding the decoder adds.
+  let ctx: AudioContext | undefined;
+  let gain: GainNode | undefined;
+  let node: AudioBufferSourceNode | undefined;
+  let buffer: AudioBuffer | undefined;
+
+  function stop() {
+    if (node && gain && ctx) {
+      const n = node;
+      gain.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
+      setTimeout(() => { try { n.stop(); } catch { /* already stopped */ } }, 400);
+    }
+    node = undefined;
+    document.getElementById("l7-poster")?.classList.remove("is-playing");
+    const btn = document.getElementById("l7-play");
+    btn?.setAttribute("aria-pressed", "false");
+    const label = document.getElementById("l7-play-label");
+    if (label) label.textContent = "Hear the band";
+  }
+
+  async function play(btn: HTMLElement) {
+    const label = document.getElementById("l7-play-label");
+    try {
+      ctx ??= new AudioContext();
+      await ctx.resume();
+      if (!buffer) {
+        if (label) label.textContent = "Loading…";
+        const data = await (await fetch(btn.dataset.src!)).arrayBuffer();
+        buffer = await ctx.decodeAudioData(data);
+      }
+      // Quiet anything else playing on the site (the track dock).
+      document.querySelectorAll("audio").forEach((a) => a.pause());
+      gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.setTargetAtTime(1, ctx.currentTime, 0.05);
+      gain.connect(ctx.destination);
+      node = ctx.createBufferSource();
+      node.buffer = buffer;
+      node.loop = true;
+      node.loopStart = 0.1;
+      node.loopEnd = 13.1;
+      node.connect(gain);
+      node.start(0, 0.1);
+      btn.setAttribute("aria-pressed", "true");
+      if (label) label.textContent = "Stop the music";
+      document.getElementById("l7-poster")?.classList.add("is-playing");
+    } catch {
+      stop();
+    }
+  }
+
+  function init() {
+    const btn = document.getElementById("l7-play");
+    if (!btn || btn.dataset.ready) return;
+    btn.dataset.ready = "1";
+    const toggle = () => (node ? stop() : play(btn));
+    btn.addEventListener("click", toggle);
+    document.getElementById("l7-poster")?.addEventListener("click", toggle);
+  }
+  document.addEventListener("astro:page-load", init);
+  document.addEventListener("astro:before-swap", stop);
+  document.addEventListener("visibilitychange", () => { if (document.hidden && node) stop(); });
+</script>
