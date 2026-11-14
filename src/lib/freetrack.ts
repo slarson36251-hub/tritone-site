@@ -16,6 +16,20 @@ import { track } from "./track";
 export const ENDPOINT =
   "https://script.google.com/macros/s/AKfycby7DXnYPXt2odT9N5PLVtecmN9ZJNuJFt20iwsX8rMxPHS5TJu6g5QXnfWEO3U2ejI_eA/exec";
 
+/**
+ * Song gifts picked by a ?track= link (the gig QR signs). The visitor still signs up as
+ * usual; the chosen song is passed to the Apps Script as `track` and offered for download
+ * right away on the next screen, so it arrives whatever the script emails.
+ */
+export const GIFTS: Record<string, { title: string; band: string; src: string; file: string }> = {
+  "mood-indigo": {
+    title: "Mood Indigo",
+    band: "Lucky 7",
+    src: "/audio/lucky-7/mood-indigo.mp3",
+    file: "lucky-7-mood-indigo-tritone-productions.mp3",
+  },
+};
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function initFreeTrack() {
@@ -47,6 +61,18 @@ export function initFreeTrack() {
   const openedAt = Date.now();
   const hp = q<HTMLInputElement>("#ft-company");
 
+  const gift = GIFTS[new URLSearchParams(location.search).get("track") || ""];
+  if (gift) {
+    q("#ft-lede").textContent = `Drop your name and email and ${gift.band}'s “${gift.title}” is yours to keep.`;
+    const link = q<HTMLAnchorElement>("#ft-gift-link");
+    link.href = gift.src;
+    link.download = gift.file;
+    link.textContent = `Download “${gift.title}”`;
+    q("#ft-gift-note").textContent = `${gift.band} · MP3`;
+    q("#ft-inbox").textContent = "Here's your song. We'll send the link to your inbox too.";
+    link.addEventListener("click", () => track("free_track", "download"));
+  }
+
   const rules: [HTMLInputElement, (v: string) => boolean][] = [
     [first, (v) => v.length > 0],
     [email, (v) => EMAIL_RE.test(v)],
@@ -77,6 +103,7 @@ export function initFreeTrack() {
       lastName: last.value.trim(),
       email: email.value.trim(),
       name: (first.value.trim() + " " + last.value.trim()).trim(),
+      ...(gift ? { track: gift.title + " (" + gift.band + ")" } : {}),
     };
     busy = true;
     btn.disabled = true;
@@ -89,6 +116,7 @@ export function initFreeTrack() {
         try { body = await r.json(); } catch { /* a non-JSON 2xx still means the row went in */ }
         if (body && body.ok === false) throw new Error(String(body.error || "rejected"));
         track("free_track", "signup"); // never the name or email
+        if (gift) q("#ft-gift").hidden = false;
         go("tip");
       })
       .catch(() => {
