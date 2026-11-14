@@ -7,6 +7,7 @@ import BandArt from "../../components/BandArt.astro";
 import TrackList from "../../components/TrackList.astro";
 import LiteYouTube from "../../components/sessions/LiteYouTube.astro";
 import { postersFor } from "../../lib/posters";
+import Lucky7Feature from "../../components/shows/Lucky7Feature.astro";
 import { SITE, canonicalUrl, cardPath, musicGroup } from "../../lib/seo";
 
 export async function getStaticPaths() {
@@ -60,6 +61,7 @@ const crumbs = [{ name: "Bands", path: "/bands" }, { name, path: `/bands/${slug}
           )}
           <Pill href="/contact" ghost>Book this band</Pill>
         </div>
+        {slug === "lucky-7" && <Lucky7Feature />}
 
         {lineup.length > 0 && (
           <div>
