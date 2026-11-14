@@ -24,7 +24,7 @@ const socials = [
         <div class="tf-screen" data-screen="form">
           <p class="eyebrow m-0 text-center text-stone">Oakland, CA</p>
           <h1 class="disp mb-3 mt-2 text-center text-[clamp(2.4rem,9vw,3.6rem)] leading-[0.92]">A free track, on us</h1>
-          <p class="mx-auto mb-7 mt-0 max-w-[36ch] text-center text-white/85">Drop your name and email and we'll send a free track straight to your inbox.</p>
+          <p class="mx-auto mb-7 mt-0 max-w-[36ch] text-center text-white/85" id="ft-lede">Drop your name and email and we'll send a free track straight to your inbox.</p>
           <form id="ft-form" novalidate>
             <div class="tf-row">
               <div class="tf-field">
@@ -57,7 +57,11 @@ const socials = [
         <div class="tf-screen text-center" data-screen="tip" hidden>
           <div class="tf-check mx-auto" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <h2 class="disp m-0 text-[clamp(2.4rem,9vw,3.4rem)] leading-[0.92]">Awesome!</h2>
-          <p class="mx-auto mb-0 mt-3 max-w-[34ch] text-white/85">Check your inbox for your free track download link.</p>
+          <p class="mx-auto mb-0 mt-3 max-w-[34ch] text-white/85" id="ft-inbox">Check your inbox for your free track download link.</p>
+          <div id="ft-gift" class="mt-6" hidden>
+            <a id="ft-gift-link" href="#" download class="tf-btn inline-flex items-center justify-center no-underline">Download your song</a>
+            <p class="mb-0 mt-2 text-[14px] text-stone" id="ft-gift-note"></p>
+          </div>
           <p class="eyebrow mb-4 mt-8 text-stone">Want to support the music? Leave a tip</p>
           <div class="grid gap-3 sm:grid-cols-2">
             {tips.map((t) => (
