@@ -154,7 +154,7 @@
     "redirects": [
       {
         "source": "/press/lucky-7-woodchoppers-ball",
-        "destination": "/lucky-7-woodchoppers-ball#promo-kit",
+        "destination": "/lucky-7-woodchoppers-ball",
         "type": 302
       },
       {
