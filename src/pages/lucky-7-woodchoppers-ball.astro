@@ -28,6 +28,7 @@ const lineup = [
 const KIT = "/press/lucky-7-dec-15";
 const KB = "scotch-larson-lucky-7-verdi-club-san-francisco-dec-15-2026";
 const kitFiles = [
+  ["Media kit, PDF", "lucky-7-woodchoppers-ball-dec-15-media-kit.pdf"],
   ["Poster, web JPG", `${KB}-poster.jpg`],
   ["Poster, print 11 × 17", `${KB}-poster-print-11x17.jpg`],
   ["Instagram post", `${KB}-instagram-feed-1080x1350.jpg`],
@@ -152,9 +153,9 @@ const event = {
         </section>
 
         <section id="promo-kit" aria-labelledby="l7-kit" class="flex flex-col gap-3 rounded-md border border-stone/40 bg-black/20 p-5 md:p-6">
-          <h2 id="l7-kit" class="eyebrow m-0 text-white/80">Promo kit</h2>
-          <p class="m-0">Posters, Instagram post and story (stills and animated with music), bio, lineup and ready-to-post captions with tags, all in one ZIP (27 MB). Free to post. Credit: Tritone Productions.</p>
-          <a href={`${KIT}/lucky-7-woodchoppers-ball-dec-15-promo-kit.zip`} download class="inline-flex min-h-12 items-center justify-center self-start rounded-full bg-white px-6 text-center font-semibold uppercase tracking-[.04em] text-charcoal no-underline hover:bg-stone hover:text-white">Download the kit · ZIP</a>
+          <h2 id="l7-kit" class="eyebrow m-0 text-white/80">Media kit</h2>
+          <p class="m-0">Media kit PDF, posters, Instagram post and story (stills and animated with music), bio, lineup and ready-to-post captions with tags, all in one ZIP (28 MB). Free to post. Credit: Tritone Productions.</p>
+          <a href={`${KIT}/lucky-7-woodchoppers-ball-dec-15-media-kit.zip`} download class="inline-flex min-h-12 items-center justify-center self-start rounded-full bg-white px-6 text-center font-semibold uppercase tracking-[.04em] text-charcoal no-underline hover:bg-stone hover:text-white">Download the kit · ZIP</a>
           <ul class="m-0 flex list-none flex-col p-0 text-[15px]">
             {kitFiles.map(([label, file]) => (
               <li><a href={`${KIT}/${file}`} download class="inline-flex min-h-11 items-center font-semibold">{label} ↓</a></li>
