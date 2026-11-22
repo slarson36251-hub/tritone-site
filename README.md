@@ -61,6 +61,15 @@ they press **Send feedback** (one atomic Firestore commit: a `submissions` doc p
 referrer, never counted by analytics. Contract: `docs/mix-review-contract.md`; code: `src/lib/review/`.
 `/review?demo=1` runs the whole page on a generated test tune with nothing fetched or sent.
 
+## Rehearsal planner (bands)
+`/rehearse/<key>` is a private page per band (noindex, not tracked, not in the sitemap). Players pick their name and tap
+each time Yes / Maybe / No; the **Band grid** tab shows everyone's answers and the three best times. No sign-in: the link's
+24-character key is the secret. Plans live in `src/data/rehearsals.ts` (band, gig line, dates, roster, time slots); to add a
+band, copy an entry with a new random key and push. Answers: Firestore `rehearsals/<key>/answers/<player>` (`firestore.rules`,
+tests in `tests/rules/rehearse-rules.test.mjs`). Times that clash with Scott's Music calendar or a Hummingbird Hut booking
+are blocked at build time from Google's FreeBusy API (start/end only, never titles or locations: `src/lib/rehearse/busy.ts`),
+refreshed by the 2-hourly rebuild. The Hut calendar must be shared with the calendar service account (free/busy is enough).
+
 ## Analytics (first-party, no cookies)
 Every page of tritone-productions.com counts visits itself: no Google Analytics, no cookies, no consent banner.
 - `src/lib/track.ts` (loaded from `Base.astro`) sends one Firestore document per page view and per interest event

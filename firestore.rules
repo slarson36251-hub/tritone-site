@@ -15,6 +15,27 @@ service cloud.firestore {
         && request.resource.data.createdAt is string && request.resource.data.createdAt.size() < 40;
       allow read, update, delete: if false;
     }
+    // ---- Rehearsal planner (/rehearse/<key>, src/data/rehearsals.ts, src/lib/rehearse/core.ts) ----
+    // The page link is the key (24 letters/digits). Anyone with the link may read the band's answers
+    // and write one player's document in the exact shape below, stamped with the server time.
+    // Nobody can list rehearsals or delete answers through the client.
+    function validAnswers(d) {
+      return d.keys().hasAll(['name', 'note', 'answers', 'updatedAt'])
+        && d.keys().hasOnly(['name', 'note', 'answers', 'updatedAt'])
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
+        && str(d.note, 280)
+        && d.answers is map && d.answers.size() <= 600
+        && d.updatedAt is timestamp && d.updatedAt == request.time;
+    }
+    match /rehearsals/{key} {
+      allow read, write: if false;
+      match /answers/{member} {
+        allow get, list: if key.matches('^[A-Za-z0-9]{24}$');
+        allow create, update: if key.matches('^[A-Za-z0-9]{24}$') && member.matches('^[a-z0-9-]{1,40}$')
+          && validAnswers(request.resource.data);
+        allow delete: if false;
+      }
+    }
     // ---- Mix review (docs/mix-review-contract.md) ----
     // The share link is the key: reviews/{reviewKey} where reviewKey is 24 random base62 characters.
     // Clients (no sign-in) may read an OPEN review, its versions, notes and submissions, and may add

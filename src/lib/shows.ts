@@ -174,7 +174,7 @@ async function fetchWithTimeout(url: string, init: RequestInit = {}): Promise<Re
 }
 
 // Signs a JWT for the service account and swaps it for a read-only Calendar access token.
-async function serviceAccountToken(json: string): Promise<string> {
+export async function serviceAccountToken(json: string): Promise<string> {
   const { createSign } = await import("node:crypto");
   const sa = JSON.parse(json);
   const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");

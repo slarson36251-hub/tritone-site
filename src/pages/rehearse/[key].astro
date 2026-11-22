@@ -1,0 +1,101 @@
+---
+// Rehearsal planner: /rehearse/<key>, one per band (src/data/rehearsals.ts). A private, unlinked
+// tool page: noindex/nofollow (kept out of the sitemap), no referrer, not counted by analytics.
+// Players pick their name and mark each time Yes / Maybe / No; everyone's answers show in one grid
+// (Firestore rehearsals/<key>/answers, see firestore.rules). Times that clash with Scott's calendar
+// or a Hut booking are blocked at build time from free/busy times only (src/lib/rehearse/busy.ts).
+import { Image } from "astro:assets";
+import Base from "../../layouts/Base.astro";
+import logo from "../../assets/logo/tritone-wordmark-white.png";
+import { REHEARSALS } from "../../data/rehearsals";
+import { busyBetween } from "../../lib/rehearse/busy";
+import type { PlanData } from "../../lib/rehearse/core";
+import "../../lib/rehearse/rehearse.css";
+
+export function getStaticPaths() {
+  return REHEARSALS.map((p) => ({ params: { key: p.key }, props: { plan: p } }));
+}
+const { plan } = Astro.props;
+const busy = await busyBetween(plan.from, plan.to);
+const data: PlanData = {
+  key: plan.key,
+  band: plan.band,
+  gig: plan.gig,
+  from: plan.from,
+  to: plan.to,
+  roster: plan.roster,
+  slots: plan.slots,
+  blocks: [...busy.blocks, ...(plan.extraBlocks ?? [])],
+  busyAt: busy.at,
+  sources: busy.sources,
+};
+---
+<Base
+  title={`${plan.band} Rehearsal · Tritone Productions`}
+  description={`Pick the rehearsal times that work for you. Everyone in ${plan.band} sees the answers in one grid.`}
+  noindex
+  nofollow
+  bare
+>
+  <meta slot="head" name="referrer" content="no-referrer" />
+  <header slot="header" class="rh-shell rh-header">
+    <Image src={logo} alt="Tritone Productions, Oakland, California" class="rh-logo" widths={[240, 480]} sizes="160px" loading="eager" />
+  </header>
+
+  <div id="rh" class="rh-shell">
+    <div class="rh-intro">
+      <p class="rh-eyebrow">Rehearsal planner</p>
+      <h1 class="rh-h1">{plan.band}</h1>
+      <p class="rh-sub">{plan.gig}</p>
+    </div>
+
+    <nav class="rh-tabs" role="tablist" aria-label="View">
+      <button type="button" class="rh-tab" role="tab" id="rh-tab-me" aria-controls="rh-me" aria-selected="true">My times</button>
+      <button type="button" class="rh-tab" role="tab" id="rh-tab-grid" aria-controls="rh-grid-view" aria-selected="false">Band grid</button>
+    </nav>
+
+    <p id="rh-status" class="rh-note" role="status" hidden></p>
+
+    <section id="rh-me" class="rh-view" role="tabpanel" aria-labelledby="rh-tab-me">
+      <label class="rh-field" for="rh-who">Who are you?
+        <select id="rh-who"><option value="">Pick your name</option></select>
+      </label>
+      <div class="rh-legend" aria-hidden="true">
+        <span>Tap a time to change it:</span>
+        <span><i class="rh-sw yes"></i>Yes</span><span><i class="rh-sw maybe"></i>Maybe</span><span><i class="rh-sw no"></i>No</span>
+        <span><i class="rh-sw none"></i>Not answered</span><span><i class="rh-sw blk"></i>Blocked</span>
+      </div>
+      <p id="rh-save" class="rh-save" aria-live="polite"></p>
+      <div id="rh-days" class="rh-days"></div>
+      <label class="rh-field" for="rh-note">Anything else? (optional)
+        <input id="rh-note" maxlength="280" autocomplete="off" placeholder="e.g. weeknights I can stay until 9" />
+      </label>
+    </section>
+
+    <section id="rh-grid-view" class="rh-view" role="tabpanel" aria-labelledby="rh-tab-grid" hidden>
+      <div>
+        <h2 class="rh-h2">Best times so far</h2>
+        <p id="rh-answered" class="rh-sub"></p>
+      </div>
+      <div id="rh-best" class="rh-best"></div>
+      <div class="rh-legend" aria-hidden="true">
+        <span><i class="rh-sw yes"></i>Yes</span><span><i class="rh-sw maybe"></i>Maybe</span><span><i class="rh-sw no"></i>No</span>
+        <span><i class="rh-sw none"></i>No answer</span><span><i class="rh-sw blk"></i>Blocked</span>
+      </div>
+      <button type="button" id="rh-hide" class="rh-pill" aria-pressed="false">Hide blocked times</button>
+      <div class="rh-gridwrap"><table id="rh-grid"></table></div>
+      <div id="rh-notes" class="rh-note" hidden></div>
+    </section>
+
+    <footer class="rh-foot">
+      <span>Tritone Productions · Oakland, CA</span>
+      <span id="rh-updated">All times Pacific.</span>
+    </footer>
+  </div>
+  <script type="application/json" id="rh-plan" set:html={JSON.stringify(data).replace(/</g, "\\u003c")} />
+</Base>
+
+<script>
+  import { initRehearse } from "../../lib/rehearse/app";
+  document.addEventListener("astro:page-load", initRehearse);
+</script>
