@@ -52,5 +52,10 @@ export const REHEARSALS: RehearsalPlan[] = [
       { name: "Allegra Bandy", role: "vocals" },
     ],
     slots: DEFAULT_SLOTS,
+    // Hut bookings as of Nov 22, until the Hut calendar's free/busy feed is readable at build time.
+    extraBlocks: [
+      { date: "2026-11-28", start: "10:00", end: "14:00", label: "Hut booked" },
+      { date: "2026-12-04", start: "12:00", end: "15:00", label: "Hut booked" },
+    ],
   },
 ];

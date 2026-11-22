@@ -1,10 +1,12 @@
 // Build-time busy times for the rehearsal planner: Scott's Music calendar and the Hummingbird Hut
-// calendar, read through Google's FreeBusy API with the same read-only service account as the Shows
-// list. FreeBusy returns start and end times only: no titles, guests, notes or locations, so nothing
+// calendar. Only start and end times are kept: no titles, guests, notes or locations, so nothing
 // about a client or the studio's address can reach the page. Each page bakes in only the blocks for
-// its own dates. Without the service account (local builds, the fixture build) it returns no blocks
-// and says which calendars were missing.
-import { serviceAccountToken } from "../shows";
+// its own dates.
+// Source, per calendar: Google's FreeBusy API when the build has the calendar service account
+// (GOOGLE_SERVICE_ACCOUNT_JSON); otherwise the calendar's public iCal feed, which works for the
+// Music calendar (public, as for /shows) and for the Hut calendar once it is shared publicly as
+// "See only free/busy (hide details)". A calendar that can't be read adds no blocks and a build warning.
+import { parseIcs, serviceAccountToken } from "../shows";
 import { toBlocks, type Block } from "./core";
 
 const TZ = "America/Los_Angeles";
@@ -24,12 +26,32 @@ export function pacificWall(d: Date): { date: string; min: number } {
 }
 
 export interface Busy { blocks: Block[]; at: string; sources: { gigs: boolean; hut: boolean } }
-
 let cache: Promise<{ music?: { start: string; end: string }[]; hut?: { start: string; end: string }[] }> | undefined;
 
-async function freeBusy() {
+
+type Span = { start: string; end: string };
+
+async function fromPublicFeed(id: string, name: string): Promise<Span[] | undefined> {
+  try {
+    const res = await fetch(`https://calendar.google.com/calendar/ical/${encodeURIComponent(id)}/public/basic.ics`, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) throw new Error(`public feed answered ${res.status}`);
+    const now = Date.now();
+    return parseIcs(await res.text(), new Date(now - 864e5), new Date(now + 120 * 864e5))
+      .filter((e) => !e.cancelled)
+      .map((e) => ({ start: e.start.toISOString(), end: e.end.toISOString() }));
+  } catch (e) {
+    console.warn(`[rehearse] ${name} calendar not read (${(e as Error).message}): its times won't be blocked.`);
+    return undefined;
+  }
+}
+
+async function freeBusy(): Promise<{ music?: Span[]; hut?: Span[] }> {
+  if (env("SHOWS_FIXTURE")) return {};
   const sa = env("GOOGLE_SERVICE_ACCOUNT_JSON");
-  if (!sa || env("SHOWS_FIXTURE")) return {};
+  if (!sa) {
+    const [music, hut] = await Promise.all([fromPublicFeed(env("MUSIC_CALENDAR_ID") ?? MUSIC_ID, "Music"), fromPublicFeed(env("HUT_CALENDAR_ID") ?? HUT_ID, "Hut")]);
+    return { music, hut };
+  }
   try {
     const token = await serviceAccountToken(sa);
     const now = Date.now();
